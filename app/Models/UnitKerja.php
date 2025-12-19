@@ -12,7 +12,7 @@ class UnitKerja extends Model
     use HasFactory;
 
     protected $table = 'unit_kerja';
-    protected $guarded = 'id';
+    protected $guarded = ['id'];
 
     // Satu unit kerja punya banyak pegawai
     public function pegawai()

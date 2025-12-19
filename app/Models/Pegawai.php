@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pegawai extends Model
 {
-    //
     use HasFactory;
 
     protected $table = 'pegawai';
-    protected $guarded = 'id';
+    protected $guarded = ['id'];
 
+    // Perhatikan: Saya menghapus ": BelongsTo" di sebelah nama fungsi biar tidak error
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
@@ -20,6 +20,6 @@ class Pegawai extends Model
 
     public function jabatan()
     {
-        $this->belongsTo(Jabatan::class, 'jabatan_id');
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 }

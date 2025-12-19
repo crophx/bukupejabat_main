@@ -11,7 +11,7 @@ class Jabatan extends Model
     use HasFactory;
 
     protected $table = 'jabatan';
-    protected $guarded = 'id';
+    protected $guarded = ['id'];
 
     // Relasi satu jabatan bisa dimiliki banyak pegawai
     public function pegawai()
