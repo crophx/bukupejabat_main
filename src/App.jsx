@@ -17,20 +17,48 @@ function ProtectedLayout({ onSignOut }) {
 }
 
 export default function App() {
-  const [authed, setAuthed] = useState(false);
+  // 1. Inisialisasi state langsung dari localStorage agar saat refresh tidak logout
+  const [authed, setAuthed] = useState(() => {
+    const savedStatus = localStorage.getItem('isLoggedIn');
+    return savedStatus === 'true';
+  });
+
+  // 2. Fungsi Login: Simpan status ke localStorage
+  const handleLogin = () => {
+    setAuthed(true);
+    localStorage.setItem('isLoggedIn', 'true');
+  };
+
+  // 3. Fungsi SignOut: Hapus status dari localStorage
+  const handleSignOut = () => {
+    setAuthed(false);
+    localStorage.removeItem('isLoggedIn');
+  };
+
   return (
-    <>
-      <Routes>
+    <Routes>
       <Route
         path="/login"
-        element={<Login onLogin={() => setAuthed(true)} />}
+        element={
+          authed ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Login onLogin={handleLogin} />
+          )
+        }
       />
 
       <Route
         path="/"
-        element={authed ? <ProtectedLayout onSignOut={() => setAuthed(false)} /> : <Navigate to="/login" />}
+        element={
+          authed ? (
+            <ProtectedLayout onSignOut={handleSignOut} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
       >
-        <Route index element={<DashboardAdmin />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardAdmin />} />
         <Route path="pegawai" element={<DataPegawai />} />
         <Route path="pegawai/tambah" element={<TambahPegawai />} />
@@ -39,8 +67,10 @@ export default function App() {
         <Route path="unit-kerja/form" element={<UnitKerja />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={authed ? '/dashboard' : '/login'} />} />
-      </Routes>
-    </>
+      <Route 
+        path="*" 
+        element={<Navigate to={authed ? "/dashboard" : "/login"} replace />} 
+      />
+    </Routes>
   );
 }

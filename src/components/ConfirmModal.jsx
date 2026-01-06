@@ -11,15 +11,10 @@ export default function ConfirmModal({ open, onClose, onConfirm, message = "Are 
         <button onClick={onClose} className="px-3 py-1 rounded border">
           Batal
         </button>
-        <button
-          onClick={() => {
-            onConfirm && onConfirm();
-            onClose && onClose();
-          }}
-          className="px-3 py-1 rounded bg-red-600 text-white"
-        >
-          Hapus
-        </button>
+        <button onClick={() => {
+          onConfirm && onConfirm();
+          onClose && onClose();
+        }} className="btn btn-error text-white">Hapus</button>
       </div>
     </Modal>
   );

@@ -5,6 +5,7 @@ export default function Sidebar() {
   const [openJabatan, setOpenJabatan] = useState(false);
   const location = useLocation();
   const isUnitActive = location.pathname.startsWith("/unit-kerja");
+  const isOpen = openJabatan || isUnitActive;
 
   return (
     <aside className="w-64 hidden md:block">
@@ -118,10 +119,9 @@ export default function Sidebar() {
             <div className="border-t border-slate-100 mt-2 pt-3">
               <div className="space-y-1">
                 <button
-                  className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 ${openJabatan ? 'bg-slate-100' : ''}`}
+                  className="relative w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200"
                   onClick={() => setOpenJabatan((o) => !o)}
                 >
-                  <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r bg-sky-500 transition-opacity ${isUnitActive ? 'opacity-100' : 'opacity-0'}`} />
                   <span className="h-5 w-5 bg-slate-100 rounded-sm flex items-center justify-center text-slate-600">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -133,10 +133,10 @@ export default function Sidebar() {
                     </svg>
                   </span>
                   <span className="text-sm font-medium text-slate-700">Data Unit Kerja</span>
-                  <span className="ml-auto text-xs text-slate-400">{openJabatan ? "▾" : "▸"}</span>
+                  <span className="ml-auto text-xs text-slate-400">{isOpen ? "▾" : "▸"}</span>
                 </button>
 
-                {openJabatan && (
+                {isOpen && (
                   <div className="ml-6 mt-1 space-y-1">
                     <NavLink
                       to="/unit-kerja"
@@ -145,11 +145,11 @@ export default function Sidebar() {
                       {({ isActive }) => (
                         <>
                           <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r bg-sky-500 transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                          Form Input Unit Kerja
+                          Form Input Jabatan/Unit Kerja
                         </>
                       )}
                     </NavLink>
-                    <NavLink
+                    {/* <NavLink
                       to="/unit-kerja/form"
                       className={({ isActive }) => `relative w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-50 text-sm text-slate-600 ${isActive ? 'bg-slate-100' : ''}`}
                     >
@@ -159,7 +159,7 @@ export default function Sidebar() {
                           Form Input
                         </>
                       )}
-                    </NavLink>
+                    </NavLink> */}
                   </div>
                 )}
 

@@ -1,55 +1,81 @@
-import React from 'react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import React, { useState } from 'react';
+import Modal from './Modal';
+import ConfirmModal from './ConfirmModal';
+
+const sampleAdmins = [
+	{ id: 1, unit: 'Biro Sumber Daya Manusia', email: 'jeanskaret@gmail.com', username: 'BSDM', role: 'Admin', createdAt: '2025-12-06' },
+	{ id: 2, unit: 'Biro Keuangan', email: 'keu@example.com', username: 'KEU', role: 'Admin', createdAt: '2025-11-12' },
+];
 
 export default function DataAdmin() {
+	const [admins, setAdmins] = useState(sampleAdmins);
+	const [query, setQuery] = useState('');
+	const [isEditOpen, setEditOpen] = useState(false);
+	const [isDeleteOpen, setDeleteOpen] = useState(false);
+	const [selected, setSelected] = useState(null);
+
+	const openEdit = (item) => {
+		setSelected(item);
+		setEditOpen(true);
+	};
+
+	const openDelete = (item) => {
+		setSelected(item);
+		setDeleteOpen(true);
+	};
+
+	const handleSave = (updated) => {
+		setAdmins((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+	};
+
+	const handleDelete = () => {
+		if (!selected) return;
+		setAdmins((prev) => prev.filter((a) => a.id !== selected.id));
+		setSelected(null);
+	};
+
+	const filtered = admins.filter((a) =>
+		(a.unit + a.email + a.username + a.role).toLowerCase().includes(query.toLowerCase())
+	);
+
 	return (
 		<div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6">
-			{/* <header className="flex items-start justify-between">
-				<div>
-					<h2 className="text-xl font-bold text-slate-900">Data Pegawai</h2>
-					<p className="text-sm text-slate-500">Manajemen data pegawai dan unit kerja</p>
-				</div>
 
-				<div className="flex items-center gap-3">
-					<button className="text-sm px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold">Tambah Pegawai</button>
-				</div>
-			</header> */}
-
-			{/* <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<div className="bg-white rounded-2xl p-4 shadow-sm border">
-					<div className="text-xs text-slate-500">Total Pegawai</div>
-					<div className="text-2xl font-bold text-slate-900">1,256</div>
-				</div>
-				<div className="bg-white rounded-2xl p-4 shadow-sm border">
-					<div className="text-xs text-slate-500">Active Today</div>
-					<div className="text-2xl font-bold text-slate-900">342</div>
-				</div>
-				<div className="bg-white rounded-2xl p-4 shadow-sm border">
-					<div className="text-xs text-slate-500">New This Month</div>
-					<div className="text-2xl font-bold text-slate-900">24</div>
-				</div>
-			</section> */}
-
-			<section className="bg-white rounded-xl p-4 shadow-md border border-gray-400">
+			<section className="bg-white rounded-xl p-4">
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 					<div className="flex items-center gap-2 w-full sm:w-auto">
-						<input className="text-sm w-full sm:w-64 px-3 py-1 rounded-xl border border-gray-400" placeholder="Search by name, NIP, or ID" />
-						<select className="text-sm px-2 py-1 rounded-xl border border-gray-400">
-							<option>All Units</option>
-							<option>Unit A</option>
-							<option>Unit B</option>
-							<option>Unit C</option>
-							<option>Unit D</option>
-						</select>
-						<select className="text-sm px-2 py-1 rounded-xl border border-gray-400">
-							<option>All Status</option>
-							<option>Active</option>
-							<option>Inactive</option>
-						</select>
+						<input value={query} onChange={(e) => setQuery(e.target.value)} className="text-sm text-slate-500 w-full sm:w-64 px-3 py-1 rounded-xl border border-gray-400 " placeholder="Search..." />
+
+						<Menu as="div" className="relative inline-block">
+							<MenuButton className="inline-flex w-full justify-center gap-x-1 rounded-xl px-3 py-1 text-sm text-slate-500 border border-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+								Options
+								<ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
+							</MenuButton>
+
+							<MenuItems
+								transition
+								className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-gray-800 outline-1 -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+							>
+								<div className="py-1">
+									<MenuItem>
+										<a
+											href="#"
+											className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:text-white data-focus:outline-hidden"
+										>
+											Account settings
+										</a>
+									</MenuItem>
+								</div>
+							</MenuItems>
+						</Menu>
+
 					</div>
 
 					<div className="flex items-center gap-2">
-						<button className="text-sm px-3 py-1 rounded-xl bg-white border border-gray-400">Reset</button>
-						<button className="text-sm px-3 py-1 rounded-xl bg-slate-100 border border-gray-400">Apply</button>
+						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-white border border-gray-400">Reset</button>
+						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-slate-100 border border-gray-400">Apply</button>
 					</div>
 				</div>
 
@@ -57,7 +83,6 @@ export default function DataAdmin() {
 					<table className="w-full text-sm table-auto">
 						<thead className="text-left text-xs text-slate-500 border-b">
 							<tr>
-								<th className="py-2 w-6"><input type="checkbox" /></th>
 								<th className="py-2">Unit Organisasi</th>
 								<th className="py-2">Email</th>
 								<th className="py-2">Username</th>
@@ -67,18 +92,17 @@ export default function DataAdmin() {
 							</tr>
 						</thead>
 						<tbody>
-							{Array.from({ length: 6 }).map((_, i) => (
-								<tr key={i} className="hover:bg-slate-50">
-									<td className="py-2"><input type="checkbox" /></td>
-									<td className="py-2">Biro Sumber Daya Manusia</td>
-									<td className="py-2">jeanskaret@gmail.com</td>
-									<td className="py-2">BSDM</td>
-									<td className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700">Admin</span></td>
-									<td className="py-2">2025-12-0{6 - i}</td>
+							{filtered.map((a) => (
+								<tr key={a.id} className="hover:bg-slate-50">
+									<td className="py-2 text-slate-500">{a.unit}</td>
+									<td className="py-2 text-slate-500">{a.email}</td>
+									<td className="py-2 text-slate-500">{a.username}</td>
+									<td className="py-2"><span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700">{a.role}</span></td>
+									<td className="py-2 text-slate-500">{a.createdAt}</td>
 									<td className="py-2">
 										<div className="flex items-center gap-2">
-											<button className="text-xs text-sky-600">Edit</button>
-											<button className="text-xs text-red-600">Delete</button>
+											<span onClick={() => openEdit(a)} className="px-2 py-0.5 rounded text-xs bg-sky-100 text-sky-700 cursor-pointer">Edit</span>
+											<span onClick={() => openDelete(a)} className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 cursor-pointer">Delete</span>
 										</div>
 									</td>
 								</tr>
@@ -88,13 +112,74 @@ export default function DataAdmin() {
 				</div>
 
 				<div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-					<div>Showing 6 of 6</div>
+					<div>Showing {filtered.length} of {admins.length}</div>
 					<div className="flex items-center gap-2">
 						<button className="px-2 py-1 rounded-xl bg-white border">Prev</button>
 						<button className="px-2 py-1 rounded-xl bg-white border">Next</button>
 					</div>
 				</div>
 			</section>
+
+			<Modal open={isEditOpen} onClose={() => setEditOpen(false)} title="Edit Admin">
+				{selected && (
+					<AdminEditForm
+						initialData={selected}
+						onCancel={() => setEditOpen(false)}
+						onSave={(u) => {
+							handleSave(u);
+							setEditOpen(false);
+						}}
+					/>
+				)}
+			</Modal>
+
+			<ConfirmModal
+				open={isDeleteOpen}
+				onClose={() => setDeleteOpen(false)}
+				onConfirm={handleDelete}
+				message={`Hapus akun ${selected?.username ?? 'item'}?`}
+			/>
+
 		</div>
+	);
+}
+
+function AdminEditForm({ initialData = {}, onSave, onCancel }) {
+	const [form, setForm] = useState({ ...initialData });
+
+	return (
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				onSave && onSave(form);
+			}}
+		>
+			<div className="grid gap-3">
+				<div>
+					<label className="text-sm text-black">Unit Organisasi</label>
+					<input value={form.unit || ''} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="w-full border p-2 rounded-md text-sm text-slate-700" />
+				</div>
+				<div>
+					<label className="text-sm text-black">Email</label>
+					<input value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full border p-2 rounded-md text-sm text-slate-700" />
+				</div>
+				<div>
+					<label className="text-sm text-black">Username</label>
+					<input value={form.username || ''} onChange={(e) => setForm({ ...form, username: e.target.value })} className="w-full border p-2 rounded-md text-sm text-slate-700" />
+				</div>
+				<div>
+					<label className="text-sm text-black">Role</label>
+					<select value={form.role || 'Admin'} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full border p-2 rounded-md text-sm text-slate-700">
+						<option>Superrr Admin</option>
+						<option>Admin</option>
+					</select>
+				</div>
+			</div>
+
+			<div className="mt-4 flex justify-end gap-2">
+				<button type="button" onClick={onCancel} className="px-3 py-1 btn btn-soft">Batal</button>
+				<button type="submit" className="btn btn-info text-white">Simpan</button>
+			</div>
+		</form>
 	);
 }

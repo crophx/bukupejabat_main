@@ -14,16 +14,6 @@ export default function LogHistory() {
             placeholder="Search user"
           />
 
-          {/* <select aria-label="Filter action" className="border px-2 py-1 rounded text-sm">
-            <option>All actions</option>
-            <option>CREATE</option>
-            <option>UPDATE</option>
-            <option>DELETE</option>
-            <option>LOGIN</option>
-            <option>LOGOUT</option>
-          </select>
-
-          <button className="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Export</button> */}
         </div>
       </div>
 
@@ -38,7 +28,7 @@ export default function LogHistory() {
             </tr>
           </thead>
           <tbody>
-            <tr className="hover:bg-slate-50 cursor-default">
+            <tr className="hover:bg-slate-50 cursor-default text-slate-500">
               <td className="py-2 align-top">2025-12-12 14:32</td>
               <td className="py-2 align-top">
                 <div className="text-sm font-medium">Siti</div>
@@ -48,7 +38,7 @@ export default function LogHistory() {
               <td className="py-2 align-top text-slate-600">Updated job title</td>
             </tr>
 
-            <tr className="hover:bg-slate-50 cursor-default">
+            <tr className="hover:bg-slate-50 cursor-default text-slate-500">
               <td className="py-2 align-top">2025-12-12 13:12</td>
               <td className="py-2 align-top">
                 <div className="text-sm font-medium">Anton</div>
@@ -58,7 +48,7 @@ export default function LogHistory() {
               <td className="py-2 align-top text-slate-600">Deleted unit (soft)</td>
             </tr>
 
-            <tr className="hover:bg-slate-50 cursor-default">
+            <tr className="hover:bg-slate-50 cursor-default text-slate-500">
               <td className="py-2 align-top">2025-12-11 08:01</td>
               <td className="py-2 align-top">
                 <div className="text-sm font-medium">Admin</div>

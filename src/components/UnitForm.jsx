@@ -11,11 +11,10 @@ export default function UnitForm({ initial = {}, onSave }) {
       }}
       className="grid gap-3"
     >
-      <input className="border p-2 rounded" placeholder="Nama Unit Kerja" value={name} onChange={(e) => setName(e.target.value)} />
-
-      <div className="flex justify-end mt-2">
-        <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded">Simpan</button>
-      </div>
+      <input className="text-sm border p-2 rounded rounded-xl text-slate-700" placeholder="Nama Unit Kerja" value={name} onChange={(e) => setName(e.target.value)} />
+      <h2 className="text-lg font-semibold mb-1 text-slate-700">Jabatan</h2>
+      <input className="text-sm border p-2 rounded rounded-xl text-slate-700" placeholder="Nama Jabatan" value={name} onChange={(e) => setName(e.target.value)} />
     </form>
+
   );
 }

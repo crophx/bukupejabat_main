@@ -7,25 +7,25 @@ export default function TableCard({ rows = [] }) {
   const initialData = rows.length
     ? rows
     : [
-        {
-          no: 1,
-          nip: "19870512",
-          name: "Rina Sari",
-          unit: "Keuangan",
-          position: "Staf",
-          phone: "0832981091",
-          alamat: "Jl. Pejambon",
-        },
-        {
-          no: 2,
-          nip: "19901203",
-          name: "Budi Santoso",
-          unit: "SDM",
-          position: "Manager",
-          phone: "0832919310",
-          alamat: "Jl. Merdeka",
-        },
-      ];
+      {
+        no: 1,
+        nip: "19870512",
+        name: "Rina Sari",
+        unit: "Keuangan",
+        position: "Staf",
+        phone: "0832981091",
+        alamat: "Jl. Pejambon",
+      },
+      {
+        no: 2,
+        nip: "19901203",
+        name: "Budi Santoso",
+        unit: "SDM",
+        position: "Manager",
+        phone: "0832919310",
+        alamat: "Jl. Merdeka",
+      },
+    ];
 
   const [data, setData] = useState(initialData);
   const [isEditOpen, setEditOpen] = useState(false);
@@ -37,9 +37,7 @@ export default function TableCard({ rows = [] }) {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm font-semibold text-slate-900">Data Pegawai</h2>
         <div className="flex items-center gap-2">
-          <button className="px-4 py-2 text-sm rounded-2xl bg-emerald-400 hover:bg-emerald-500 text-white cursor-pointer">
-            Tambah Pegawai
-          </button>
+          <button className="btn btn-success text-white rounded-xl">Tambah Pegawai</button>
         </div>
       </div>
 
@@ -92,7 +90,7 @@ export default function TableCard({ rows = [] }) {
                   {r.alamat}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
-                  <div className="inline-flex items-center gap-3 px-3 py-2 rounded-full bg-emerald-100">
+                  <div className="inline-flex items-center gap-3 px-3 py-2 rounded-full bg-emerald-100 border border-emerald-200">
                     {/* icon edit */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -148,7 +146,7 @@ export default function TableCard({ rows = [] }) {
                 prev.map((it) => (it.no === updated.no ? updated : it))
               );
               setEditOpen(false);
-            }}              
+            }}
           />
         )}
       </Modal>
@@ -193,44 +191,44 @@ function EditForm({ initialData = {}, onSave, onCancel }) {
     >
       <div className="grid gap-5">
         <div className="grid gap-1">
-          <p className="text-sm">Nama</p>
+          <p className="text-sm text-black">Nama</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.name || ""}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Nama"
           />
-          <p className="text-sm">NIP</p>
+          <p className="text-sm text-black">NIP</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.nip || ""}
             onChange={(e) => setForm({ ...form, nip: e.target.value })}
             placeholder="NIP"
           />
-          <p className="text-sm">Unit</p>
+          <p className="text-sm text-black">Unit</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.unit || ""}
             onChange={(e) => setForm({ ...form, unit: e.target.value })}
             placeholder="Unit"
           />
-          <p className="text-sm">Jabatan</p>
+          <p className="text-sm text-black">Jabatan</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.position || ""}
             onChange={(e) => setForm({ ...form, position: e.target.value })}
             placeholder="Jabatan"
           />
-          <p className="text-sm">No. Handphone</p>
+          <p className="text-sm text-black">No. Handphone</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.phone || ""}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             placeholder="Phone"
-            />
-            <p className="text-sm">Alamat</p>
+          />
+          <p className="text-sm text-black">Alamat</p>
           <input
-            className="border p-2 rounded-md border border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+            className="border p-2 rounded-md border text-black border-slate-400 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
             value={form.alamat || ""}
             onChange={(e) => setForm({ ...form, alamat: e.target.value })}
             placeholder="Alamat"
@@ -239,19 +237,14 @@ function EditForm({ initialData = {}, onSave, onCancel }) {
       </div>
 
       <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-3 py-1 border rounded"
-        >
-          Batal
-        </button>
-        <button
+        <button onClick={onCancel} className="px-3 py-1 btn btn-soft">Batal</button>
+        {/* <button
           type="submit"
           className="px-3 py-1 bg-blue-600 text-white rounded"
         >
           Simpan
-        </button>
+        </button> */}
+        <button type="submit" className="btn btn-info text-white">Simpan</button>
       </div>
     </form>
   );

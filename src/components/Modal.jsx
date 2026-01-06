@@ -12,7 +12,7 @@ export default function Modal({ open, onClose, title, children }) {
         className="relative bg-white rounded-lg shadow-lg w-full max-w-lg mx-4 p-6"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <h3 className="text-lg font-semibold text-black">{title}</h3>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-700">✕</button>
         </div>
         <div>{children}</div>
