@@ -1,6 +1,6 @@
 export default function LogHistory() {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb   -6">
+    <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">Activity Log</h3>
