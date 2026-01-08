@@ -37,16 +37,12 @@ export default function DashboardAdmin() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:flex-1">
+        <div className="grid grid-cols-1  gap-4 w-full md:flex-1">
           <StatCard title="Total Pegawai" value={stats.total}>
             <BarChart values={stats.bars} />
           </StatCard>
 
-          <StatCard
-            title="Active Today"
-            value={stats.activeToday}
-            tone="emerald"
-          >
+          <StatCard title="Total Admin" value={stats.activeToday} tone="emerald">
             <Sparkline values={stats.sparkline} />
           </StatCard>
         </div>

@@ -37,8 +37,8 @@ export default function TableCard({ rows = [] }) {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-sm font-semibold text-slate-900">Data Pegawai</h2>
         <div className="flex items-center gap-2">
-          <button className="btn btn-success text-white rounded-xl">Tambah Pegawai</button>
-        </div>
+          <button className="btn btn-accent rounded-xl text-neutral-50">Tambah Pegawai</button>
+        </div>  
       </div>
 
       <div className="overflow-x-auto">

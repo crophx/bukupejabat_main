@@ -1,12 +1,12 @@
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+// import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+// import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { useState } from 'react';
 import Modal from './Modal';
 import ConfirmModal from './ConfirmModal';
 
 const sampleAdmins = [
 	{ id: 1, unit: 'Biro Sumber Daya Manusia', email: 'jeanskaret@gmail.com', username: 'BSDM', role: 'Admin', createdAt: '2025-12-06' },
-	{ id: 2, unit: 'Biro Keuangan', email: 'keu@example.com', username: 'KEU', role: 'Admin', createdAt: '2025-11-12' },
+	{ id: 2, unit: 'Biro Hukum', email: 'hukum@example.com', username: 'ROKUM', role: 'Admin', createdAt: '2025-11-12' },
 ];
 
 export default function DataAdmin() {
@@ -46,9 +46,20 @@ export default function DataAdmin() {
 			<section className="bg-white rounded-xl p-4">
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 					<div className="flex items-center gap-2 w-full sm:w-auto">
-						<input value={query} onChange={(e) => setQuery(e.target.value)} className="text-sm text-slate-500 w-full sm:w-64 px-3 py-1 rounded-xl border border-gray-400 " placeholder="Search..." />
+						{/* <input value={query} onChange={(e) => setQuery(e.target.value)} className="text-sm text-slate-500 w-full sm:w-64 px-3 py-1 rounded-xl border border-gray-400 " placeholder="Search..." /> */}
+						{/* Search icon Daisy coba dulu */}
+						<label className="input bg-white border border-slate-400 text-slate-400 rounded-xl">
+							<svg className="h-[1em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
+									<circle cx="11" cy="11" r="8"></circle>
+									<path d="m21 21-4.3-4.3"></path>
+								</g>
+							</svg>
+							<input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" className="pl-1 text-slate-700" />
 
-						<Menu as="div" className="relative inline-block">
+						</label>
+
+						{/* <Menu as="div" className="relative inline-block">
 							<MenuButton className="inline-flex w-full justify-center gap-x-1 rounded-xl px-3 py-1 text-sm text-slate-500 border border-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 								Options
 								<ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
@@ -69,14 +80,15 @@ export default function DataAdmin() {
 									</MenuItem>
 								</div>
 							</MenuItems>
-						</Menu>
+						</Menu> */}
 
 					</div>
 
-					<div className="flex items-center gap-2">
+					{/* button reset & apply */}
+					{/* <div className="flex items-center gap-2">
 						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-white border border-gray-400">Reset</button>
 						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-slate-100 border border-gray-400">Apply</button>
-					</div>
+					</div> */}
 				</div>
 
 				<div className="mt-4 overflow-x-auto">
@@ -113,10 +125,11 @@ export default function DataAdmin() {
 
 				<div className="mt-4 flex items-center justify-between text-xs text-slate-500">
 					<div>Showing {filtered.length} of {admins.length}</div>
-					<div className="flex items-center gap-2">
+					{/* button prev & next */}
+					{/* <div className="flex items-center gap-2">
 						<button className="px-2 py-1 rounded-xl bg-white border">Prev</button>
 						<button className="px-2 py-1 rounded-xl bg-white border">Next</button>
-					</div>
+					</div> */}
 				</div>
 			</section>
 
@@ -170,8 +183,10 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
 				<div>
 					<label className="text-sm text-black">Role</label>
 					<select value={form.role || 'Admin'} onChange={(e) => setForm({ ...form, role: e.target.value })} className="w-full border p-2 rounded-md text-sm text-slate-700">
-						<option>Superrr Admin</option>
-						<option>Admin</option>
+						<div className="w-full border p-2 rounded-xl text-sm text-slate-700">
+							<option>Superrr Admin</option>
+							<option>Admin</option>
+						</div>
 					</select>
 				</div>
 			</div>
