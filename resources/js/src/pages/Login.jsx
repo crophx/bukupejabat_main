@@ -49,7 +49,7 @@ export default function Login({ onLogin }) {
                                 <input
                                     type="email"
                                     placeholder="jeanskaret@example.com"
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300"
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-300"
                                     required
                                 />
                             </div>
@@ -62,7 +62,7 @@ export default function Login({ onLogin }) {
                                     <input
                                         type={show ? "text" : "password"}
                                         placeholder="Enter your password"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-300 pr-12"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-300 pr-12"
                                         required
                                     />
                                     <button
@@ -116,11 +116,12 @@ export default function Login({ onLogin }) {
                                 <label className="inline-flex items-center gap-2 text-sm">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 rounded border-slate-200"
+                                        defaultChecked
+                                        className="checkbox text-slate-500"
                                     />
-                                    <span className="text-slate-600">
+                                    <p className="text-slate-400">
                                         Remember me
-                                    </span>
+                                    </p>
                                 </label>
                                 <a
                                     href="#"
@@ -133,7 +134,7 @@ export default function Login({ onLogin }) {
                             <div>
                                 <button
                                     type="submit"
-                                    className="w-full inline-flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold"
+                                    className="btn btn-info w-full rounded-xl text-white font-semibold"
                                 >
                                     Sign in
                                 </button>

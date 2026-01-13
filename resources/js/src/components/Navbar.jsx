@@ -1,6 +1,6 @@
+import React from "react";
 import { useState } from "react";
 import Logo from "../assets/images/logo-kemlu.png"; // optional: add logo file or remove
-import React from "react";
 
 export default function Navbar({ onSignOut }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -20,7 +20,7 @@ export default function Navbar({ onSignOut }) {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="relative inline-flex items-center p-2 rounded-lg hover:bg-slate-50">
+                        <button className="relative inline-flex items-center p-2 rounded-lg hover:bg-slate-200">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-5 w-5 text-slate-600"

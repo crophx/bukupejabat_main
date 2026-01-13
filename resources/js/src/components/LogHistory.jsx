@@ -14,22 +14,11 @@ export default function LogHistory() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    ``
                     <input
                         aria-label="Search logs"
                         className="border-xl px-2 py-1 rounded text-sm"
                         placeholder="Search user"
                     />
-                    {/* <select aria-label="Filter action" className="border px-2 py-1 rounded text-sm">
-            <option>All actions</option>
-            <option>CREATE</option>
-            <option>UPDATE</option>
-            <option>DELETE</option>
-            <option>LOGIN</option>
-            <option>LOGOUT</option>
-          </select>
-
-          <button className="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Export</button> */}
                 </div>
             </div>
 
@@ -37,6 +26,7 @@ export default function LogHistory() {
                 <table className="w-full text-sm table-auto">
                     <thead className="text-left text-xs text-slate-500 border-b">
                         <tr>
+                            <th className="py-2">Date</th>
                             <th className="py-2">Time</th>
                             <th className="py-2">User</th>
                             <th className="py-2">Action</th>
@@ -44,8 +34,9 @@ export default function LogHistory() {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="hover:bg-slate-50 cursor-default">
-                            <td className="py-2 align-top">2025-12-12 14:32</td>
+                        <tr className="hover:bg-slate-50 cursor-default text-slate-500">
+                            <td className="py-2 align-top">2025-12-12</td>
+                            <td className="py-2 align-top">14:32</td>
                             <td className="py-2 align-top">
                                 <div className="text-sm font-medium">Siti</div>
                                 <div className="text-xs text-slate-500">
@@ -57,38 +48,6 @@ export default function LogHistory() {
                             </td>
                             <td className="py-2 align-top text-slate-600">
                                 Updated job title
-                            </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 cursor-default">
-                            <td className="py-2 align-top">2025-12-12 13:12</td>
-                            <td className="py-2 align-top">
-                                <div className="text-sm font-medium">Anton</div>
-                                <div className="text-xs text-slate-500">
-                                    admin
-                                </div>
-                            </td>
-                            <td className="py-2 align-top flex items-center gap-2">
-                                ✖ <span className="font-medium">DELETE</span>
-                            </td>
-                            <td className="py-2 align-top text-slate-600">
-                                Deleted unit (soft)
-                            </td>
-                        </tr>
-
-                        <tr className="hover:bg-slate-50 cursor-default">
-                            <td className="py-2 align-top">2025-12-11 08:01</td>
-                            <td className="py-2 align-top">
-                                <div className="text-sm font-medium">Admin</div>
-                                <div className="text-xs text-slate-500">
-                                    super
-                                </div>
-                            </td>
-                            <td className="py-2 align-top flex items-center gap-2">
-                                🔑 <span className="font-medium">LOGIN</span>
-                            </td>
-                            <td className="py-2 align-top text-slate-600">
-                                Admin login from web
                             </td>
                         </tr>
                     </tbody>

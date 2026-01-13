@@ -16,36 +16,6 @@ export default function DashboardAdmin() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row gap-4">
                 {/* Profile card */}
-                {/* <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 w-full md:w-1/3">
-          <div className="flex items-center gap-4">
-            <div className="h-17 w-17 rounded-full bg-sky-500 flex items-center justify-center text-white text-xl font-semibold">
-              <img
-                src={AdminProfile}
-                alt="Admin Avatar"
-                className="h-16 w-16 rounded-full"
-              />
-            </div>
-            <div className="flex flex-col">
-              <div className="text-lg font-semibold text-slate-900">
-                AdminBSDM
-              </div>
-              <div className="text-sm text-slate-600">jeanskaret@example.com</div>
-            </div>
-          </div>
-
-          <hr className="mt-3" />
-          <div className="pt-3 text-sm text-slate-700">
-            <div className="flex justify-between">
-              <div className="text-slate-500">Last login</div>
-              <div>2025-12-09 09:12</div>
-            </div>
-            <div className="flex justify-between mt-2">
-              <div className="text-slate-500">Role</div>
-              <div>Super Admin</div>
-            </div>
-          </div>
-        </div> */}
-
                 <div className="bg-white rounded-2xl p-1 shadow-md border border-slate-100 w-full md:w-1/3">
                     <div className="pt-3 text-sm text-slate-700">
                         <div class="flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:gap-6 sm:py-4 ...">
@@ -72,13 +42,13 @@ export default function DashboardAdmin() {
                 </div>
 
                 {/* Stats grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:flex-1">
+                <div className="grid grid-cols-1  gap-4 w-full md:flex-1">
                     <StatCard title="Total Pegawai" value={stats.total}>
                         <BarChart values={stats.bars} />
                     </StatCard>
 
                     <StatCard
-                        title="Active Today"
+                        title="Total Admin"
                         value={stats.activeToday}
                         tone="emerald"
                     >
