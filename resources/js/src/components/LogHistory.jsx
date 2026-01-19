@@ -16,12 +16,12 @@ export default function LogHistory() {
                 <div className="flex items-center gap-2">
                     <input
                         aria-label="Search logs"
-                        className="border-xl px-2 py-1 rounded text-sm"
+                        className="border-xl border border-slate-500 text-slate-700 px-2 py-2 rounded-xl text-sm"
                         placeholder="Search user"
                     />
                 </div>
             </div>
-
+            
             <div className="overflow-y-auto max-h-72">
                 <table className="w-full text-sm table-auto">
                     <thead className="text-left text-xs text-slate-500 border-b">

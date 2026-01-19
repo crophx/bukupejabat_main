@@ -77,7 +77,7 @@ export default function Navbar({ onSignOut }) {
                                             setMenuOpen(false);
                                             onSignOut?.();
                                         }}
-                                        className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-slate-200 rounded-2xl"
+                                        className="w-full text-left px-3 py-3 text-sm text-red-600 hover:bg-slate-200 rounded-xl"
                                     >
                                         Sign out
                                     </button>

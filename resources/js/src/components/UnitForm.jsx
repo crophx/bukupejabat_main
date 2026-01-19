@@ -13,19 +13,14 @@ export default function UnitForm({ initial = {}, onSave }) {
             className="grid gap-3"
         >
             <input
-                className="text-sm border p-2 rounded rounded-xl"
+                className="text-sm text-slate-700 border p-2 rounded rounded-xl"
                 placeholder="Nama Unit Kerja"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
             />
 
             <div className="flex justify-end mt-2">
-                <button
-                    type="submit"
-                    className="px-3 py-1 bg-blue-600 text-white rounded rounded-xl cursor-auto"
-                >
-                    Simpan
-                </button>
+                <button className="btn btn-info text-white">Simpan</button>
             </div>
         </form>
     );
