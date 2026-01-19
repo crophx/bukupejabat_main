@@ -10,21 +10,11 @@ export default function ConfirmModal({
     if (!open) return null;
 
     return (
-        <Modal open={open} onClose={onClose} title="Konfirmasi">
+        <Modal className="text-slate-700" open={open} onClose={onClose} title="Konfirmasi">
             <p className="mb-4 text-sm text-slate-700">{message}</p>
             <div className="flex justify-end gap-2">
-                <button onClick={onClose} className="px-3 py-1 rounded border">
-                    Batal
-                </button>
-                <button
-                    onClick={() => {
-                        onConfirm && onConfirm();
-                        onClose && onClose();
-                    }}
-                    className="px-3 py-1 rounded bg-red-600 text-white"
-                >
-                    Hapus
-                </button>
+                <button onClick={onClose} className="btn btn-neutral btn-outline">Batal</button>
+                <button onClick={() => { onConfirm && onConfirm(); onClose && onClose(); }} className="btn btn-error">Hapus</button>
             </div>
         </Modal>
     );

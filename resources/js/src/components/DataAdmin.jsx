@@ -59,7 +59,7 @@ export default function DataAdmin() {
     );
 
     return (
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6">
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6 text-slate-700">
             <section className="bg-white rounded-xl p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2 w-full sm:w-auto">

@@ -11,7 +11,7 @@ export default function TambahPegawai() {
     return (
         <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">
-                <h3 className="text-lg font-semibold mb-4">Tambah Pegawai</h3>
+                <h3 className="text-lg text-slate-700 font-semibold mb-4">Tambah Pegawai</h3>
                 <EmployeeForm onSave={handleSave} />
             </div>
         </div>
