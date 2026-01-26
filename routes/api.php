@@ -1,18 +1,12 @@
 <?php
 
-use App\Http\Controllers\Api\PegawaiController;
-use App\Models\Pegawai;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+// 1. Panggil Controller yang sudah Anda buat tadi (PENTING!)
+use App\Http\Controllers\Api\PegawaiController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
-// rute buku pejabat
-
-// 1) Ambil data pegawai
+// 2. Daftarkan Alamatnya
+// Artinya: Kalau ada yang akses "/pegawai", panggil fungsi "index" di PegawaiController
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 
-// 2) Tambah Pegawai
+// Tambahan: Untuk simpan data (nanti dipakai saat form submit)
 Route::post('/pegawai', [PegawaiController::class, 'store']);
