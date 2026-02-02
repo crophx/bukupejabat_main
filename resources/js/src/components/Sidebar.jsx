@@ -9,7 +9,7 @@ export default function Sidebar() {
     const isOpen = openJabatan || isUnitActive;
 
     return (
-        <aside className="w-64 hidden md:block">
+        <aside className="w-56 hidden md:block">
             <div className="sticky top-8">
                 <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 h-full">
                     {/* <div className="mb-4 px-1">
