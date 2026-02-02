@@ -8,10 +8,22 @@ export default function TableCard() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedUnitKode, setSelectedUnitKode] = useState("");
+    const [selectedUnitName, setSelectedUnitName] = useState("");
+    const [unitSearchTerm, setUnitSearchTerm] = useState("");
+    const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+
+    // Unit Kerja list (diambil dari API)
+    const [unitList, setUnitList] = useState([]);
+
+    // Filter unit kerja berdasarkan search term (client-side fallback)
+    const filteredUnitList = unitList.filter((u) =>
+        (u.nama || "").toLowerCase().includes(unitSearchTerm.toLowerCase())
+    );
 
     // 2. State Pagination
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // 3. State Modal
     const [isEditOpen, setEditOpen] = useState(false);
@@ -21,6 +33,7 @@ export default function TableCard() {
     // Ambil data dari API saat pertama kali load
     useEffect(() => {
         fetchData();
+        fetchUnitKerja('');
     }, []);
 
     const fetchData = async () => {
@@ -31,6 +44,11 @@ export default function TableCard() {
             // Sesuai struktur JSON: response.data.data.emp
             const allData = response.data.data.emp || [];
             setData(allData);
+            // Jika unitList belum terisi dari API unit-kerja, bangun daftar unit dari data pegawai sebagai fallback
+            if ((!unitList || unitList.length === 0) && allData.length > 0) {
+                const built = buildUnitsFromData(allData);
+                setUnitList(built);
+            }
         } catch (error) {
             console.error("Gagal mengambil data:", error);
         } finally {
@@ -38,23 +56,74 @@ export default function TableCard() {
         }
     };
 
+    // Bangun daftar unit unik dari data pegawai
+    const buildUnitsFromData = (allData) => {
+        const map = new Map();
+        allData.forEach((d) => {
+            const kode = (d.kd_unker || d.kd_unker || d.idLokasiKerja || d.kd_unker || d.kd_jabatan) || (d.ket_unker || '').trim();
+            const nama = (d.ket_unker || d.LokasiKerjaName || '').trim();
+            const key = kode || nama;
+            if (!key) return;
+            if (!map.has(key)) {
+                map.set(key, { kd_unker: kode || key, nama: nama || key });
+            }
+        });
+        return Array.from(map.values()).sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+    };
+
+    const fetchUnitKerja = async (q = '') => {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/api/unit-kerja", { params: { search: q, limit: 100 } });
+            const units = response.data.data || [];
+            setUnitList(units);
+        } catch (error) {
+            console.error("Gagal mengambil data unit kerja:", error);
+        }
+    };
+
+    // Debounce unit search
+    useEffect(() => {
+        const t = setTimeout(() => {
+            fetchUnitKerja(unitSearchTerm);
+        }, 300);
+        return () => clearTimeout(t);
+    }, [unitSearchTerm]);
+
     // --- LOGIKA SEARCH ---
     const filteredData = data.filter((item) => {
         const searchStr = searchTerm.toLowerCase();
+        const unitMatch = selectedUnitKode === "" || item.kd_unker === selectedUnitKode;
+
         return (
-            item.nama?.toLowerCase().includes(searchStr) ||
-            item.nip?.toString().toLowerCase().includes(searchStr) ||
-            item.Jabatan?.toString().toLowerCase().includes(searchStr) ||
-            item.ket_unker?.toString().toLowerCase().includes(searchStr) ||
-            item.eselon?.toString().toLowerCase().includes(searchStr) 
+            unitMatch &&
+            (
+                item.nama?.toLowerCase().includes(searchStr) ||
+                item.nip?.toString().toLowerCase().includes(searchStr) ||
+                item.Jabatan?.toString().toLowerCase().includes(searchStr) ||
+                item.ket_unker?.toString().toLowerCase().includes(searchStr) ||
+                item.eselon?.toString().toLowerCase().includes(searchStr)
+            )
         );
     });
 
+    // --- LOGIKA SORTING BERDASARKAN ESELON SECARA DEFAULT ---
+    const sortedData = [...filteredData].sort((a, b) => {
+        const eselonOrder = { "i": 1, "ii": 2, "iii": 3, "iv": 4 };
+
+        let aValue = a.eselon?.toString().toLowerCase().trim() || "";
+        let bValue = b.eselon?.toString().toLowerCase().trim() || "";
+
+        const aNum = eselonOrder[aValue] || 999;
+        const bNum = eselonOrder[bValue] || 999;
+
+        return aNum - bNum;
+    });
+
     // --- LOGIKA PAGINATION ---
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const totalPages = Math.ceil(sortedData.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = sortedData.slice(indexOfFirstItem, indexOfLastItem);
 
     const handleNext = () => {
         if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -102,20 +171,104 @@ export default function TableCard() {
                 <div className="flex flex-col">
                     <h2 className="text-lg font-bold text-slate-800">Data Pegawai</h2>
                     <span className="text-xs text-slate-500">
-                        {searchTerm ? `Ditemukan ${filteredData.length} hasil` : `Total ${data.length} pegawai`}
+                        {searchTerm ? `Ditemukan ${sortedData.length} hasil` : `Total ${data.length} pegawai`}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
                     <button
                         onClick={fetchData}
-                        className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100"
+                        className="btn btn-sm btn-ghost border border-slate-300 rounded-xl text-slate-400 hover:bg-slate-100"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         Refresh
                     </button>
+
+                    {/* Searchable Unit Kerja Dropdown */}
+                    <div className="relative w-full md:w-48">
+                        <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all">
+                            <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.3-4.3"></path>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Cari unit kerja..."
+                                className="grow"
+                                value={unitSearchTerm || selectedUnitName}
+                                onChange={(e) => {
+                                    setUnitSearchTerm(e.target.value);
+                                    setShowUnitDropdown(true);
+                                }}
+                                onFocus={() => setShowUnitDropdown(true)}
+                                onBlur={() => setTimeout(() => setShowUnitDropdown(false), 200)}
+                            />
+                            {selectedUnitName && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedUnitKode("");
+                                        setSelectedUnitName("");
+                                        setUnitSearchTerm("");
+                                        setCurrentPage(1);
+                                    }}
+                                    className="text-slate-400 hover:text-slate-600"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </label>
+
+                        {/* Dropdown List */}
+                        {showUnitDropdown && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                                <div className="p-1">
+                                    <button
+                                        onClick={() => {
+                                            setSelectedUnitKode("");
+                                            setSelectedUnitName("");
+                                            setUnitSearchTerm("");
+                                            setShowUnitDropdown(false);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                    >
+                                        Semua Unit Kerja
+                                    </button>
+                                    {filteredUnitList.length > 0 ? (
+                                        filteredUnitList.map((unit, idx) => (
+                                            <button
+                                                key={unit.kd_unker || unit.id || idx}
+                                                onClick={() => {
+                                                    const kode = unit.kd_unker || unit.kode || unit.id || "";
+                                                    const name = unit.nama || unit.name || kode;
+                                                    setSelectedUnitKode(kode);
+                                                    setSelectedUnitName(name);
+                                                    setUnitSearchTerm(name);
+                                                    setShowUnitDropdown(false);
+                                                    setCurrentPage(1);
+                                                }}
+                                                className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+                                                    selectedUnitKode === (unit.kd_unker || unit.id || "")
+                                                        ? "bg-sky-500 text-white"
+                                                        : "text-slate-600 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                {unit.nama || unit.name || (unit.kd_unker || unit.id)}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-2 text-sm text-slate-400 italic">
+                                            Tidak ada yang cocok
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all w-full md:w-64">
                         <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -145,7 +298,8 @@ export default function TableCard() {
                         <tr>
                             <th className="p-4 border-b border-slate-100">No</th>
                             <th className="p-4 border-b border-slate-100">NIP / Nama</th>
-                            <th className="p-4 border-b border-slate-100">Jabatan & Unit</th>
+                            <th className="p-4 border-b border-slate-100">Eselon & Jabatan</th>
+                            <th className="p-4 border-b border-slate-100">Unit Kerja</th>
                             <th className="p-4 border-b border-slate-100">Kontak</th>
                             <th className="p-4 border-b border-slate-100 text-center">Aksi</th>
                         </tr>
@@ -161,18 +315,20 @@ export default function TableCard() {
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-800 text-sm">{r.nama}</span>
                                                 <span className="text-xs text-slate-500 font-mono mt-0.5">{r.nip?.trim()}</span>
-                                                <span className="text-xs text-slate-500 font-mono mt-0.5">{r.eselon?.trim()}</span>
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex flex-col max-w-xs">
-                                                <span className="text-sm font-semibold text-slate-700 truncate" title={r.Jabatan}>{r.Jabatan || "-"}</span>
-                                                <span className="text-xs text-slate-500 truncate" title={r.ket_unker}>{r.ket_unker || "-"}</span>
+                                            <div className="flex flex-col max-w-xs gap-1">
+                                                <span className="badge badge-outline badge-sm">{r.eselon?.trim() || "-"}</span>
+                                                <span className="text-sm font-semibold text-slate-700" title={r.Jabatan}>{r.Jabatan || "-"}</span>
                                             </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="text-sm text-slate-600" title={r.  ket_unker}>{r.ket_unker || "-"}</span>
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">
                                             <div className="flex flex-col gap-1">
-                                                <span>📞 {r.no_hp && r.no_hp !== "-" ? r.no_hp : <span className="font-style: italic text-slate-400 font-semibold" >Nomor belum diisi</span>}</span>
+                                                <span>📞 {r.no_hp && r.no_hp !== "-" ? r.no_hp : <span className="italic text-slate-400 font-semibold">Nomor belum diisi</span>}</span>
                                                 <span>📍 {r.LokasiKerjaName || "Tidak tersedia"}</span>
                                             </div>
                                         </td>
@@ -195,7 +351,7 @@ export default function TableCard() {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="5" className="p-8 text-center text-slate-400 font-medium italic">
+                                <td colSpan="6" className="p-8 text-center text-slate-400 font-medium italic">
                                     Data tidak ditemukan...
                                 </td>
                             </tr>
@@ -204,16 +360,36 @@ export default function TableCard() {
                 </table>
             </div>
 
-
             {/* Pagination Footer */}
             <div className="px-6 py-4 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-slate-600 font-medium">
-                        Menampilkan {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, data.length)} dari {data.length} pegawai
-                    </span>
-                    <span className="text-xs text-slate-500">
-                        Halaman {currentPage} dari {totalPages}
-                    </span>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm text-slate-600 font-medium">Tampilkan</span>
+                        <select 
+                            value={itemsPerPage} 
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="select select-bordered select-sm bg-white border rounded-xl border-slate-300 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                        <span className="text-sm text-slate-600 font-medium">per halaman</span>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1">
+                        <span className="text-sm text-slate-600 font-medium">
+                            Menampilkan {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, sortedData.length)} dari {sortedData.length} pegawai
+                        </span>
+                        <span className="text-xs text-slate-500">
+                            Halaman {currentPage} dari {totalPages}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-center gap-1 flex-wrap">
@@ -242,7 +418,6 @@ export default function TableCard() {
                     </button>
                 </div>
             </div>
-
 
             {/* Modal Components */}
             <Modal open={isEditOpen} onClose={() => setEditOpen(false)} title="Edit Pegawai">
@@ -283,13 +458,13 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Nama
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nama || ""} onChange={(e) => handleInputChange("nama", e.target.value)} placeholder="Masukkan nama"/>
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nama || ""} onChange={(e) => handleInputChange("nama", e.target.value)} placeholder="Masukkan nama" />
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         NIP
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nip || ""} onChange={(e) => handleInputChange("nip", e.target.value)} placeholder="Masukkan NIP"/>
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nip || ""} onChange={(e) => handleInputChange("nip", e.target.value)} placeholder="Masukkan NIP" />
                 </div>
             </div>
 
@@ -305,7 +480,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Jabatan
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.Jabatan || ""} onChange={(e) => handleInputChange("Jabatan", e.target.value)} placeholder="Masukkan jabatan"/>
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.Jabatan || ""} onChange={(e) => handleInputChange("Jabatan", e.target.value)} placeholder="Masukkan jabatan" />
                 </div>
             </div>
 
