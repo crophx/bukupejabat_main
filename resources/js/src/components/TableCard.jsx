@@ -195,12 +195,7 @@ export default function TableCard() {
                                     <path d="m21 21-4.3-4.3"></path>
                                 </g>
                             </svg>
-                            <input
-                                type="text"
-                                placeholder="Cari unit kerja..."
-                                className="grow"
-                                value={unitSearchTerm || selectedUnitName}
-                                onChange={(e) => {
+                            <input type="text" placeholder="Cari unit kerja..." className="grow" value={unitSearchTerm || selectedUnitName} onChange={(e) => {
                                     setUnitSearchTerm(e.target.value);
                                     setShowUnitDropdown(true);
                                 }}
@@ -277,12 +272,7 @@ export default function TableCard() {
                                 <path d="m21 21-4.3-4.3"></path>
                             </g>
                         </svg>
-                        <input
-                            type="search"
-                            placeholder="Cari nama atau NIP..."
-                            className="grow"
-                            value={searchTerm}
-                            onChange={(e) => {
+                        <input type="search" placeholder="Cari nama atau NIP..." className="grow" value={searchTerm} onChange={(e) => {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
@@ -327,8 +317,8 @@ export default function TableCard() {
                                             <span className="text-sm text-slate-600" title={r.  ket_unker}>{r.ket_unker || "-"}</span>
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">
-                                            <div className="flex flex-col gap-1">
-                                                <span>📞 {r.no_hp && r.no_hp !== "-" ? r.no_hp : <span className="italic text-slate-400 font-semibold">Nomor belum diisi</span>}</span>
+                                            <div className="flex flex-col gap-2">
+                                                <span>📞 {r.no_hp && r.no_hp !== "-" ? r.no_hp : <span className="italic text-slate-400 font-semibold whitespace-nowrap">Nomor belum diisi</span>}</span>
                                                 <span>📍 {r.LokasiKerjaName || "Tidak tersedia"}</span>
                                             </div>
                                         </td>
