@@ -18,7 +18,7 @@ export default function TableCard() {
 
     // Filter unit kerja berdasarkan search term (client-side fallback)
     const filteredUnitList = unitList.filter((u) =>
-        (u.nama || "").toLowerCase().includes(unitSearchTerm.toLowerCase())
+        (u.nama || "").toLowerCase().includes(unitSearchTerm.toLowerCase()),
     );
 
     // 2. State Pagination
@@ -33,14 +33,16 @@ export default function TableCard() {
     // Ambil data dari API saat pertama kali load
     useEffect(() => {
         fetchData();
-        fetchUnitKerja('');
+        fetchUnitKerja("");
     }, []);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             // Mengambil data dari API Laravel lokal Anda
-            const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const response = await axios.get(
+                "http://127.0.0.1:8000/api/pegawai",
+            );
             // Sesuai struktur JSON: response.data.data.emp
             const allData = response.data.data.emp || [];
             setData(allData);
@@ -60,20 +62,31 @@ export default function TableCard() {
     const buildUnitsFromData = (allData) => {
         const map = new Map();
         allData.forEach((d) => {
-            const kode = (d.kd_unker || d.kd_unker || d.idLokasiKerja || d.kd_unker || d.kd_jabatan) || (d.ket_unker || '').trim();
-            const nama = (d.ket_unker || d.LokasiKerjaName || '').trim();
+            const kode =
+                d.kd_unker ||
+                d.kd_unker ||
+                d.idLokasiKerja ||
+                d.kd_unker ||
+                d.kd_jabatan ||
+                (d.ket_unker || "").trim();
+            const nama = (d.ket_unker || d.LokasiKerjaName || "").trim();
             const key = kode || nama;
             if (!key) return;
             if (!map.has(key)) {
                 map.set(key, { kd_unker: kode || key, nama: nama || key });
             }
         });
-        return Array.from(map.values()).sort((a,b) => (a.nama||'').localeCompare(b.nama||''));
+        return Array.from(map.values()).sort((a, b) =>
+            (a.nama || "").localeCompare(b.nama || ""),
+        );
     };
 
-    const fetchUnitKerja = async (q = '') => {
+    const fetchUnitKerja = async (q = "") => {
         try {
-            const response = await axios.get("http://127.0.0.1:8000/api/unit-kerja", { params: { search: q, limit: 100 } });
+            const response = await axios.get(
+                "http://127.0.0.1:8000/api/unit-kerja",
+                { params: { search: q, limit: 100 } },
+            );
             const units = response.data.data || [];
             setUnitList(units);
         } catch (error) {
@@ -92,29 +105,55 @@ export default function TableCard() {
     // --- LOGIKA SEARCH ---
     const filteredData = data.filter((item) => {
         const searchStr = searchTerm.toLowerCase();
-        const unitMatch = selectedUnitKode === "" || item.kd_unker === selectedUnitKode;
+        const unitMatch =
+            selectedUnitKode === "" || item.kd_unker === selectedUnitKode;
 
         return (
             unitMatch &&
-            (
-                item.nama?.toLowerCase().includes(searchStr) ||
+            (item.nama?.toLowerCase().includes(searchStr) ||
                 item.nip?.toString().toLowerCase().includes(searchStr) ||
                 item.Jabatan?.toString().toLowerCase().includes(searchStr) ||
                 item.ket_unker?.toString().toLowerCase().includes(searchStr) ||
-                item.eselon?.toString().toLowerCase().includes(searchStr)
-            )
+                item.eselon?.toString().toLowerCase().includes(searchStr))
         );
     });
 
-    // --- LOGIKA SORTING BERDASARKAN ESELON SECARA DEFAULT ---
+    // --- LOGIKA SORTING CUSTOM (VIP DULU, BARU ESELON) ---
     const sortedData = [...filteredData].sort((a, b) => {
-        const eselonOrder = { "i": 1, "ii": 2, "iii": 3, "iv": 4 };
+        // 1. Definisikan Urutan Prioritas (Hardcode nama Unit Kerja VIP)
+        // Pastikan tulisannya SAMA PERSIS dengan di database (atau gunakan UpperCase biar aman)
+        const priorityUnits = [
+            "MENTERI LUAR NEGERI RI",
+            "WAKIL MENTERI LUAR NEGERI",
+            // Wakil Menteri akan otomatis muncul berurutan (ada 3 orang pun tetap di posisi ke-2)
+        ];
 
-        let aValue = a.eselon?.toString().toLowerCase().trim() || "";
-        let bValue = b.eselon?.toString().toLowerCase().trim() || "";
+        // Ambil nama unit kerja dan bersihkan string-nya
+        const unitA = (a.ket_unker || "").toString().toUpperCase().trim();
+        const unitB = (b.ket_unker || "").toString().toUpperCase().trim();
 
-        const aNum = eselonOrder[aValue] || 999;
-        const bNum = eselonOrder[bValue] || 999;
+        // Cari posisi di array prioritas (Menteri = 0, Wakil = 1, Tidak ketemu = -1)
+        let indexA = priorityUnits.indexOf(unitA);
+        let indexB = priorityUnits.indexOf(unitB);
+
+        // Jika tidak ketemu di daftar VIP, beri nilai prioritas paling bawah (misal 999)
+        if (indexA === -1) indexA = 999;
+        if (indexB === -1) indexB = 999;
+
+        // 2. BANDINGKAN PRIORITAS VIP TERLEBIH DAHULU
+        if (indexA !== indexB) {
+            return indexA - indexB; // Yang index-nya lebih kecil (VIP) naik ke atas
+        }
+
+        // 3. JIKA SAMA-SAMA BUKAN VIP (ATAU SAMA-SAMA WAKIL MENTERI),
+        // LANJUT KE SORTING ESELON (Logika Lama)
+        const eselonOrder = { i: 1, ii: 2, iii: 3, iv: 4 };
+
+        let aEselon = a.eselon?.toString().toLowerCase().trim() || "";
+        let bEselon = b.eselon?.toString().toLowerCase().trim() || "";
+
+        const aNum = eselonOrder[aEselon] || 999; // 999 = non-eselon / staf
+        const bNum = eselonOrder[bEselon] || 999;
 
         return aNum - bNum;
     });
@@ -142,14 +181,14 @@ export default function TableCard() {
             for (let i = 1; i <= totalPages; i++) pages.push(i);
         } else {
             pages.push(1);
-            if (currentPage > 3) pages.push('...');
+            if (currentPage > 3) pages.push("...");
 
             let start = Math.max(2, currentPage - 1);
             let end = Math.min(totalPages - 1, currentPage + 1);
 
             for (let i = start; i <= end; i++) pages.push(i);
 
-            if (currentPage < totalPages - 2) pages.push('...');
+            if (currentPage < totalPages - 2) pages.push("...");
             pages.push(totalPages);
         }
         return pages;
@@ -165,13 +204,16 @@ export default function TableCard() {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 font-sans">
-
             {/* Header: Judul (Kiri) & Search/Refresh (Kanan) */}
             <div className="flex flex-col md:flex-row items-center justify-between p-5 border-b border-slate-100 gap-4">
                 <div className="flex flex-col">
-                    <h2 className="text-lg font-bold text-slate-800">Data Pegawai</h2>
+                    <h2 className="text-lg font-bold text-slate-800">
+                        Data Pegawai
+                    </h2>
                     <span className="text-xs text-slate-500">
-                        {searchTerm ? `Ditemukan ${sortedData.length} hasil` : `Total ${data.length} pegawai`}
+                        {searchTerm
+                            ? `Ditemukan ${sortedData.length} hasil`
+                            : `Total ${data.length} pegawai`}
                     </span>
                 </div>
 
@@ -180,8 +222,19 @@ export default function TableCard() {
                         onClick={fetchData}
                         className="btn btn-sm btn-ghost border border-slate-300 rounded-xl text-slate-400 hover:bg-slate-100"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="size-4"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                            />
                         </svg>
                         Refresh
                     </button>
@@ -189,18 +242,38 @@ export default function TableCard() {
                     {/* Searchable Unit Kerja Dropdown */}
                     <div className="relative w-full md:w-48">
                         <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all">
-                            <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
+                            <svg
+                                className="h-4 w-4 opacity-50"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                            >
+                                <g
+                                    strokeLinejoin="round"
+                                    strokeLinecap="round"
+                                    strokeWidth="2.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                >
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.3-4.3"></path>
                                 </g>
                             </svg>
-                            <input type="text" placeholder="Cari unit kerja..." className="grow" value={unitSearchTerm || selectedUnitName} onChange={(e) => {
+                            <input
+                                type="text"
+                                placeholder="Cari unit kerja..."
+                                className="grow"
+                                value={unitSearchTerm || selectedUnitName}
+                                onChange={(e) => {
                                     setUnitSearchTerm(e.target.value);
                                     setShowUnitDropdown(true);
                                 }}
                                 onFocus={() => setShowUnitDropdown(true)}
-                                onBlur={() => setTimeout(() => setShowUnitDropdown(false), 200)}
+                                onBlur={() =>
+                                    setTimeout(
+                                        () => setShowUnitDropdown(false),
+                                        200,
+                                    )
+                                }
                             />
                             {selectedUnitName && (
                                 <button
@@ -236,10 +309,21 @@ export default function TableCard() {
                                     {filteredUnitList.length > 0 ? (
                                         filteredUnitList.map((unit, idx) => (
                                             <button
-                                                key={unit.kd_unker || unit.id || idx}
+                                                key={
+                                                    unit.kd_unker ||
+                                                    unit.id ||
+                                                    idx
+                                                }
                                                 onClick={() => {
-                                                    const kode = unit.kd_unker || unit.kode || unit.id || "";
-                                                    const name = unit.nama || unit.name || kode;
+                                                    const kode =
+                                                        unit.kd_unker ||
+                                                        unit.kode ||
+                                                        unit.id ||
+                                                        "";
+                                                    const name =
+                                                        unit.nama ||
+                                                        unit.name ||
+                                                        kode;
                                                     setSelectedUnitKode(kode);
                                                     setSelectedUnitName(name);
                                                     setUnitSearchTerm(name);
@@ -247,12 +331,18 @@ export default function TableCard() {
                                                     setCurrentPage(1);
                                                 }}
                                                 className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                                                    selectedUnitKode === (unit.kd_unker || unit.id || "")
+                                                    selectedUnitKode ===
+                                                    (unit.kd_unker ||
+                                                        unit.id ||
+                                                        "")
                                                         ? "bg-sky-500 text-white"
                                                         : "text-slate-600 hover:bg-slate-100"
                                                 }`}
                                             >
-                                                {unit.nama || unit.name || (unit.kd_unker || unit.id)}
+                                                {unit.nama ||
+                                                    unit.name ||
+                                                    unit.kd_unker ||
+                                                    unit.id}
                                             </button>
                                         ))
                                     ) : (
@@ -266,13 +356,28 @@ export default function TableCard() {
                     </div>
 
                     <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all w-full md:w-64">
-                        <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
+                        <svg
+                            className="h-4 w-4 opacity-50"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                        >
+                            <g
+                                strokeLinejoin="round"
+                                strokeLinecap="round"
+                                strokeWidth="2.5"
+                                fill="none"
+                                stroke="currentColor"
+                            >
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </g>
                         </svg>
-                        <input type="search" placeholder="Cari nama atau NIP..." className="grow" value={searchTerm} onChange={(e) => {
+                        <input
+                            type="search"
+                            placeholder="Cari nama atau NIP..."
+                            className="grow"
+                            value={searchTerm}
+                            onChange={(e) => {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
@@ -286,12 +391,24 @@ export default function TableCard() {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
-                            <th className="p-4 border-b border-slate-100">No</th>
-                            <th className="p-4 border-b border-slate-100">NIP / Nama</th>
-                            <th className="p-4 border-b border-slate-100">Eselon & Jabatan</th>
-                            <th className="p-4 border-b border-slate-100">Unit Kerja</th>
-                            <th className="p-4 border-b border-slate-100">Kontak</th>
-                            <th className="p-4 border-b border-slate-100 text-center">Aksi</th>
+                            <th className="p-4 border-b border-slate-100">
+                                No
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                NIP / Nama
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Eselon & Jabatan
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Unit Kerja
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Kontak
+                            </th>
+                            <th className="p-4 border-b border-slate-100 text-center">
+                                Aksi
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -299,39 +416,108 @@ export default function TableCard() {
                             currentItems.map((r, index) => {
                                 const realNumber = indexOfFirstItem + index + 1;
                                 return (
-                                    <tr key={r.nip || index} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 text-sm text-slate-500 w-12">{realNumber}</td>
+                                    <tr
+                                        key={r.nip || index}
+                                        className="hover:bg-slate-50 transition-colors"
+                                    >
+                                        <td className="p-4 text-sm text-slate-500 w-12">
+                                            {realNumber}
+                                        </td>
                                         <td className="p-4">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-800 text-sm">{r.nama}</span>
-                                                <span className="text-xs text-slate-500 font-mono mt-0.5">{r.nip?.trim()}</span>
+                                                <span className="font-bold text-slate-800 text-sm">
+                                                    {r.nama}
+                                                </span>
+                                                <span className="text-xs text-slate-500 font-mono mt-0.5">
+                                                    {r.nip?.trim()}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-col max-w-xs gap-1">
-                                                <span className="badge badge-outline badge-sm">{r.eselon?.trim() || "-"}</span>
-                                                <span className="text-sm font-semibold text-slate-700" title={r.Jabatan}>{r.Jabatan || "-"}</span>
+                                                <span className="badge badge-outline badge-sm">
+                                                    {r.eselon?.trim() || "-"}
+                                                </span>
+                                                <span
+                                                    className="text-sm font-semibold text-slate-700"
+                                                    title={r.Jabatan}
+                                                >
+                                                    {r.Jabatan || "-"}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <span className="text-sm text-slate-600" title={r.  ket_unker}>{r.ket_unker || "-"}</span>
+                                            <span
+                                                className="text-sm text-slate-600"
+                                                title={r.ket_unker}
+                                            >
+                                                {r.ket_unker || "-"}
+                                            </span>
                                         </td>
                                         <td className="p-4 text-sm text-slate-600">
                                             <div className="flex flex-col gap-2">
-                                                <span>📞 {r.no_hp && r.no_hp !== "-" ? r.no_hp : <span className="italic text-slate-400 font-semibold whitespace-nowrap">Nomor belum diisi</span>}</span>
-                                                <span>📍 {r.LokasiKerjaName || "Tidak tersedia"}</span>
+                                                <span>
+                                                    📞{" "}
+                                                    {r.no_hp &&
+                                                    r.no_hp !== "-" ? (
+                                                        r.no_hp
+                                                    ) : (
+                                                        <span className="italic text-slate-400 font-semibold whitespace-nowrap">
+                                                            Nomor belum diisi
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                <span>
+                                                    📍{" "}
+                                                    {r.LokasiKerjaName ||
+                                                        "Tidak tersedia"}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="p-4 text-center">
                                             <div className="inline-flex gap-2">
-                                                <button onClick={() => { setSelectedRow(r); setEditOpen(true); }} className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedRow(r);
+                                                        setEditOpen(true);
+                                                    }}
+                                                    className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        strokeWidth={1.5}
+                                                        stroke="currentColor"
+                                                        className="size-5"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                                                        />
                                                     </svg>
                                                 </button>
-                                                <button onClick={() => { setSelectedRow(r); setDeleteOpen(true); }} className="btn btn-sm btn-square btn-ghost text-rose-500 hover:bg-rose-50">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedRow(r);
+                                                        setDeleteOpen(true);
+                                                    }}
+                                                    className="btn btn-sm btn-square btn-ghost text-rose-500 hover:bg-rose-50"
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        strokeWidth={1.5}
+                                                        stroke="currentColor"
+                                                        className="size-5"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                                        />
                                                     </svg>
                                                 </button>
                                             </div>
@@ -341,7 +527,10 @@ export default function TableCard() {
                             })
                         ) : (
                             <tr>
-                                <td colSpan="6" className="p-8 text-center text-slate-400 font-medium italic">
+                                <td
+                                    colSpan="6"
+                                    className="p-8 text-center text-slate-400 font-medium italic"
+                                >
                                     Data tidak ditemukan...
                                 </td>
                             </tr>
@@ -354,9 +543,11 @@ export default function TableCard() {
             <div className="px-6 py-4 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-slate-600 font-medium">Tampilkan</span>
-                        <select 
-                            value={itemsPerPage} 
+                        <span className="text-sm text-slate-600 font-medium">
+                            Tampilkan
+                        </span>
+                        <select
+                            value={itemsPerPage}
                             onChange={(e) => {
                                 setItemsPerPage(Number(e.target.value));
                                 setCurrentPage(1);
@@ -369,12 +560,16 @@ export default function TableCard() {
                             <option value={50}>50</option>
                             <option value={100}>100</option>
                         </select>
-                        <span className="text-sm text-slate-600 font-medium">per halaman</span>
+                        <span className="text-sm text-slate-600 font-medium">
+                            per halaman
+                        </span>
                     </div>
 
                     <div className="flex flex-col items-end gap-1">
                         <span className="text-sm text-slate-600 font-medium">
-                            Menampilkan {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, sortedData.length)} dari {sortedData.length} pegawai
+                            Menampilkan {indexOfFirstItem + 1}–
+                            {Math.min(indexOfLastItem, sortedData.length)} dari{" "}
+                            {sortedData.length} pegawai
                         </span>
                         <span className="text-xs text-slate-500">
                             Halaman {currentPage} dari {totalPages}
@@ -383,36 +578,55 @@ export default function TableCard() {
                 </div>
 
                 <div className="flex items-center justify-center gap-1 flex-wrap">
-                    <button onClick={handlePrev} disabled={currentPage === 1} className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+                    <button
+                        onClick={handlePrev}
+                        disabled={currentPage === 1}
+                        className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
                         ← Sebelumnya
                     </button>
 
                     {getPageNumbers().map((page, idx) => (
                         <button
                             key={idx}
-                            onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                            disabled={page === '...'}
-                            className={`px-3 py-2 rounded-lg text-sm transition-colors ${page === currentPage
-                                ? 'bg-blue-600 text-white'
-                                : page === '...'
-                                    ? 'text-slate-400 cursor-default'
-                                    : 'border border-slate-300 text-slate-600 hover:bg-slate-300'
-                                }`}
+                            onClick={() =>
+                                typeof page === "number" && setCurrentPage(page)
+                            }
+                            disabled={page === "..."}
+                            className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                                page === currentPage
+                                    ? "bg-blue-600 text-white"
+                                    : page === "..."
+                                      ? "text-slate-400 cursor-default"
+                                      : "border border-slate-300 text-slate-600 hover:bg-slate-300"
+                            }`}
                         >
                             {page}
                         </button>
                     ))}
 
-                    <button onClick={handleNext} disabled={currentPage === totalPages} className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+                    <button
+                        onClick={handleNext}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
                         Selanjutnya →
                     </button>
                 </div>
             </div>
 
             {/* Modal Components */}
-            <Modal open={isEditOpen} onClose={() => setEditOpen(false)} title="Edit Pegawai">
+            <Modal
+                open={isEditOpen}
+                onClose={() => setEditOpen(false)}
+                title="Edit Pegawai"
+            >
                 {selectedRow && (
-                    <EditForm initialData={selectedRow} onCancel={() => setEditOpen(false)} onSave={() => setEditOpen(false)} />
+                    <EditForm
+                        initialData={selectedRow}
+                        onCancel={() => setEditOpen(false)}
+                        onSave={() => setEditOpen(false)}
+                    />
                 )}
             </Modal>
 
@@ -441,20 +655,42 @@ function EditForm({ initialData, onCancel, onSave }) {
     };
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); onSave && onSave(form); }} className="space-y-4">
+        <form
+            onSubmit={(e) => {
+                e.preventDefault();
+                onSave && onSave(form);
+            }}
+            className="space-y-4"
+        >
             {/* Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Nama
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nama || ""} onChange={(e) => handleInputChange("nama", e.target.value)} placeholder="Masukkan nama" />
+                    <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.nama || ""}
+                        onChange={(e) =>
+                            handleInputChange("nama", e.target.value)
+                        }
+                        placeholder="Masukkan nama"
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         NIP
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.nip || ""} onChange={(e) => handleInputChange("nip", e.target.value)} placeholder="Masukkan NIP" />
+                    <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.nip || ""}
+                        onChange={(e) =>
+                            handleInputChange("nip", e.target.value)
+                        }
+                        placeholder="Masukkan NIP"
+                    />
                 </div>
             </div>
 
@@ -464,13 +700,29 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Unit Kerja
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.ket_unker || ""} onChange={(e) => handleInputChange("ket_unker", e.target.value)} placeholder="Masukkan unit kerja" />
+                    <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.ket_unker || ""}
+                        onChange={(e) =>
+                            handleInputChange("ket_unker", e.target.value)
+                        }
+                        placeholder="Masukkan unit kerja"
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Jabatan
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.Jabatan || ""} onChange={(e) => handleInputChange("Jabatan", e.target.value)} placeholder="Masukkan jabatan" />
+                    <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.Jabatan || ""}
+                        onChange={(e) =>
+                            handleInputChange("Jabatan", e.target.value)
+                        }
+                        placeholder="Masukkan jabatan"
+                    />
                 </div>
             </div>
 
@@ -480,21 +732,46 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         No. Telepon
                     </label>
-                    <input type="tel" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.no_hp || ""} onChange={(e) => handleInputChange("no_hp", e.target.value)} placeholder="Masukkan nomor telepon" />
+                    <input
+                        type="tel"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.no_hp || ""}
+                        onChange={(e) =>
+                            handleInputChange("no_hp", e.target.value)
+                        }
+                        placeholder="Masukkan nomor telepon"
+                    />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2"> Lokasi
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        {" "}
+                        Lokasi
                     </label>
-                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={form.LokasiKerjaName || ""} onChange={(e) => handleInputChange("LokasiKerjaName", e.target.value)} placeholder="Masukkan lokasi" />
+                    <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.LokasiKerjaName || ""}
+                        onChange={(e) =>
+                            handleInputChange("LokasiKerjaName", e.target.value)
+                        }
+                        placeholder="Masukkan lokasi"
+                    />
                 </div>
             </div>
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                <button type="button" onClick={onCancel} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-medium">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-medium"
+                >
                     Batal
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
                     Simpan Perubahan
                 </button>
             </div>
