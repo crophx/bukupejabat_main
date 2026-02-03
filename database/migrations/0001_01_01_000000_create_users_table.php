@@ -12,15 +12,12 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-
-            $table->string('username')->unique();
+            $table->string('username'); // Sesuai database Anda
+            $table->string('email')->unique(); // <--- TAMBAHKAN BARIS INI (PENTING!)
             $table->string('password');
-
-
-            $table->unsignedBigInteger('unit_kerja_id')->nullable();
+            $table->string('role')->nullable();
+            $table->foreignId('unit_kerja_id')->nullable()->constrained('unit_kerja')->onDelete('set null');
             $table->string('sso')->nullable();
-            $table->string('role')->default('admin');
-
             $table->rememberToken();
             $table->timestamps();
         });

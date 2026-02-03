@@ -19,14 +19,18 @@ export default function DashboardAdmin() {
                 <div className="bg-white rounded-2xl p-1 shadow-md border border-slate-100 w-full md:w-1/3">
                     <div className="pt-3 text-sm text-slate-700">
                         <div class="flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:gap-6 sm:py-4 ...">
-                            <img className="h-24 w-24 rounded-full object-cover sm:mx-0 sm:shrink-0" src={AdminProfile} alt="Profile"/>
+                            <img
+                                className="h-24 w-24 rounded-full object-cover sm:mx-0 sm:shrink-0"
+                                src={AdminProfile}
+                                alt="Profile"
+                            />
                             <div class="space-y-0 text-center sm:text-left">
                                 <div class="space-y-0.5">
                                     <p class="text-lg font-semibold text-black">
                                         BSDM
                                     </p>
                                     <p class="font-medium text-gray-500">
-                                        bsdm@gmail.com
+                                        bsdm@kemlu.go.id
                                     </p>
                                 </div>
                                 <button class="text-purple-800">
@@ -43,7 +47,11 @@ export default function DashboardAdmin() {
                         <BarChart values={stats.bars} />
                     </StatCard>
 
-                    <StatCard title="Total Admin" value={stats.activeToday} tone="emerald">
+                    <StatCard
+                        title="Total Admin"
+                        value={stats.activeToday}
+                        tone="emerald"
+                    >
                         <Sparkline values={stats.sparkline} />
                     </StatCard>
                 </div>

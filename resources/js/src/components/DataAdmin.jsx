@@ -1,34 +1,55 @@
-// import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-// import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // Pastikan axios diimport
 import Modal from "./Modal";
 import ConfirmModal from "./ConfirmModal";
 
-const sampleAdmins = [
-    {
-        id: 1,
-        unit: "Biro Sumber Daya Manusia",
-        email: "jeanskaret@gmail.com",
-        username: "BSDM",
-        role: "Admin",
-        createdAt: "2025-12-06",
-    },
-    {
-        id: 2,
-        unit: "Biro Hukum",
-        email: "hukum@example.com",
-        username: "ROKUM",
-        role: "Admin",
-        createdAt: "2025-11-12",
-    },
-];
-
 export default function DataAdmin() {
-    const [admins, setAdmins] = useState(sampleAdmins);
+    // 1. Ganti sampleAdmins dengan array kosong dulu
+    const [admins, setAdmins] = useState([]);
     const [query, setQuery] = useState("");
     const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selected, setSelected] = useState(null);
+
+    // 2. FETCH DATA DARI DATABASE SAAT HALAMAN DIBUKA
+    useEffect(() => {
+        fetchAdmins();
+    }, []);
+
+    const fetchAdmins = async () => {
+        try {
+            // Panggil API yang baru kita buat
+            const response = await axios.get("http://127.0.0.1:8000/api/users");
+
+            if (response.data.success) {
+                // 3. MAPPING DATA (PENTING!)
+                // Kita ubah format database agar sesuai dengan format tampilan Anda
+                const formattedData = response.data.data.map((user) => ({
+                    id: user.id,
+                    // Ambil nama unit kerja dari relasi, kalau kosong tulis '-'
+                    unit: user.unit_kerja
+                        ? user.unit_kerja.nama_unit_kerja
+                        : "-",
+                    email: user.email,
+                    username: user.username,
+                    role: user.role || "Admin", // Default role jika kosong
+                    // Format tanggal agar cantik (DD/MM/YYYY)
+                    createdAt: new Date(user.created_at).toLocaleDateString(
+                        "id-ID",
+                        {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                        },
+                    ),
+                }));
+
+                setAdmins(formattedData);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data admin:", error);
+        }
+    };
 
     const openEdit = (item) => {
         setSelected(item);
@@ -40,9 +61,11 @@ export default function DataAdmin() {
         setDeleteOpen(true);
     };
 
+    // Note: Handle Save & Delete sementara hanya update di layar (Frontend)
+    // Nanti bisa ditambahkan logika API-nya
     const handleSave = (updated) => {
         setAdmins((prev) =>
-            prev.map((a) => (a.id === updated.id ? updated : a))
+            prev.map((a) => (a.id === updated.id ? updated : a)),
         );
     };
 
@@ -55,7 +78,7 @@ export default function DataAdmin() {
     const filtered = admins.filter((a) =>
         (a.unit + a.email + a.username + a.role)
             .toLowerCase()
-            .includes(query.toLowerCase())
+            .includes(query.toLowerCase()),
     );
 
     return (
@@ -63,8 +86,6 @@ export default function DataAdmin() {
             <section className="bg-white rounded-xl p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        {/* <input value={query} onChange={(e) => setQuery(e.target.value)} className="text-sm text-slate-500 w-full sm:w-64 px-3 py-1 rounded-xl border border-gray-400 " placeholder="Search..." /> */}
-                        {/* Search icon Daisy coba dulu */}
                         <label className="input bg-white border border-slate-400 text-slate-400 rounded-xl">
                             <svg
                                 className="h-[1em]"
@@ -90,36 +111,7 @@ export default function DataAdmin() {
                                 className="pl-1 text-slate-700"
                             />
                         </label>
-
-                        {/* <Menu as="div" className="relative inline-block">
-							<MenuButton className="inline-flex w-full justify-center gap-x-1 rounded-xl px-3 py-1 text-sm text-slate-500 border border-gray-400 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-								Options
-								<ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
-							</MenuButton>
-
-							<MenuItems
-								transition
-								className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-gray-800 outline-1 -outline-offset-1 outline-white/10 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
-							>
-								<div className="py-1">
-									<MenuItem>
-										<a
-											href="#"
-											className="block px-4 py-2 text-sm text-gray-300 data-focus:bg-white/5 data-focus:text-white data-focus:outline-hidden"
-										>
-											Account settings
-										</a>
-									</MenuItem>
-								</div>
-							</MenuItems>
-						</Menu> */}
                     </div>
-
-                    {/* button reset & apply */}
-                    {/* <div className="flex items-center gap-2">
-						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-white border border-gray-400">Reset</button>
-						<button className="text-sm text-slate-500 px-3 py-1 rounded-xl bg-slate-100 border border-gray-400">Apply</button>
-					</div> */}
                 </div>
 
                 <div className="mt-4 overflow-x-auto">
@@ -135,43 +127,65 @@ export default function DataAdmin() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map((a) => (
-                                <tr key={a.id} className="hover:bg-slate-50">
-                                    <td className="py-2 text-slate-500">
-                                        {a.unit}
-                                    </td>
-                                    <td className="py-2 text-slate-500">
-                                        {a.email}
-                                    </td>
-                                    <td className="py-2 text-slate-500">
-                                        {a.username}
-                                    </td>
-                                    <td className="py-2">
-                                        <span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700">
-                                            {a.role}
-                                        </span>
-                                    </td>
-                                    <td className="py-2 text-slate-500">
-                                        {a.createdAt}
-                                    </td>
-                                    <td className="py-2">
-                                        <div className="flex items-center gap-2">
+                            {filtered.length > 0 ? (
+                                filtered.map((a) => (
+                                    <tr
+                                        key={a.id}
+                                        className="hover:bg-slate-50"
+                                    >
+                                        <td className="py-2 text-slate-500">
+                                            {a.unit}
+                                        </td>
+                                        <td className="py-2 text-slate-500">
+                                            {a.email}
+                                        </td>
+                                        <td className="py-2 text-slate-500">
+                                            {a.username}
+                                        </td>
+                                        <td className="py-2">
                                             <span
-                                                onClick={() => openEdit(a)}
-                                                className="px-2 py-0.5 rounded text-xs bg-sky-100 text-sky-700 cursor-pointer"
+                                                className={`px-2 py-0.5 rounded text-xs ${
+                                                    a.role === "superadmin"
+                                                        ? "bg-purple-100 text-purple-700"
+                                                        : "bg-emerald-100 text-emerald-700"
+                                                }`}
                                             >
-                                                Edit
+                                                {a.role}
                                             </span>
-                                            <span
-                                                onClick={() => openDelete(a)}
-                                                className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 cursor-pointer"
-                                            >
-                                                Delete
-                                            </span>
-                                        </div>
+                                        </td>
+                                        <td className="py-2 text-slate-500">
+                                            {a.createdAt}
+                                        </td>
+                                        <td className="py-2">
+                                            <div className="flex items-center gap-2">
+                                                <span
+                                                    onClick={() => openEdit(a)}
+                                                    className="px-2 py-0.5 rounded text-xs bg-sky-100 text-sky-700 cursor-pointer"
+                                                >
+                                                    Edit
+                                                </span>
+                                                <span
+                                                    onClick={() =>
+                                                        openDelete(a)
+                                                    }
+                                                    className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 cursor-pointer"
+                                                >
+                                                    Delete
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan="6"
+                                        className="py-4 text-center text-slate-400"
+                                    >
+                                        Data tidak ditemukan
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -180,11 +194,6 @@ export default function DataAdmin() {
                     <div>
                         Showing {filtered.length} of {admins.length}
                     </div>
-                    {/* button prev & next */}
-                    {/* <div className="flex items-center gap-2">
-						<button className="px-2 py-1 rounded-xl bg-white border">Prev</button>
-						<button className="px-2 py-1 rounded-xl bg-white border">Next</button>
-					</div> */}
                 </div>
             </section>
 
@@ -236,6 +245,7 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
                             setForm({ ...form, unit: e.target.value })
                         }
                         className="w-full border p-2 rounded-md text-sm text-slate-700"
+                        readOnly // Unit Kerja biasanya tidak diedit manual text, sebaiknya dropdown nanti
                     />
                 </div>
                 <div>
@@ -261,16 +271,14 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
                 <div>
                     <label className="text-sm text-black">Role</label>
                     <select
-                        value={form.role || "Admin"}
+                        value={form.role || "admin"}
                         onChange={(e) =>
                             setForm({ ...form, role: e.target.value })
                         }
                         className="w-full border p-2 rounded-md text-sm text-slate-700"
                     >
-                        <div className="w-full border p-2 rounded-xl text-sm text-slate-700">
-                            <option>Superrr Admin</option>
-                            <option>Admin</option>
-                        </div>
+                        <option value="superadmin">Super Admin</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
             </div>

@@ -1,14 +1,52 @@
-import React from "react";
-import { useState } from "react";
-import Logo from "../assets/images/logo-kemlu.png"; // optional: add logo file or remove
+import React, { useState } from "react";
+import axios from "axios"; // <--- 1. Pastikan axios diimport
+import Logo from "../assets/images/logo-kemlu.png";
 
 export default function Navbar({ onSignOut }) {
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // AMBIL DATA DARI SESSION
+    const userName = localStorage.getItem("user_name") || "Admin";
+    const userDivisi = localStorage.getItem("user_divisi") || "Super Admin";
+    const userInitial = userName ? userName.charAt(0).toUpperCase() : "A";
+
+    // --- 2. FUNGSI LOGOUT BARU (TERHUBUNG KE LARAVEL) ---
+    const handleLogout = async () => {
+        try {
+            // Ambil token
+            // Cek di Login.jsx, apakah anda menyimpannya dengan nama "token" atau "auth_token"?
+            // Disini saya asumsikan "token". Jika gagal, coba ganti jadi "auth_token"
+            const token = localStorage.getItem("token");
+
+            // Lapor ke Laravel (Agar tercatat di Activity Log)
+            if (token) {
+                await axios.post(
+                    "http://127.0.0.1:8000/api/logout",
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    },
+                );
+            }
+        } catch (error) {
+            console.error("Gagal lapor logout ke server", error);
+        }
+
+        // Hapus Data di Browser
+        localStorage.clear(); // Bersihkan semua (token, user, divisi, dll)
+
+        // Redirect ke halaman Login
+        window.location.href = "/";
+    };
+    // -----------------------------------------------------
 
     return (
         <header className="w-full pt-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="bg-white rounded-2xl shadow-md border border-slate-100 h-20 flex items-center justify-between px-4 sm:px-6">
+                    {/* LOGO SECTION */}
                     <div className="flex items-center gap-4">
                         <div className="h-32 w-42 flex items-center justify-center">
                             <img
@@ -19,8 +57,10 @@ export default function Navbar({ onSignOut }) {
                         </div>
                     </div>
 
+                    {/* RIGHT SECTION */}
                     <div className="flex items-center gap-3">
-                        <button className="relative inline-flex items-center p-2 rounded-lg hover:bg-slate-200">
+                        {/* Notification Bell */}
+                        <button className="relative inline-flex items-center p-2 rounded-lg hover:bg-slate-200 transition-colors">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-5 w-5 text-slate-600"
@@ -40,27 +80,30 @@ export default function Navbar({ onSignOut }) {
                             </span>
                         </button>
 
-                        <div className="hidden sm:flex items-center gap-3">
-                            <div className="text-sm text-slate-700">BSDM</div>
+                        <div className="hidden sm:flex flex-col items-end mr-2">
+                            <div className="text-sm font-bold text-slate-800">
+                                {userName}
+                            </div>
                             <div className="text-xs text-slate-500">
-                                Super Admin
+                                {userDivisi}
                             </div>
                         </div>
 
+                        {/* PROFILE DROPDOWN */}
                         <div className="relative">
                             <button
                                 onClick={() => setMenuOpen((s) => !s)}
-                                className="flex items-center gap-2 px-3 py-1 rounded-full hover:bg-slate-50"
+                                className="flex items-center gap-2 px-1 py-1 rounded-full hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
                                 aria-expanded={menuOpen}
                             >
-                                <div className="h-8 w-8 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm">
-                                    B
+                                <div className="h-9 w-9 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold shadow-sm">
+                                    {userInitial}
                                 </div>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     fill="currentColor"
-                                    className="h-4 w-4 text-slate-600"
+                                    className="h-4 w-4 text-slate-400"
                                 >
                                     <path
                                         fillRule="evenodd"
@@ -71,14 +114,38 @@ export default function Navbar({ onSignOut }) {
                             </button>
 
                             {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-md z-20">
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-slate-100 z-50 overflow-hidden animation-fade-in">
+                                    <div className="block sm:hidden px-4 py-3 border-b border-slate-100 bg-slate-50">
+                                        <p className="text-sm font-medium text-slate-900 truncate">
+                                            {userName}
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate">
+                                            {userDivisi}
+                                        </p>
+                                    </div>
+
                                     <button
                                         onClick={() => {
                                             setMenuOpen(false);
-                                            onSignOut?.();
+                                            // 3. PANGGIL FUNGSI HANDLE LOGOUT KITA
+                                            handleLogout();
                                         }}
-                                        className="w-full text-left px-3 py-3 text-sm text-red-600 hover:bg-slate-200 rounded-xl"
+                                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                                     >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke="currentColor"
+                                            className="size-4"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"
+                                            />
+                                        </svg>
                                         Sign out
                                     </button>
                                 </div>

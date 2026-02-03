@@ -1,11 +1,66 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // JANGAN LUPA: npm install axios
 import BgImage from "../assets/images/gedung-pancasila.jpg";
-import React from "react";
 
 export default function Login({ onLogin }) {
-    const [show, setShow] = useState(false);
     const navigate = useNavigate();
+
+    // State Input
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    // State loading agar user tahu sedang memproses (Opsional, tidak merubah tampilan dasar)
+    const [isLoading, setIsLoading] = useState(false);
+
+    // --- LOGIC BARU (TERHUBUNG DATABASE) ---
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError(""); // Reset error lama
+        setIsLoading(true); // Mulai proses
+
+        try {
+            // 1. TEMBAK API LARAVEL
+            const response = await axios.post(
+                "http://127.0.0.1:8000/api/login",
+                {
+                    email: email,
+                    password: password,
+                },
+            );
+
+            // 2. JIKA SUKSES
+            if (response.data.success) {
+                const { token, user } = response.data.data;
+
+                // 3. SIMPAN DATA DARI DATABASE KE BROWSER
+                localStorage.setItem("token", token);
+                // Kita ambil 'username' karena di database kolomnya username
+                localStorage.setItem("user_name", user.username);
+                // Ambil nama unit kerja (jika ada relasinya), kalau tidak ada set "Pusat"
+                localStorage.setItem(
+                    "user_divisi",
+                    user.unit_kerja?.nama_unit_kerja || "Pusat",
+                );
+
+                // 4. UPDATE STATE LOGIN UTAMA (APP.JSX)
+                if (onLogin) onLogin();
+
+                // 5. PINDAH KE DASHBOARD
+                navigate("/dashboard");
+            }
+        } catch (err) {
+            console.error("Login Error:", err);
+            // Ambil pesan error dari Laravel jika ada, atau pesan default
+            setError(
+                err.response?.data?.message ||
+                    "Login Gagal. Periksa Email/Password atau Server.",
+            );
+        } finally {
+            setIsLoading(false); // Selesai proses
+        }
+    };
+    // ---------------------------------------
 
     return (
         <div
@@ -16,10 +71,13 @@ export default function Login({ onLogin }) {
                 backgroundPosition: "center",
             }}
         >
-            <div />
-            <div className="relative w-full max-w-md">
+            {/* TAMPILAN TETAP SAMA (Z-INDEX SUDAH BENAR) */}
+            <div className="absolute inset-0 bg-black/40 z-0" />
+
+            <div className="relative w-full max-w-md z-20">
                 <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                     <div className="px-8 py-10">
+                        {/* Header */}
                         <div className="flex items-center gap-3 mb-6">
                             <div className="h-12 w-12 rounded-xl bg-sky-500 flex items-center justify-center text-white font-bold text-lg">
                                 A
@@ -34,23 +92,27 @@ export default function Login({ onLogin }) {
                             </div>
                         </div>
 
-                        <form
-                            className="space-y-4"
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                if (onLogin) onLogin();
-                                navigate("/dashboard");
-                            }}
-                        >
+                        {/* Pesan Error */}
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-100 text-red-600 text-sm rounded-lg border border-red-200">
+                                {error}
+                            </div>
+                        )}
+
+                        <form className="space-y-4" onSubmit={handleLogin}>
                             <div>
                                 <label className="block text-xs font-medium text-slate-600 mb-2">
                                     Email
                                 </label>
                                 <input
                                     type="email"
-                                    placeholder="jeanskaret@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    // Placeholder contoh pakai akun database
+                                    placeholder="sdm@kemenlu.go.id"
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-300"
                                     required
+                                    disabled={isLoading}
                                 />
                             </div>
 
@@ -60,101 +122,36 @@ export default function Login({ onLogin }) {
                                 </label>
                                 <div className="relative">
                                     <input
-                                        type={show ? "text" : "password"}
-                                        placeholder="Enter your password"
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-300 pr-12"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        placeholder="Enter password"
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-300"
                                         required
+                                        disabled={isLoading}
                                     />
-                                    <button
-                                        type="button"
-                                        aria-label="Toggle show password"
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 px-2 py-1"
-                                        onClick={() => setShow((s) => !s)}
-                                    >
-                                        {show ? (
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-5 w-5"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M13.875 18.825A10.05 10.05 0 0 1 12 19c-4.477 0-8.268-2.943-9.542-7a10.05 10.05 0 0 1 1.66-3.149M6.21 6.21 3 3m18 18-3.21-3.21"
-                                                />
-                                            </svg>
-                                        ) : (
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                className="h-5 w-5"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                />
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                                />
-                                            </svg>
-                                        )}
-                                    </button>
                                 </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <label className="inline-flex items-center gap-2 text-sm">
-                                    <input
-                                        type="checkbox"
-                                        defaultChecked
-                                        className="checkbox text-slate-500"
-                                    />
-                                    <p className="text-slate-400">
-                                        Remember me
-                                    </p>
-                                </label>
-                                <a
-                                    href="#"
-                                    className="text-sm text-sky-600 hover:underline"
-                                >
-                                    Forgot password?
-                                </a>
                             </div>
 
                             <div>
                                 <button
                                     type="submit"
-                                    className="btn btn-info w-full rounded-xl text-white font-semibold"
+                                    disabled={isLoading}
+                                    className={`btn w-full rounded-xl text-white font-semibold mt-4 cursor-pointer transition-colors py-3
+                                        ${isLoading ? "bg-slate-400 cursor-not-allowed" : "btn-info hover:bg-sky-600"}
+                                    `}
                                 >
-                                    Sign in
+                                    {isLoading ? "Memproses..." : "Sign in"}
                                 </button>
                             </div>
                         </form>
 
-                        <div className="mt-6 text-center text-sm text-slate-500">
-                            Don’t have an account?{" "}
-                            <a
-                                href="#"
-                                className="text-sky-600 font-medium hover:underline"
-                            >
-                                Sign up
-                            </a>
+                        <div className="px-8 py-4 mt-6 border-t border-slate-200 text-xs text-slate-500 text-center">
+                            Gunakan akun database: <br />
+                            <b>sdm@kemenlu.go.id</b> (sdm123)
                         </div>
-                    </div>
-
-                    <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 text-center">
-                        Property of Kementerian Luar Negeri - Biro Sumber Daya
-                        Manusia
                     </div>
                 </div>
             </div>
