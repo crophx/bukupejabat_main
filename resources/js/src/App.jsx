@@ -4,9 +4,13 @@ import Login from "./pages/Login";
 import MainLayout from "./layouts/MainLayout";
 import DashboardAdmin from "./components/DashboardAdmin";
 import DataPegawai from "./pages/DataPegawai";
-import TambahPegawai from "./pages/TambahPegawai";
+import PerSatker from "./pages/PerSatker";
+import DalamNegeri from "./pages/DalamNegeri";
+import LuarNegeri from "./pages/LuarNegeri";
+// import TambahPegawai from "./pages/TambahPegawai";
 import UnitKerja from "./pages/UnitKerja";
 import DataAdmin from "./components/DataAdmin";
+import PengaturanAkun from "./pages/PengaturanAkun";
 
 function ProtectedLayout({ onSignOut }) {
     return (
@@ -61,10 +65,14 @@ export default function App() {
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardAdmin />} />
                 <Route path="pegawai" element={<DataPegawai />} />
-                <Route path="pegawai/tambah" element={<TambahPegawai />} />
+                <Route path="satkerja" element={<PerSatker />} />
+                <Route path="satkerja/dalam-negeri" element={<DalamNegeri />} />
+                <Route path="satkerja/luar-negeri" element={<LuarNegeri />} />
+                {/* <Route path="pegawai/tambah" element={<TambahPegawai />} /> */}
                 <Route path="admin" element={<DataAdmin />} />
                 <Route path="unit-kerja" element={<UnitKerja />} />
                 <Route path="unit-kerja/form" element={<UnitKerja />} />
+                <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
             </Route>
 
             <Route

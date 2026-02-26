@@ -15,7 +15,7 @@ class PegawaiController extends Controller
         return base_path('resources/js/src/data/response_get_all_employee.json');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $path = $this->getJsonPath();
 
@@ -33,12 +33,37 @@ class PegawaiController extends Controller
 
         // 3. Ubah string JSON menjadi Array
         $data = json_decode($jsonString, true);
+        
+        // Pastikan data adalah array
+        if (!is_array($data)) {
+            $data = [];
+        } else if (isset($data['emp']) && is_array($data['emp'])) {
+            $data = $data['emp'];
+        }
 
-        // 4. Kirim respon
+        // 4. Filter berdasarkan unit_kerja_id atau kd_unker jika ada query parameter
+        $unitKerjaId = $request->query('unit_kerja_id');
+        $kdUnker = $request->query('kd_unker');
+        
+        if ($unitKerjaId) {
+            // Filter berdasarkan kd_unker (kode unit kerja)
+            $data = array_values(array_filter($data, function($item) use ($unitKerjaId) {
+                return isset($item['kd_unker']) && trim($item['kd_unker']) === trim($unitKerjaId);
+            }));
+        } elseif ($kdUnker) {
+            // Alternatif filter berdasarkan kd_unker parameter
+            $data = array_values(array_filter($data, function($item) use ($kdUnker) {
+                return isset($item['kd_unker']) && trim($item['kd_unker']) === trim($kdUnker);
+            }));
+        }
+
+        // 5. Kirim respon
         return response()->json([
             'success' => true,
-            'message' => 'List Data Pejabat (Dari Resources)',
-            'data' => $data,
+            'message' => ($unitKerjaId || $kdUnker) ? 'List Data Pegawai Berdasarkan Unit Kerja' : 'List Data Pejabat (Dari Resources)',
+            'data' => [
+                'emp' => $data
+            ]
         ], 200);
     }
 
