@@ -2,53 +2,12 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function UnitKerja() {
-    const [units, setUnits] = useState([
-        {
-            id: 1,
-            kode_unit_kerja: "UK001",
-            nama_unit_kerja: "Biro Keuangan",
-            email: "rokeu@gmail.com",
-            telepon: "0212345678",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 2,
-            kode_unit_kerja: "UK002",
-            nama_unit_kerja: "Biro Sumber Daya Manusia",
-            email: "bsdm@gmail.com",
-            telepon: "0212345679",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 3,
-            kode_unit_kerja: "UK003",
-            nama_unit_kerja: "Biro Hukum",
-            email: "rokum@gmail.com",
-            telepon: "0212345680",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 4,
-            kode_unit_kerja: "UK004",
-            nama_unit_kerja: "Biro Umum dan Pengadaan",
-            email: "bup@gmail.com",
-            telepon: "0212345681",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 5,
-            kode_unit_kerja: "UK005",
-            nama_unit_kerja: "Pusat Data Teknologi dan Informasi",
-            email: "pusdatin@gmail.com",
-            telepon: "0212345682",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        }
-    ]);
+    const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(false);
 
     // pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 3; // adjust as needed
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // derive displayed units for current page
     const indexOfLast = currentPage * itemsPerPage;
@@ -61,8 +20,30 @@ export default function UnitKerja() {
         setCurrentPage(page);
     };
 
+    // --- LOGIKA SMART PAGINATION (Sama seperti Data Pegawai) ---
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push("...");
+
+            let start = Math.max(2, currentPage - 1);
+            let end = Math.min(totalPages - 1, currentPage + 1);
+
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (currentPage < totalPages - 2) pages.push("...");
+            pages.push(totalPages);
+        }
+        return pages;
+    };
+
     useEffect(() => {
-        // fetchUnits();
+        fetchUnits();
     }, []);
 
     const fetchUnits = async () => {
@@ -71,19 +52,11 @@ export default function UnitKerja() {
             const response = await axios.get(
                 "http://127.0.0.1:8000/api/unit-kerja",
             );
-            console.log("Cek hasil API:", response.data); // LIHAT DI CONSOLE BROWSER (F12)
-
-            // Gunakan pengecekan bertingkat
-            const result = response.data.data || response.data;
-
-            if (Array.isArray(result)) {
-                setUnits(result);
-            } else if (result && result.emp) {
-                // Jika strukturnya mirip API pegawai sebelumnya
-                setUnits(result.emp);
-            }
+            const result = response.data.data || [];
+            setUnits(result);
+            setCurrentPage(1);
         } catch (error) {
-            console.error("Gagal mengambil data:", error);
+            console.error("Gagal mengambil data unit kerja:", error);
         } finally {
             setLoading(false);
         }
@@ -100,6 +73,14 @@ export default function UnitKerja() {
                     <p className="text-xs text-slate-500 font-medium">
                         Total {units.length} unit tersedia
                     </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchUnits}
+                        className="btn btn-sm btn-ghost text-sky-600 hover:bg-sky-50"
+                    >
+                        ↻ Refresh
+                    </button>
                 </div>
             </div>
 
@@ -154,7 +135,9 @@ export default function UnitKerja() {
                                         {unit.kode_unit_kerja || "N/A"}
                                     </td>
                                     <td className="p-4 text-sm font-semibold text-slate-700">
-                                        {unit.nama_unit_kerja}
+                                        {unit.deskripsi ||
+                                            unit.nama_unit_kerja ||
+                                            "-"}
                                     </td>
                                     <td className="p-4 text-sm text-slate-600">
                                         {unit.email || "-"}
@@ -166,11 +149,20 @@ export default function UnitKerja() {
                                         {unit.alamat || "-"}
                                     </td>
                                     <td className="p-4 text-center">
-                                        <button
-                                            className="btn btn-sm btn-square btn-ghost text-skyr-500 hover:bg-amber-50"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
+                                        <button className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.5}
+                                                stroke="currentColor"
+                                                className="size-5"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                                                />
                                             </svg>
                                         </button>
                                     </td>
@@ -191,31 +183,51 @@ export default function UnitKerja() {
             </div>
 
             {/* Pagination controls */}
-            {units.length > itemsPerPage && (
-                <div className="p-4 border-t border-slate-100 flex justify-center items-center space-x-2">
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="btn btn-xs btn-outline"
-                    >
-                        Prev
-                    </button>
-                    {[...Array(totalPages)].map((_, idx) => (
+            {units.length > 0 && (
+                <div className="p-4 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-sm text-slate-500">
+                        Menampilkan {indexOfFirst + 1} -{" "}
+                        {Math.min(indexOfLast, units.length)} dari{" "}
+                        {units.length} unit
+                    </span>
+                    <div className="flex space-x-2">
                         <button
-                            key={idx}
-                            onClick={() => handlePageChange(idx + 1)}
-                            className={`btn btn-xs ${currentPage === idx + 1 ? "btn-primary" : "btn-outline"}`}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="btn btn-xs btn-outline"
                         >
-                            {idx + 1}
+                            Prev
                         </button>
-                    ))}
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="btn btn-xs btn-outline"
-                    >
-                        Next
-                    </button>
+
+                        {/* Render Smart Pagination */}
+                        {getPageNumbers().map((page, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() =>
+                                    typeof page === "number" &&
+                                    handlePageChange(page)
+                                }
+                                disabled={page === "..."}
+                                className={`btn btn-xs ${
+                                    page === currentPage
+                                        ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                        : page === "..."
+                                          ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                          : "btn-outline text-slate-500"
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="btn btn-xs btn-outline"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
