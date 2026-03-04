@@ -14,6 +14,15 @@ return new class extends Migration {
             $table->id();
             $table->string('kode_unit_kerja')->unique();
             $table->string('nama_unit_kerja');
+
+            $table->text('alamat')->nullable();
+            $table->string('telepon')->nullable();
+            $table->string('fax')->nullable();
+            $table->string('email')->nullable();
+            $table->string('website')->nullable();
+            $table->string('hari_kerja')->nullable();
+            $table->string('beda_jam')->nullable();
+
             $table->text('deskripsi')->nullable();
             $table->timestamps();
         });

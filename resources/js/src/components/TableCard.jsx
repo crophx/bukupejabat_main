@@ -43,12 +43,29 @@ export default function TableCard() {
             const response = await axios.get(
                 "http://127.0.0.1:8000/api/pegawai",
             );
-            // Sesuai struktur JSON: response.data.data.emp
-            const allData = response.data.data.emp || [];
-            setData(allData);
-            // Jika unitList belum terisi dari API unit-kerja, bangun daftar unit dari data pegawai sebagai fallback
-            if ((!unitList || unitList.length === 0) && allData.length > 0) {
-                const built = buildUnitsFromData(allData);
+
+            // Mapping data dari Database ke variabel state yang ada di UI
+            const dbData = response.data.data || [];
+            const formattedData = dbData.map((item) => ({
+                ...item, // Bawa semua data asli
+                kd_unker: item.unit_kerja?.kode_unit_kerja || "",
+                ket_unker:
+                    item.unit_kerja?.deskripsi ||
+                    item.unit_kerja?.nama_unit_kerja ||
+                    "-",
+                Jabatan: item.jabatan?.nama_jabatan || "-",
+                LokasiKerjaName: item.alamat || "-",
+                no_hp: item.no_handphone || "-",
+            }));
+
+            setData(formattedData);
+
+            // Fallback list unit jika unitList belum terisi
+            if (
+                (!unitList || unitList.length === 0) &&
+                formattedData.length > 0
+            ) {
+                const built = buildUnitsFromData(formattedData);
                 setUnitList(built);
             }
         } catch (error) {
@@ -64,9 +81,7 @@ export default function TableCard() {
         allData.forEach((d) => {
             const kode =
                 d.kd_unker ||
-                d.kd_unker ||
                 d.idLokasiKerja ||
-                d.kd_unker ||
                 d.kd_jabatan ||
                 (d.ket_unker || "").trim();
             const nama = (d.ket_unker || d.LokasiKerjaName || "").trim();
@@ -87,8 +102,16 @@ export default function TableCard() {
                 "http://127.0.0.1:8000/api/unit-kerja",
                 { params: { search: q, limit: 100 } },
             );
-            const units = response.data.data || [];
-            setUnitList(units);
+
+            // Mapping unit kerja dari DB
+            const dbUnits = response.data.data || [];
+            const formattedUnits = dbUnits.map((u) => ({
+                ...u,
+                kd_unker: u.kode_unit_kerja,
+                nama: u.deskripsi || u.nama_unit_kerja,
+            }));
+
+            setUnitList(formattedUnits);
         } catch (error) {
             console.error("Gagal mengambil data unit kerja:", error);
         }
@@ -113,49 +136,33 @@ export default function TableCard() {
             (item.nama?.toLowerCase().includes(searchStr) ||
                 item.nip?.toString().toLowerCase().includes(searchStr) ||
                 item.Jabatan?.toString().toLowerCase().includes(searchStr) ||
-                item.ket_unker?.toString().toLowerCase().includes(searchStr) ||
-                item.eselon?.toString().toLowerCase().includes(searchStr))
+                item.ket_unker?.toString().toLowerCase().includes(searchStr))
         );
     });
 
-    // --- LOGIKA SORTING CUSTOM (VIP DULU, BARU ESELON) ---
+    // --- LOGIKA SORTING CUSTOM (HANYA VIP LALU ABJAD NAMA) ---
     const sortedData = [...filteredData].sort((a, b) => {
-        // 1. Definisikan Urutan Prioritas (Hardcode nama Unit Kerja VIP)
-        // Pastikan tulisannya SAMA PERSIS dengan di database (atau gunakan UpperCase biar aman)
         const priorityUnits = [
             "MENTERI LUAR NEGERI RI",
             "WAKIL MENTERI LUAR NEGERI",
-            // Wakil Menteri akan otomatis muncul berurutan (ada 3 orang pun tetap di posisi ke-2)
         ];
 
-        // Ambil nama unit kerja dan bersihkan string-nya
         const unitA = (a.ket_unker || "").toString().toUpperCase().trim();
         const unitB = (b.ket_unker || "").toString().toUpperCase().trim();
 
-        // Cari posisi di array prioritas (Menteri = 0, Wakil = 1, Tidak ketemu = -1)
         let indexA = priorityUnits.indexOf(unitA);
         let indexB = priorityUnits.indexOf(unitB);
 
-        // Jika tidak ketemu di daftar VIP, beri nilai prioritas paling bawah (misal 999)
         if (indexA === -1) indexA = 999;
         if (indexB === -1) indexB = 999;
 
-        // 2. BANDINGKAN PRIORITAS VIP TERLEBIH DAHULU
+        // Jika berbeda prioritas VIP, urutkan berdasarkan VIP
         if (indexA !== indexB) {
-            return indexA - indexB; // Yang index-nya lebih kecil (VIP) naik ke atas
+            return indexA - indexB;
         }
 
-        // 3. JIKA SAMA-SAMA BUKAN VIP (ATAU SAMA-SAMA WAKIL MENTERI),
-        // LANJUT KE SORTING ESELON (Logika Lama)
-        const eselonOrder = { i: 1, ii: 2, iii: 3, iv: 4 };
-
-        let aEselon = a.eselon?.toString().toLowerCase().trim() || "";
-        let bEselon = b.eselon?.toString().toLowerCase().trim() || "";
-
-        const aNum = eselonOrder[aEselon] || 999; // 999 = non-eselon / staf
-        const bNum = eselonOrder[bEselon] || 999;
-
-        return aNum - bNum;
+        // Jika sama-sama bukan VIP (atau sama-sama VIP), urutkan berdasarkan nama
+        return (a.nama || "").localeCompare(b.nama || "");
     });
 
     // --- LOGIKA PAGINATION ---
@@ -172,7 +179,6 @@ export default function TableCard() {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
 
-    // --- LOGIKA GENERATE ANGKA HALAMAN (PAGINATION) ---
     const getPageNumbers = () => {
         const pages = [];
         const maxVisible = 5;
@@ -363,7 +369,7 @@ export default function TableCard() {
                                 NIP / Nama
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Eselon & Jabatan
+                                Jabatan
                             </th>
                             <th className="p-4 border-b border-slate-100">
                                 Unit Kerja
@@ -400,9 +406,6 @@ export default function TableCard() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex flex-col max-w-xs gap-1">
-                                                <span className="badge badge-outline badge-sm">
-                                                    {r.eselon?.trim() || "-"}
-                                                </span>
                                                 <span
                                                     className="text-sm font-semibold text-slate-700"
                                                     title={r.Jabatan}

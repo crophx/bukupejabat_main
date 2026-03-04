@@ -14,6 +14,19 @@ class UnitKerja extends Model
     protected $table = 'unit_kerja';
     protected $guarded = ['id'];
 
+    protected $fillable = [
+        'kode_unit_kerja',
+        'nama_unit_kerja',
+        'deskripsi',
+        'alamat',
+        'telepon',
+        'fax',
+        'email',
+        'website',
+        'hari_kerja',
+        'beda_jam'
+    ];
+
     // Satu unit kerja punya banyak pegawai
     public function pegawai()
     {
