@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axios from "axios";
 
 export default function UnitKerja() {
+    const navigate = useNavigate(); // Inisialisasi navigate
     const [units, setUnits] = useState([
         {
             id: 1,
@@ -48,7 +50,7 @@ export default function UnitKerja() {
 
     // pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 3; // adjust as needed
+    const itemsPerPage = 3; 
 
     // derive displayed units for current page
     const indexOfLast = currentPage * itemsPerPage;
@@ -71,15 +73,10 @@ export default function UnitKerja() {
             const response = await axios.get(
                 "http://127.0.0.1:8000/api/detail-pegawai",
             );
-            console.log("Cek hasil API:", response.data); // LIHAT DI CONSOLE BROWSER (F12)
-
-            // Gunakan pengecekan bertingkat
             const result = response.data.data || response.data;
-
             if (Array.isArray(result)) {
                 setUnits(result);
             } else if (result && result.emp) {
-                // Jika strukturnya mirip API pegawai sebelumnya
                 setUnits(result.emp);
             }
         } catch (error) {
@@ -101,11 +98,16 @@ export default function UnitKerja() {
                         Total {units.length} unit tersedia
                     </p>
                 </div>
+                
+                {/* Tombol Back menggantikan tombol Refresh */}
                 <button
-                    onClick={fetchUnits}
-                    className="btn btn-sm btn-ghost text-sky-600"
+                    onClick={() => navigate(-1)}
+                    className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2"
                 >
-                    ↻ Refresh
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    Kembali
                 </button>
             </div>
 
@@ -114,24 +116,12 @@ export default function UnitKerja() {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
-                            <th className="p-4 border-b border-slate-100 w-12 text-center">
-                                No
-                            </th>
-                            <th className="p-4 border-b border-slate-100">
-                                NIP
-                            </th>
-                            <th className="p-4 border-b border-slate-100">
-                                Nama
-                            </th>
-                            <th className="p-4 border-b border-slate-100">
-                                Jabatan
-                            </th>
-                            <th className="p-4 border-b border-slate-100">
-                                No. Telepon
-                            </th>
-                            <th className="p-4 border-b border-slate-100 w-20 text-center">
-                                Aksi
-                            </th>
+                            <th className="p-4 border-b border-slate-100 w-12 text-center">No</th>
+                            <th className="p-4 border-b border-slate-100">NIP</th>
+                            <th className="p-4 border-b border-slate-100">Nama</th>
+                            <th className="p-4 border-b border-slate-100">Jabatan</th>
+                            <th className="p-4 border-b border-slate-100">No. Telepon</th>
+                            <th className="p-4 border-b border-slate-100 w-20 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -139,17 +129,12 @@ export default function UnitKerja() {
                             <tr>
                                 <td colSpan="7" className="p-10 text-center">
                                     <span className="loading loading-spinner text-info"></span>
-                                    <p className="text-xs mt-2 text-slate-400">
-                                        Memuat data unit...
-                                    </p>
+                                    <p className="text-xs mt-2 text-slate-400">Memuat data unit...</p>
                                 </td>
                             </tr>
                         ) : units.length > 0 ? (
                             currentUnits.map((unit, index) => (
-                                <tr
-                                    key={unit.id || index}
-                                    className="hover:bg-slate-50 transition-colors"
-                                >
+                                <tr key={unit.id || index} className="hover:bg-slate-50 transition-colors">
                                     <td className="p-4 text-sm text-center text-slate-500">
                                         {indexOfFirst + index + 1}
                                     </td>
@@ -166,9 +151,7 @@ export default function UnitKerja() {
                                         {unit.telepon || "-"}
                                     </td>
                                     <td className="p-4 text-center">
-                                        <button
-                                            className="btn btn-sm btn-square btn-ghost text-skyr-500 hover:bg-amber-50"
-                                        >
+                                        <button className="btn btn-sm btn-square btn-ghost text-sky-500 hover:bg-amber-50">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
                                             </svg>
@@ -178,19 +161,14 @@ export default function UnitKerja() {
                             ))
                         ) : (
                             <tr>
-                                <td
-                                    colSpan="7"
-                                    className="p-10 text-center text-slate-400 italic"
-                                >
-                                    Belum ada data unit kerja.
-                                </td>
+                                <td colSpan="7" className="p-10 text-center text-slate-400 italic">Belum ada data unit kerja.</td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination controls */}
+            {/* Pagination */}
             {units.length > itemsPerPage && (
                 <div className="p-4 border-t border-slate-100 flex justify-center items-center space-x-2">
                     <button

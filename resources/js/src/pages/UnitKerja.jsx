@@ -101,12 +101,6 @@ export default function UnitKerja() {
                         Total {units.length} unit tersedia
                     </p>
                 </div>
-                <button
-                    onClick={fetchUnits}
-                    className="btn btn-sm btn-ghost text-sky-600"
-                >
-                    ↻ Refresh
-                </button>
             </div>
 
             {/* Content */}
