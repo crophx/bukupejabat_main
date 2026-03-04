@@ -5,41 +5,41 @@ export default function UnitKerja() {
     const [units, setUnits] = useState([
         {
             id: 1,
-            kode_unit_kerja: "UK001",
-            nama_unit_kerja: "Biro Keuangan",
-            email: "rokeu@gmail.com",
+            nip: "91477889203802",
+            nama_pegawai: "Solahuddin Wahid",
+            jabatan: "Imam Taraweh",
             telepon: "0212345678",
             alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
         },
         {
             id: 2,
-            kode_unit_kerja: "UK002",
-            nama_unit_kerja: "Biro Sumber Daya Manusia",
-            email: "bsdm@gmail.com",
+            nip: "91477889203802",
+            nama_pegawai: "Iwan Fals",
+            jabatan: "Penyanyi",
             telepon: "0212345679",
             alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
         },
         {
             id: 3,
-            kode_unit_kerja: "UK003",
-            nama_unit_kerja: "Biro Hukum",
-            email: "rokum@gmail.com",
+            nip: "91477889203802",
+            nama_pegawai: "Anggun C. Sasmi",
+            jabatan: "Penyanyi",
             telepon: "0212345680",
             alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
         },
         {
             id: 4,
-            kode_unit_kerja: "UK004",
-            nama_unit_kerja: "Biro Umum dan Pengadaan",
-            email: "bup@gmail.com",
+            nip: "91477889203802",
+            nama_pegawai: "Leon S. Kennedy",
+            jabatan: "Poni Lempar",
             telepon: "0212345681",
             alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
         },
         {
             id: 5,
-            kode_unit_kerja: "UK005",
-            nama_unit_kerja: "Pusat Data Teknologi dan Informasi",
-            email: "pusdatin@gmail.com",
+            nip: "91477889203802",
+            nama_pegawai: "Windah Basudara",
+            jabatan: "Tukang Absen",
             telepon: "0212345682",
             alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
         }
@@ -69,7 +69,7 @@ export default function UnitKerja() {
         setLoading(true);
         try {
             const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja",
+                "http://127.0.0.1:8000/api/detail-pegawai",
             );
             console.log("Cek hasil API:", response.data); // LIHAT DI CONSOLE BROWSER (F12)
 
@@ -95,7 +95,7 @@ export default function UnitKerja() {
             <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                 <div>
                     <h2 className="text-lg font-bold text-slate-800">
-                        Daftar Unit Kerja
+                        Detail Pegawai
                     </h2>
                     <p className="text-xs text-slate-500 font-medium">
                         Total {units.length} unit tersedia
@@ -118,19 +118,16 @@ export default function UnitKerja() {
                                 No
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Kode Unit Kerja
+                                NIP
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Nama Unit Kerja
+                                Nama
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Email
+                                Jabatan
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Telepon
-                            </th>
-                            <th className="p-4 border-b border-slate-100">
-                                Alamat
+                                No. Telepon
                             </th>
                             <th className="p-4 border-b border-slate-100 w-20 text-center">
                                 Aksi
@@ -157,19 +154,16 @@ export default function UnitKerja() {
                                         {indexOfFirst + index + 1}
                                     </td>
                                     <td className="p-4 text-sm font-mono text-sky-600 font-medium">
-                                        {unit.kode_unit_kerja || "N/A"}
+                                        {unit.nip || "N/A"}
+                                    </td>
+                                    <td className="p-4 text-sm font-mono text-sky-600 font-medium">
+                                        {unit.nama_pegawai || "N/A"}
                                     </td>
                                     <td className="p-4 text-sm font-semibold text-slate-700">
-                                        {unit.nama_unit_kerja}
-                                    </td>
-                                    <td className="p-4 text-sm text-slate-600">
-                                        {unit.email || "-"}
+                                        {unit.jabatan || "-"}
                                     </td>
                                     <td className="p-4 text-sm text-slate-600">
                                         {unit.telepon || "-"}
-                                    </td>
-                                    <td className="p-4 text-sm text-slate-600">
-                                        {unit.alamat || "-"}
                                     </td>
                                     <td className="p-4 text-center">
                                         <button

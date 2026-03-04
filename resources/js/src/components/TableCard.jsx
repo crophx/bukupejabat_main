@@ -222,17 +222,9 @@ export default function TableCard() {
                         onClick={fetchData}
                         className="btn btn-sm btn-ghost border border-slate-300 rounded-xl text-slate-400 hover:bg-slate-100"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-4"
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                            <path strokeLinecap="round" strokeLinejoin="round"
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
                             />
                         </svg>
@@ -242,28 +234,15 @@ export default function TableCard() {
                     {/* Searchable Unit Kerja Dropdown */}
                     <div className="relative w-full md:w-48">
                         <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all">
-                            <svg
-                                className="h-4 w-4 opacity-50"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
+                            <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                             >
-                                <g
-                                    strokeLinejoin="round"
-                                    strokeLinecap="round"
-                                    strokeWidth="2.5"
-                                    fill="none"
-                                    stroke="currentColor"
+                                <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"
                                 >
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <path d="m21 21-4.3-4.3"></path>
                                 </g>
                             </svg>
-                            <input
-                                type="text"
-                                placeholder="Cari unit kerja..."
-                                className="grow"
-                                value={unitSearchTerm || selectedUnitName}
-                                onChange={(e) => {
+                            <input type="text" placeholder="Cari unit kerja..." className="grow" value={unitSearchTerm || selectedUnitName} onChange={(e) => {
                                     setUnitSearchTerm(e.target.value);
                                     setShowUnitDropdown(true);
                                 }}
@@ -356,27 +335,13 @@ export default function TableCard() {
                     </div>
 
                     <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all w-full md:w-64">
-                        <svg
-                            className="h-4 w-4 opacity-50"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                        >
-                            <g
-                                strokeLinejoin="round"
-                                strokeLinecap="round"
-                                strokeWidth="2.5"
-                                fill="none"
-                                stroke="currentColor"
-                            >
+                        <svg className="h-4 w-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.3-4.3"></path>
                             </g>
                         </svg>
-                        <input
-                            type="search"
-                            placeholder="Cari nama atau NIP..."
-                            className="grow"
-                            value={searchTerm}
+                        <input type="search" placeholder="Cari nama atau NIP..." className="grow" value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
@@ -483,17 +448,9 @@ export default function TableCard() {
                                                     }}
                                                     className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
                                                 >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.5}
-                                                        stroke="currentColor"
-                                                        className="size-5"
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5"
                                                     >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
+                                                        <path strokeLinecap="round" strokeLinejoin="round"
                                                             d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
                                                         />
                                                     </svg>
@@ -527,10 +484,7 @@ export default function TableCard() {
                             })
                         ) : (
                             <tr>
-                                <td
-                                    colSpan="6"
-                                    className="p-8 text-center text-slate-400 font-medium italic"
-                                >
+                                <td colSpan="6" className="p-8 text-center text-slate-400 font-medium italic">
                                     Data tidak ditemukan...
                                 </td>
                             </tr>
@@ -578,9 +532,7 @@ export default function TableCard() {
                 </div>
 
                 <div className="flex items-center justify-center gap-1 flex-wrap">
-                    <button
-                        onClick={handlePrev}
-                        disabled={currentPage === 1}
+                    <button onClick={handlePrev} disabled={currentPage === 1}
                         className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
                         ← Sebelumnya
@@ -605,9 +557,7 @@ export default function TableCard() {
                         </button>
                     ))}
 
-                    <button
-                        onClick={handleNext}
-                        disabled={currentPage === totalPages}
+                    <button onClick={handleNext} disabled={currentPage === totalPages}
                         className="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                     >
                         Selanjutnya →
@@ -668,9 +618,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Nama
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.nama || ""}
                         onChange={(e) =>
                             handleInputChange("nama", e.target.value)
@@ -682,9 +630,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         NIP
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.nip || ""}
                         onChange={(e) =>
                             handleInputChange("nip", e.target.value)
@@ -700,9 +646,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Unit Kerja
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.ket_unker || ""}
                         onChange={(e) =>
                             handleInputChange("ket_unker", e.target.value)
@@ -714,9 +658,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         Jabatan
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.Jabatan || ""}
                         onChange={(e) =>
                             handleInputChange("Jabatan", e.target.value)
@@ -732,9 +674,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                         No. Telepon
                     </label>
-                    <input
-                        type="tel"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="tel" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.no_hp || ""}
                         onChange={(e) =>
                             handleInputChange("no_hp", e.target.value)
@@ -747,9 +687,7 @@ function EditForm({ initialData, onCancel, onSave }) {
                         {" "}
                         Lokasi
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    <input type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={form.LokasiKerjaName || ""}
                         onChange={(e) =>
                             handleInputChange("LokasiKerjaName", e.target.value)
@@ -761,17 +699,10 @@ function EditForm({ initialData, onCancel, onSave }) {
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-medium"
-                >
+                <button type="button" onClick={onCancel} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-medium">
                     Batal
                 </button>
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                     Simpan Perubahan
                 </button>
             </div>

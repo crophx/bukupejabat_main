@@ -7,10 +7,11 @@ import DataPegawai from "./pages/DataPegawai";
 import PerSatker from "./pages/PerSatker";
 import DalamNegeri from "./pages/DalamNegeri";
 import LuarNegeri from "./pages/LuarNegeri";
-// import TambahPegawai from "./pages/TambahPegawai";
+import DetailPegawai from "./pages/DetailPegawai";
 import UnitKerja from "./pages/UnitKerja";
 import DataAdmin from "./components/DataAdmin";
 import PengaturanAkun from "./pages/PengaturanAkun";
+// import TambahPegawai from "./pages/TambahPegawai";
 
 function ProtectedLayout({ onSignOut }) {
     return (
@@ -68,11 +69,12 @@ export default function App() {
                 <Route path="satkerja" element={<PerSatker />} />
                 <Route path="satkerja/dalam-negeri" element={<DalamNegeri />} />
                 <Route path="satkerja/luar-negeri" element={<LuarNegeri />} />
-                {/* <Route path="pegawai/tambah" element={<TambahPegawai />} /> */}
+                <Route path="detail-pegawai" element={<DetailPegawai />} />
                 <Route path="admin" element={<DataAdmin />} />
                 <Route path="unit-kerja" element={<UnitKerja />} />
                 <Route path="unit-kerja/form" element={<UnitKerja />} />
                 <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
+                {/* <Route path="pegawai/tambah" element={<TambahPegawai />} /> */}
             </Route>
 
             <Route
