@@ -22,5 +22,12 @@ module.exports = {
             },
         },
     },
-    plugins: [],
+    // Tambahkan daisyui di sini
+    plugins: [require("daisyui")],
+
+    // Kunci tema agar tidak berubah menjadi gelap (hitam)
+    daisyui: {
+        themes: ["light"], // Memaksa aplikasi hanya menggunakan tema terang
+        darkTheme: "light", // Menonaktifkan otomatis dark mode
+    },
 };
