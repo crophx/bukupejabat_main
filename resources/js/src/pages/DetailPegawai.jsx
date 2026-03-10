@@ -141,7 +141,7 @@ export default function DetailPegawai() {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 mb-5">
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
@@ -207,7 +207,7 @@ export default function DetailPegawai() {
             {/* Content Tabel yang Sudah Dirapikan */}
             <div className="overflow-x-auto">
                 {/* Tambahkan whitespace-nowrap agar tabel konsisten melebar jika diperlukan */}
-                <table className="w-full text-left border-collapse whitespace-nowrap">
+                <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
@@ -264,8 +264,17 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm font-semibold text-slate-500 whitespace-normal min-w-[200px] leading-snug">
                                         {unit.jabatan || "-"}
                                     </td>
+                                    {/* --- TOOLTIP PADA EMAIL --- */}
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500">
-                                        {unit.email || "-"}
+                                        {unit.email ? (
+                                            <div className="tooltip tooltip-top" data-tip={unit.email}>
+                                                <span className="cursor-help line-clamp-1 max-w-[150px] lowercase italic">
+                                                    {unit.email}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-slate-300">-</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
