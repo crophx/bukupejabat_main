@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function DetailPegawai() {
     const navigate = useNavigate();
@@ -10,7 +12,7 @@ export default function DetailPegawai() {
     const [unitName, setUnitName] = useState("");
     const [loading, setLoading] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState(null);
-    const [isUpdating, setIsUpdating] = useState(false); // Tambahan state loading simpan
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -51,14 +53,10 @@ export default function DetailPegawai() {
         }
     };
 
-    // ==========================================
-    // FUNGSI BARU: Untuk menyimpan data ke DB
-    // ==========================================
     const handleUpdate = async (e) => {
         e.preventDefault();
         setIsUpdating(true);
 
-        // Ambil data dari form berdasarkan atribut 'name'
         const formData = new FormData(e.target);
         const data = {
             nama: formData.get("nama"),
@@ -73,8 +71,8 @@ export default function DetailPegawai() {
                 `http://127.0.0.1:8000/api/pegawai/${selectedUnit.id}`,
                 data,
             );
-            document.getElementById("modal_edit_pegawai").close(); // Tutup modal
-            fetchPegawai(); // Refresh tabel
+            document.getElementById("modal_edit_pegawai").close();
+            fetchPegawai();
         } catch (error) {
             console.error("Gagal menyimpan data:", error);
             alert("Gagal menyimpan data. Silakan periksa koneksi.");
@@ -83,10 +81,69 @@ export default function DetailPegawai() {
         }
     };
 
+    const downloadPDF = () => {
+        try {
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("LAPORAN DATA PEGAWAI", 14, 20);
+
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            const namaUnit = unitName ? unitName : "Semua Unit";
+            doc.text(`Unit Kerja : ${namaUnit}`, 14, 28);
+            doc.text(`Total Data : ${units.length} Pegawai`, 14, 34);
+
+            const tableColumn = [
+                "No",
+                "NIP",
+                "Nama Lengkap",
+                "Email",
+                "Jabatan",
+                "Telepon",
+            ];
+            const tableRows = [];
+
+            units.forEach((unit, index) => {
+                const rowData = [
+                    index + 1,
+                    unit.nip || "-",
+                    unit.nama_pegawai || "-",
+                    unit.email || "-",
+                    unit.jabatan || "-",
+                    unit.telepon || "-",
+                ];
+                tableRows.push(rowData);
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: "grid",
+                styles: { fontSize: 10, cellPadding: 3 },
+                headStyles: {
+                    fillColor: [14, 165, 233],
+                    textColor: [255, 255, 255],
+                    fontStyle: "bold",
+                },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+            });
+
+            doc.save(`Laporan_Pegawai_${namaUnit.replace(/\s+/g, "_")}.pdf`);
+        } catch (error) {
+            console.error("Gagal membuat PDF:", error);
+            alert(
+                "Terjadi kesalahan saat membuat PDF. Coba periksa console browser.",
+            );
+        }
+    };
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700">
             {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                     <h2 className="text-lg font-bold text-slate-800 uppercase">
                         Detail Pegawai{" "}
@@ -98,49 +155,81 @@ export default function DetailPegawai() {
                         Total {units.length} pegawai ditemukan
                     </p>
                 </div>
-                <button
-                    onClick={() => navigate(-1)}
-                    className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="size-4"
+
+                {/* Tombol Aksi di Header */}
+                <div className="flex items-center gap-2">
+                    {units.length > 0 && (
+                        <button
+                            onClick={downloadPDF}
+                            className="btn btn-sm bg-rose-500 hover:bg-rose-600 border-none text-white flex items-center gap-2 shadow-sm"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="size-4"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                                />
+                            </svg>
+                            Unduh PDF
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2"
                     >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-                        />
-                    </svg>
-                    Kembali
-                </button>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="size-4"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                            />
+                        </svg>
+                        Kembali
+                    </button>
+                </div>
             </div>
 
-            {/* Content Tabel */}
+            {/* Content Tabel yang Sudah Dirapikan */}
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                {/* Tambahkan whitespace-nowrap agar tabel konsisten melebar jika diperlukan */}
+                <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
-                            <th className="p-4 border-b border-slate-100 w-12 text-center">
+                            <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
                                 No
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 NIP
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Nama Lengkap
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Jabatan
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                Email
+                            </th>
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Telepon
                             </th>
-                            <th className="p-4 border-b border-slate-100 w-20 text-center">
+                            {/* Kolom aksi dibuat sticky agar selalu terlihat di sebelah kanan */}
+                            <th className="px-4 py-4 border-b border-slate-100 w-16 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] z-10">
                                 Aksi
                             </th>
                         </tr>
@@ -148,7 +237,7 @@ export default function DetailPegawai() {
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="p-10 text-center">
+                                <td colSpan="7" className="p-10 text-center">
                                     <span className="loading loading-spinner text-sky-500"></span>
                                     <p className="text-xs mt-2 text-slate-400">
                                         Memuat data pegawai...
@@ -159,27 +248,34 @@ export default function DetailPegawai() {
                             currentUnits.map((unit, index) => (
                                 <tr
                                     key={unit.id || index}
-                                    className="hover:bg-slate-50 transition-colors group"
+                                    className="hover:bg-sky-50/40 transition-colors group align-middle"
                                 >
-                                    <td className="p-4 text-sm text-center text-slate-400 font-bold">
+                                    <td className="px-4 py-3 text-sm text-center text-slate-400 font-bold">
                                         {indexOfFirst + index + 1}
                                     </td>
-                                    <td className="p-4 text-sm font-mono text-sky-600 font-medium">
+                                    <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
                                         {unit.nip || "-"}
                                     </td>
-                                    <td className="p-4 text-sm font-bold text-slate-700 uppercase">
+                                    {/* Mencegah patah, dan diberi min-w agar nama tidak tertekan */}
+                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase whitespace-normal min-w-[200px] leading-snug">
                                         {unit.nama_pegawai || "-"}
                                     </td>
-                                    <td className="p-4 text-sm font-semibold text-slate-500">
+                                    {/* Mencegah patah, dan diberi min-w agar jabatan terbaca jelas */}
+                                    <td className="px-4 py-3 text-sm font-semibold text-slate-500 whitespace-normal min-w-[200px] leading-snug">
                                         {unit.jabatan || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600">
+                                    <td className="px-4 py-3 text-sm font-medium text-slate-500">
+                                        {unit.email || "-"}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
-                                    <td className="p-4 text-center">
+                                    {/* Tombol aksi dibuat sticky agar menempel saat di-scroll ke kanan */}
+                                    <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] z-10">
                                         <button
                                             onClick={() => openEditModal(unit)}
-                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
+                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
+                                            title="Edit Pegawai"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -187,7 +283,7 @@ export default function DetailPegawai() {
                                                 viewBox="0 0 24 24"
                                                 strokeWidth={1.5}
                                                 stroke="currentColor"
-                                                className="size-5"
+                                                className="size-4"
                                             >
                                                 <path
                                                     strokeLinecap="round"
@@ -202,7 +298,7 @@ export default function DetailPegawai() {
                         ) : (
                             <tr>
                                 <td
-                                    colSpan="6"
+                                    colSpan="7"
                                     className="p-10 text-center text-slate-400 italic"
                                 >
                                     Belum ada pegawai di unit ini.
@@ -257,7 +353,6 @@ export default function DetailPegawai() {
                         </form>
                     </div>
 
-                    {/* Form Utama yang Menjalankan handleUpdate */}
                     <form className="space-y-5" onSubmit={handleUpdate}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="form-control">
@@ -277,7 +372,7 @@ export default function DetailPegawai() {
                                 </label>
                                 <input
                                     type="text"
-                                    name="nama" // Tambahan penting
+                                    name="nama"
                                     defaultValue={
                                         selectedUnit?.nama_pegawai || ""
                                     }
@@ -290,7 +385,7 @@ export default function DetailPegawai() {
                                 </label>
                                 <input
                                     type="email"
-                                    name="email" // Tambahan penting
+                                    name="email"
                                     defaultValue={selectedUnit?.email || ""}
                                     className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                                 />
@@ -301,7 +396,7 @@ export default function DetailPegawai() {
                                 </label>
                                 <input
                                     type="text"
-                                    name="no_handphone" // Tambahan penting
+                                    name="no_handphone"
                                     defaultValue={selectedUnit?.telepon || ""}
                                     className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                                 />
@@ -314,7 +409,7 @@ export default function DetailPegawai() {
                             </label>
                             <input
                                 type="text"
-                                name="jabatan" // Tambahan penting
+                                name="jabatan"
                                 defaultValue={selectedUnit?.jabatan || ""}
                                 className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                             />
@@ -325,7 +420,7 @@ export default function DetailPegawai() {
                                 Alamat Lengkap
                             </label>
                             <textarea
-                                name="alamat" // Tambahan penting
+                                name="alamat"
                                 defaultValue={selectedUnit?.alamat || ""}
                                 className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3"
                             />

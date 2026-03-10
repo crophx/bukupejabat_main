@@ -42,7 +42,7 @@ class PegawaiController extends Controller
                 'id' => $p->id,
                 'nip' => $p->nip,
                 'nama_pegawai' => $p->nama,
-                'email' => '-',
+                'email' => $p->email,
                 'jabatan' => $p->jabatan ? $p->jabatan->nama_jabatan : '-',
                 'telepon' => $p->no_handphone,
                 'alamat' => $p->alamat,
@@ -155,7 +155,7 @@ class PegawaiController extends Controller
             ], 500);
         }
     }
-    
+
     // =======================================================
     // FUNGSI BARU: UPDATE DATA PEGAWAI DARI MODAL
     // =======================================================
