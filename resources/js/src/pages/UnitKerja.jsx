@@ -148,31 +148,34 @@ export default function UnitKerja() {
 
             {/* Content Tabel */}
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                {/* Perbaikan utama ada di tag table ini dan isinya:
+                  - whitespace-nowrap secara default untuk mencegah teks tumpang tindih
+                */}
+                <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
-                            <th className="p-4 border-b border-slate-100 w-12 text-center">
+                            <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
                                 No
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Kode
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Nama Unit Kerja
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Email
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Telepon
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Alamat
                             </th>
-                            <th className="p-4 border-b border-slate-100">
+                            <th className="px-4 py-4 border-b border-slate-100">
                                 Website
                             </th>
-                            <th className="p-4 border-b border-slate-100 w-20 text-center">
+                            <th className="px-4 py-4 border-b border-slate-100 w-16 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] z-10">
                                 Aksi
                             </th>
                         </tr>
@@ -180,8 +183,8 @@ export default function UnitKerja() {
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr>
-                                <td colSpan="7" className="p-10 text-center">
-                                    <span className="loading loading-spinner text-info"></span>
+                                <td colSpan="8" className="p-10 text-center">
+                                    <span className="loading loading-spinner text-sky-500"></span>
                                     <p className="text-xs mt-2 text-slate-400">
                                         Memuat data unit...
                                     </p>
@@ -191,33 +194,50 @@ export default function UnitKerja() {
                             currentUnits.map((unit, index) => (
                                 <tr
                                     key={unit.id || index}
-                                    className="hover:bg-slate-50 transition-colors"
+                                    className="hover:bg-sky-50/40 transition-colors group align-middle"
                                 >
-                                    <td className="p-4 text-sm text-center text-slate-500">
+                                    <td className="px-4 py-3 text-sm text-center text-slate-500">
                                         {indexOfFirst + index + 1}
                                     </td>
-                                    <td className="p-4 text-sm font-mono text-sky-600 font-medium">
+
+                                    <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
                                         {unit.kode_unit_kerja || "-"}
                                     </td>
-                                    <td className="p-4 text-sm font-semibold text-slate-700">
+
+                                    {/* Mencegah patah secara tidak wajar, berikan min-width agar luas */}
+                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 whitespace-normal min-w-[250px] leading-snug">
                                         {unit.nama_unit_kerja || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600">
+
+                                    <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.email || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600">
+
+                                    <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600 truncate max-w-xs">
+
+                                    {/* Truncate untuk Alamat dan Website agar tidak merusak lebar tabel */}
+                                    <td
+                                        title={unit.alamat || "-"}
+                                        className="px-4 py-3 text-sm text-slate-600 max-w-[200px] truncate"
+                                    >
                                         {unit.alamat || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600 truncate max-w-xs">
+
+                                    <td
+                                        title={unit.website || "-"}
+                                        className="px-4 py-3 text-sm text-sky-600 max-w-[150px] truncate"
+                                    >
                                         {unit.website || "-"}
                                     </td>
-                                    <td className="p-4 text-center">
+
+                                    {/* Kolom Aksi menempel di kanan (sticky) */}
+                                    <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] z-10">
                                         <button
                                             onClick={() => openEditModal(unit)}
-                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
+                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
+                                            title="Edit Unit Kerja"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -225,7 +245,7 @@ export default function UnitKerja() {
                                                 viewBox="0 0 24 24"
                                                 strokeWidth={1.5}
                                                 stroke="currentColor"
-                                                className="size-5"
+                                                className="size-4"
                                             >
                                                 <path
                                                     strokeLinecap="round"
@@ -240,7 +260,7 @@ export default function UnitKerja() {
                         ) : (
                             <tr>
                                 <td
-                                    colSpan="7"
+                                    colSpan="8"
                                     className="p-10 text-center text-slate-400 italic"
                                 >
                                     Belum ada data unit kerja.
@@ -302,12 +322,10 @@ export default function UnitKerja() {
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
                     style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-                    // 1. Fungsi untuk menutup modal saat latar belakang diklik
                     onClick={() => setIsEditModalOpen(false)}
                 >
                     <div
                         className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto"
-                        // 2. Mencegah event klik diteruskan ke latar belakang (supaya modal tidak tertutup saat form diklik)
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
@@ -338,7 +356,7 @@ export default function UnitKerja() {
                                         name="nama_unit_kerja"
                                         value={editData.nama_unit_kerja}
                                         onChange={handleInputChange}
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-slate-50"
+                                        className="input input-sm w-full bg-slate-50 text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                         disabled
                                     />
                                 </div>
@@ -351,7 +369,7 @@ export default function UnitKerja() {
                                         name="email"
                                         value={editData.email}
                                         onChange={handleInputChange}
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-slate-50"
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
