@@ -34,3 +34,5 @@ Route::get('/pegawai/unit/{unitId}', [\App\Http\Controllers\Api\PegawaiControlle
 Route::get('/unit-kerja/luar-negeri', [\App\Http\Controllers\Api\UnitKerjaController::class, 'getLuarNegeri']);
 
 Route::get('/sync-pegawai', [\App\Http\Controllers\Api\PegawaiController::class, 'syncFromJsonStrict']);
+
+Route::put('/pegawai/{id}', [\App\Http\Controllers\Api\PegawaiController::class, 'update']);

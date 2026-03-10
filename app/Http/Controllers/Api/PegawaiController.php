@@ -155,4 +155,40 @@ class PegawaiController extends Controller
             ], 500);
         }
     }
+    
+    // =======================================================
+    // FUNGSI BARU: UPDATE DATA PEGAWAI DARI MODAL
+    // =======================================================
+    public function update(Request $request, $id)
+    {
+        $pegawai = Pegawai::find($id);
+
+        if (!$pegawai) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+        }
+
+        // 1. Update data basic (nama, email, telepon, alamat)
+        $pegawai->nama = $request->nama ?? $pegawai->nama;
+        $pegawai->email = $request->email ?? $pegawai->email;
+        $pegawai->no_handphone = $request->no_handphone ?? $pegawai->no_handphone;
+        $pegawai->alamat = $request->alamat ?? $pegawai->alamat;
+
+        // 2. Jika jabatannya diubah teksnya, kita cek ke tabel Jabatan (Buat otomatis jika belum ada)
+        if ($request->filled('jabatan')) {
+            $namaJabatan = trim($request->jabatan);
+            $jabatanBaru = Jabatan::firstOrCreate(
+                ['nama_jabatan' => $namaJabatan],
+                ['kode_jabatan' => 'JAB-' . strtoupper(substr(md5($namaJabatan), 0, 5))]
+            );
+            $pegawai->jabatan_id = $jabatanBaru->id;
+        }
+
+        $pegawai->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Pegawai berhasil diupdate',
+            'data' => $pegawai
+        ]);
+    }
 }
