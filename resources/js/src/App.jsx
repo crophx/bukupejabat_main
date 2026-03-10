@@ -43,6 +43,8 @@ export default function App() {
 
     return (
         <Routes>
+            <Route path="/public" element={<PagePublic />} />
+
             <Route
                 path="/login"
                 element={
@@ -50,7 +52,7 @@ export default function App() {
                         <Navigate to="/dashboard" replace />
                     ) : (
                         <Login onLogin={handleLogin} />
-                    )   
+                    )
                 }
             />
 
@@ -78,7 +80,6 @@ export default function App() {
                 <Route path="unit-kerja" element={<UnitKerja />} />
                 <Route path="unit-kerja/form" element={<UnitKerja />} />
                 <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
-                <Route path="/public" element={<PagePublic />} />
                 {/* <Route path="pegawai/tambah" element={<TambahPegawai />} /> */}
             </Route>
 
