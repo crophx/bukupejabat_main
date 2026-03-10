@@ -63,10 +63,30 @@ export default function DataAdmin() {
 
     // Note: Handle Save & Delete sementara hanya update di layar (Frontend)
     // Nanti bisa ditambahkan logika API-nya
-    const handleSave = (updated) => {
-        setAdmins((prev) =>
-            prev.map((a) => (a.id === updated.id ? updated : a)),
-        );
+    // Fungsi Edit yang sudah disambungkan ke Backend
+    const handleSave = async (updated) => {
+        try {
+            // Mengirim data ke API Laravel
+            const response = await axios.put(
+                `http://127.0.0.1:8000/api/users/${updated.id}`,
+                {
+                    username: updated.username,
+                    email: updated.email,
+                    role: updated.role,
+                },
+            );
+
+            if (response.data.success) {
+                // Jika sukses, tutup modal dan refresh tabel
+                setEditOpen(false);
+                fetchAdmins();
+            }
+        } catch (error) {
+            console.error("Gagal mengupdate admin:", error);
+            alert(
+                "Gagal menyimpan data. Silakan periksa koneksi atau console.",
+            );
+        }
     };
 
     const handleDelete = () => {

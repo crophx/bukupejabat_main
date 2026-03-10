@@ -18,4 +18,42 @@ class UserController extends Controller
             'data' => $users
         ]);
     }
+
+    // ==========================================
+    // FUNGSI BARU: UPDATE DATA ADMIN
+    // ==========================================
+    public function update(Request $request, $id)
+    {
+        // 1. Cari data user berdasarkan ID
+        $user = User::find($id);
+
+        // Jika user tidak ditemukan, kembalikan error 404
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data admin tidak ditemukan'
+            ], 404);
+        }
+
+        // 2. Validasi input dari frontend (React)
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'role' => 'required|string',
+        ]);
+
+        // 3. Simpan perubahan ke database
+        $user->update([
+            'username' => $request->username,
+            'email' => $request->email,
+            'role' => $request->role,
+        ]);
+
+        // 4. Kembalikan response sukses ke React
+        return response()->json([
+            'success' => true,
+            'message' => 'Data admin berhasil diperbarui',
+            'data' => $user
+        ], 200);
+    }
 }

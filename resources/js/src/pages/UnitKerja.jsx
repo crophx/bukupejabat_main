@@ -9,7 +9,25 @@ export default function UnitKerja() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    // derive displayed units for current page
+    // --- STATE UNTUK MODAL EDIT ---
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Sesuaikan state dengan semua kolom di database
+    const [editData, setEditData] = useState({
+        id: "",
+        kode_unit_kerja: "",
+        nama_unit_kerja: "",
+        alamat: "",
+        telepon: "",
+        fax: "",
+        email: "",
+        website: "",
+        hari_kerja: "",
+        beda_jam: "",
+        deskripsi: "",
+    });
+
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
     const currentUnits = units.slice(indexOfFirst, indexOfLast);
@@ -20,7 +38,6 @@ export default function UnitKerja() {
         setCurrentPage(page);
     };
 
-    // --- LOGIKA SMART PAGINATION (Sama seperti Data Pegawai) ---
     const getPageNumbers = () => {
         const pages = [];
         const maxVisible = 5;
@@ -62,8 +79,53 @@ export default function UnitKerja() {
         }
     };
 
+    const openEditModal = (unit) => {
+        setEditData({
+            id: unit.id,
+            kode_unit_kerja: unit.kode_unit_kerja || "",
+            nama_unit_kerja: unit.nama_unit_kerja || "",
+            alamat: unit.alamat || "",
+            telepon: unit.telepon || "",
+            fax: unit.fax || "",
+            email: unit.email || "",
+            website: unit.website || "",
+            hari_kerja: unit.hari_kerja || "",
+            beda_jam: unit.beda_jam || "",
+            deskripsi: unit.deskripsi || "",
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setIsUpdating(true);
+        try {
+            await axios.put(
+                `http://127.0.0.1:8000/api/unit-kerja/${editData.id}`,
+                editData,
+            );
+            setIsEditModalOpen(false);
+            fetchUnits();
+        } catch (error) {
+            console.error("Gagal mengupdate data:", error);
+            alert(
+                "Gagal menyimpan data. Silakan periksa koneksi atau console.",
+            );
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 relative">
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                 <div>
@@ -84,7 +146,7 @@ export default function UnitKerja() {
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Content Tabel */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
@@ -93,7 +155,7 @@ export default function UnitKerja() {
                                 No
                             </th>
                             <th className="p-4 border-b border-slate-100">
-                                Kode Unit Kerja
+                                Kode
                             </th>
                             <th className="p-4 border-b border-slate-100">
                                 Nama Unit Kerja
@@ -106,6 +168,9 @@ export default function UnitKerja() {
                             </th>
                             <th className="p-4 border-b border-slate-100">
                                 Alamat
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Website
                             </th>
                             <th className="p-4 border-b border-slate-100 w-20 text-center">
                                 Aksi
@@ -132,12 +197,10 @@ export default function UnitKerja() {
                                         {indexOfFirst + index + 1}
                                     </td>
                                     <td className="p-4 text-sm font-mono text-sky-600 font-medium">
-                                        {unit.kode_unit_kerja || "N/A"}
+                                        {unit.kode_unit_kerja || "-"}
                                     </td>
                                     <td className="p-4 text-sm font-semibold text-slate-700">
-                                        {unit.deskripsi ||
-                                            unit.nama_unit_kerja ||
-                                            "-"}
+                                        {unit.nama_unit_kerja || "-"}
                                     </td>
                                     <td className="p-4 text-sm text-slate-600">
                                         {unit.email || "-"}
@@ -145,11 +208,17 @@ export default function UnitKerja() {
                                     <td className="p-4 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
-                                    <td className="p-4 text-sm text-slate-600">
+                                    <td className="p-4 text-sm text-slate-600 truncate max-w-xs">
                                         {unit.alamat || "-"}
                                     </td>
+                                    <td className="p-4 text-sm text-slate-600 truncate max-w-xs">
+                                        {unit.website || "-"}
+                                    </td>
                                     <td className="p-4 text-center">
-                                        <button className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50">
+                                        <button
+                                            onClick={() => openEditModal(unit)}
+                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
+                                        >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="none"
@@ -198,8 +267,6 @@ export default function UnitKerja() {
                         >
                             Prev
                         </button>
-
-                        {/* Render Smart Pagination */}
                         {getPageNumbers().map((page, idx) => (
                             <button
                                 key={idx}
@@ -219,7 +286,6 @@ export default function UnitKerja() {
                                 {page}
                             </button>
                         ))}
-
                         <button
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
@@ -227,6 +293,174 @@ export default function UnitKerja() {
                         >
                             Next
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- KOMPONEN MODAL EDIT --- */}
+            {isEditModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
+                    style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+                    // 1. Fungsi untuk menutup modal saat latar belakang diklik
+                    onClick={() => setIsEditModalOpen(false)}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto"
+                        // 2. Mencegah event klik diteruskan ke latar belakang (supaya modal tidak tertutup saat form diklik)
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
+                            Edit Unit Kerja
+                        </h3>
+
+                        <form onSubmit={handleUpdate} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Kode Unit Kerja
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="kode_unit_kerja"
+                                        value={editData.kode_unit_kerja}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        disabled
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Nama Unit Kerja
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nama_unit_kerja"
+                                        value={editData.nama_unit_kerja}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-slate-50"
+                                        disabled
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={editData.email}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none bg-slate-50"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Telepon
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="telepon"
+                                        value={editData.telepon}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Fax
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="fax"
+                                        value={editData.fax}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Website
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="website"
+                                        value={editData.website}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Hari Kerja
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="hari_kerja"
+                                        value={editData.hari_kerja}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        placeholder="Cth: Senin - Jumat"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Beda Jam
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="beda_jam"
+                                        value={editData.beda_jam}
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Alamat
+                                </label>
+                                <textarea
+                                    name="alamat"
+                                    value={editData.alamat}
+                                    onChange={handleInputChange}
+                                    className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    rows="2"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    Deskripsi
+                                </label>
+                                <textarea
+                                    name="deskripsi"
+                                    value={editData.deskripsi}
+                                    onChange={handleInputChange}
+                                    className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUpdating}
+                                    className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none"
+                                >
+                                    {isUpdating
+                                        ? "Menyimpan..."
+                                        : "Simpan Perubahan"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -12,12 +12,10 @@ use Illuminate\Support\Facades\File;
 class PegawaiController extends Controller
 {
     // =======================================================
-    // FUNGSI BARU: Mengirim data ke React (TableCard.jsx)
+    // FUNGSI 1: MENGAMBIL SEMUA DATA PEGAWAI (Lama)
     // =======================================================
     public function index(Request $request)
     {
-        // Mengambil semua data pegawai BERSERTA relasi unit_kerja dan jabatan
-        // Pastikan relasi unitKerja() dan jabatan() sudah ada di app/Models/Pegawai.php
         $pegawais = Pegawai::with(['unitKerja', 'jabatan'])->get();
 
         return response()->json([
@@ -28,7 +26,39 @@ class PegawaiController extends Controller
     }
 
     // =======================================================
-    // FUNGSI LAMA: Sinkronisasi dari JSON (Tetap dipertahankan)
+    // FUNGSI 2: MENGAMBIL PEGAWAI BERDASARKAN UNIT KERJA (Baru)
+    // =======================================================
+    public function getByUnit($unitId)
+    {
+        // Ambil info unit kerja untuk ditampilkan di judul React
+        $unitKerja = UnitKerja::find($unitId);
+
+        $pegawais = Pegawai::with(['jabatan', 'unitKerja'])
+            ->where('unit_kerja_id', $unitId)
+            ->get();
+
+        $formatted = $pegawais->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'nip' => $p->nip,
+                'nama_pegawai' => $p->nama,
+                'email' => '-',
+                'jabatan' => $p->jabatan ? $p->jabatan->nama_jabatan : '-',
+                'telepon' => $p->no_handphone,
+                'alamat' => $p->alamat,
+                'nama_unit' => $p->unitKerja ? $p->unitKerja->deskripsi : '-' // Data tambahan
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'unit_nama' => $unitKerja ? $unitKerja->deskripsi : 'UNIT TIDAK DIKETAHUI', // Kirim ke React
+            'data' => $formatted
+        ]);
+    }
+
+    // =======================================================
+    // FUNGSI 3: SINKRONISASI JSON (Punyamu yang sempat hilang)
     // =======================================================
     public function syncFromJsonStrict()
     {
@@ -83,25 +113,19 @@ class PegawaiController extends Controller
                     continue;
                 }
 
-                // ====================================================
                 // SOLUSI ERROR NULL: Cari ID Jabatan & Auto Create
-                // ====================================================
                 $jabatanId = $jabatanMap[$namaJabatanJson] ?? null;
 
                 if ($jabatanId === null) {
-                    // Jika tidak ketemu, buat jabatan baru secara otomatis!
                     $namaJabatanAsli = trim($item['Jabatan'] ?? 'Tidak Diketahui');
                     $jabatanBaru = Jabatan::firstOrCreate(
                         ['nama_jabatan' => $namaJabatanAsli],
-                        // Bikin kode unik acak agar tidak error
                         ['kode_jabatan' => 'JAB-' . strtoupper(substr(md5($namaJabatanAsli), 0, 5))]
                     );
                     $jabatanId = $jabatanBaru->id;
 
-                    // Simpan ke memori agar kalau ada jabatan yang sama lagi prosesnya cepat
                     $jabatanMap[$namaJabatanJson] = $jabatanId;
                 }
-                // ====================================================
 
                 // SIMPAN KE DATABASE LOKAL
                 Pegawai::updateOrCreate(
@@ -111,7 +135,7 @@ class PegawaiController extends Controller
                         'alamat' => $item['LokasiKerjaName'] ?? '-',
                         'no_handphone' => $item['no_hp'] ?? '-',
                         'unit_kerja_id' => $unitKerjaMap[$kodeUnkerJson],
-                        'jabatan_id' => $jabatanId, // Sekarang dijamin TIDAK AKAN NULL
+                        'jabatan_id' => $jabatanId,
                     ]
                 );
 

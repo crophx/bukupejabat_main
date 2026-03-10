@@ -14,16 +14,23 @@ Route::post('/pegawai', [PegawaiController::class, 'store']);
 Route::get('/users', [UserController::class, 'index']);
 Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
-// Route Private (Harus Login Dulu)
 Route::middleware('auth:sanctum')->group(function () {
-
-    // Route Logout Baru
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Route lain yang butuh login pindahkan ke sini (Opsional tapi disarankan)
-    // Route::get('/activity-logs', ...);
 });
 
 Route::post('/import-master', [\App\Http\Controllers\Api\UnitKerjaController::class, 'importMasterData']);
 
 Route::post('/pegawai/sync', [\App\Http\Controllers\Api\PegawaiController::class, 'syncFromJsonStrict']);
+
+Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
+
+Route::put('/unit-kerja/{id}', [UnitKerjaController::class, 'update']);
+
+Route::put('/users/{id}', [UserController::class, 'update']);
+
+Route::get('/unit-kerja/dalam-negeri', [\App\Http\Controllers\Api\UnitKerjaController::class, 'getDalamNegeri']);
+Route::get('/pegawai/unit/{unitId}', [\App\Http\Controllers\Api\PegawaiController::class, 'getByUnit']);
+
+Route::get('/unit-kerja/luar-negeri', [\App\Http\Controllers\Api\UnitKerjaController::class, 'getLuarNegeri']);
+
+Route::get('/sync-pegawai', [\App\Http\Controllers\Api\PegawaiController::class, 'syncFromJsonStrict']);

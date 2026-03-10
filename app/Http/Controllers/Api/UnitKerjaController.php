@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\UnitKerja;
-use App\Models\Jabatan; // <--- WAJIB TAMBAH INI
+use App\Models\Jabatan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File; // <--- WAJIB TAMBAH INI
+use Illuminate\Support\Facades\File;
 
 class UnitKerjaController extends Controller
 {
@@ -48,27 +48,25 @@ class UnitKerjaController extends Controller
 
             foreach ($lines as $index => $line) {
                 if ($index === 0)
-                    continue; // Lewati baris pertama (Header)
+                    continue;
 
                 $row = str_getcsv($line, ';');
                 if (count($row) < 2) {
                     $row = str_getcsv($line, ',');
                 }
 
-                // Ambil 3 kolom dari CSV Anda
-                $kode = trim($row[0] ?? '');            // Kolom A
-                $nama = trim($row[1] ?? 'Tanpa Nama');  // Kolom B
-                $keterangan = trim($row[2] ?? '');      // Kolom C (ket_unker)
+                $kode = trim($row[0] ?? '');
+                $nama = trim($row[1] ?? 'Tanpa Nama');
+                $keterangan = trim($row[2] ?? '');
 
                 if ($kode === '')
                     continue;
 
-                // Proses Update atau Create
                 UnitKerja::updateOrCreate(
-                    ['kode_unit_kerja' => $kode], // Cari berdasarkan Kode
+                    ['kode_unit_kerja' => $kode],
                     [
                         'nama_unit_kerja' => $nama,
-                        'deskripsi' => $keterangan // Simpan Kolom C ke 'deskripsi'
+                        'deskripsi' => $keterangan
                     ]
                 );
                 $countUnit++;
@@ -86,7 +84,7 @@ class UnitKerjaController extends Controller
 
             foreach ($lines as $index => $line) {
                 if ($index === 0)
-                    continue; // Lewati baris pertama
+                    continue;
 
                 $row = str_getcsv($line, ';');
                 if (count($row) < 2) {
@@ -112,6 +110,63 @@ class UnitKerjaController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Selesai! Berhasil memasukkan $countUnit Unit Kerja dan $countJabatan Jabatan."
+        ]);
+    }
+
+    // ==========================================
+    // FUNGSI 3: UPDATE DATA DARI MODAL REACT
+    // ==========================================
+    public function update(Request $request, $id)
+    {
+        // 1. Cari data unit kerja berdasarkan ID
+        $unitKerja = UnitKerja::find($id);
+
+        if (!$unitKerja) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data Unit Kerja tidak ditemukan'
+            ], 404);
+        }
+
+        // 2. Validasi sederhana memastikan kode dan nama tidak kosong
+        $request->validate([
+            'kode_unit_kerja' => 'required|string|max:255',
+            'nama_unit_kerja' => 'required|string|max:255',
+        ]);
+
+        // 3. Update data ke database
+        $unitKerja->update($request->all());
+
+        // 4. Berikan respon sukses
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Unit Kerja berhasil diperbarui',
+            'data' => $unitKerja
+        ], 200);
+    }
+
+    // Fungsi untuk mengambil Unit Kerja Dalam Negeri (Kode 07A)
+    public function getDalamNegeri()
+    {
+        $units = \App\Models\UnitKerja::withCount('pegawai')
+            ->where('kode_unit_kerja', 'like', '07A%')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $units]);
+    }
+
+    // FUNGSI BARU: MENGAMBIL DATA LUAR NEGERI
+    // ==========================================
+    public function getLuarNegeri()
+    {
+        // Ambil unit kerja yang kodenya berawalan 04A1
+        $units = UnitKerja::withCount('pegawai')
+            ->where('kode_unit_kerja', 'like', '04A1%')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $units
         ]);
     }
 }

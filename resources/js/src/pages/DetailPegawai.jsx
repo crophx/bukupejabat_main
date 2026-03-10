@@ -1,62 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
-export default function UnitKerja() {
-    const navigate = useNavigate(); 
-    const [units, setUnits] = useState([
-        {
-            id: 1,
-            nip: "91477889203802",
-            nama_pegawai: "Solahuddin Wahid",
-            email: "solahuddin@example.com",
-            jabatan: "Imam Taraweh",
-            telepon: "0212345678",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 2,
-            nip: "91477889203802",
-            nama_pegawai: "Iwan Fals",
-            email: "iwan.fals@example.com",
-            jabatan: "Penyanyi",
-            telepon: "0212345679",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 3,
-            nip: "91477889203802",
-            nama_pegawai: "Anggun C. Sasmi",
-            email: "anggun@example.com",
-            jabatan: "Penyanyi",
-            telepon: "0212345680",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 4,
-            nip: "91477889203802",
-            nama_pegawai: "Leon S. Kennedy",
-            email: "leon.sk@example.com",
-            jabatan: "Poni Lempar",
-            telepon: "0212345681",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        },
-        {
-            id: 5,
-            nip: "91477889203802",
-            nama_pegawai: "Windah Basudara",
-            email: "windah@example.com",
-            jabatan: "Tukang Absen",
-            telepon: "0212345682",
-            alamat: "Jl. Taman Pejambon No.6, Jakarta Pusat"
-        }
-    ]);
-    const [loading, setLoading] = useState(false);
-    const [selectedUnit, setSelectedUnit] = useState(null); // State untuk data yang sedang diedit
+export default function DetailPegawai() {
+    const navigate = useNavigate();
+    const { unitId } = useParams();
 
-    // pagination state
+    const [units, setUnits] = useState([]);
+    const [unitName, setUnitName] = useState(""); // State baru untuk menyimpan nama unit
+    const [loading, setLoading] = useState(false);
+    const [selectedUnit, setSelectedUnit] = useState(null);
+
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 3; 
+    const itemsPerPage = 10;
 
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
@@ -68,22 +24,25 @@ export default function UnitKerja() {
         setCurrentPage(page);
     };
 
-    // Fungsi membuka modal
     const openEditModal = (unit) => {
         setSelectedUnit(unit);
-        document.getElementById('modal_edit_pegawai').showModal();
+        document.getElementById("modal_edit_pegawai").showModal();
     };
 
-    const fetchUnits = async () => {
+    useEffect(() => {
+        if (unitId) {
+            fetchPegawai();
+        }
+    }, [unitId]);
+
+    const fetchPegawai = async () => {
         setLoading(true);
         try {
-            const response = await axios.get("http://127.0.0.1:8000/api/detail-pegawai");
-            const result = response.data.data || response.data;
-            if (Array.isArray(result)) {
-                setUnits(result);
-            } else if (result && result.emp) {
-                setUnits(result.emp);
-            }
+            const response = await axios.get(
+                `http://127.0.0.1:8000/api/pegawai/unit/${unitId}`,
+            );
+            setUnits(response.data.data || []);
+            setUnitName(response.data.unit_nama || ""); // Tangkap nama unit dari Laravel
         } catch (error) {
             console.error("Gagal mengambil data:", error);
         } finally {
@@ -96,135 +55,134 @@ export default function UnitKerja() {
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800">Detail Pegawai</h2>
-                    <p className="text-xs text-slate-500 font-medium">Total {units.length} unit tersedia</p>
+                    {/* TAMPILKAN NAMA UNIT KERJA DI SINI */}
+                    <h2 className="text-lg font-bold text-slate-800 uppercase">
+                        Detail Pegawai{" "}
+                        {unitName && (
+                            <span className="text-sky-600"> - {unitName}</span>
+                        )}
+                    </h2>
+                    <p className="text-xs text-slate-500 font-medium">
+                        Total {units.length} pegawai ditemukan
+                    </p>
                 </div>
-                <button onClick={() => navigate(-1)} className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                <button
+                    onClick={() => navigate(-1)}
+                    className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="size-4"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                        />
                     </svg>
                     Kembali
                 </button>
             </div>
 
-            {/* Content */}
+            {/* Content Tabel */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
-                            <th className="p-4 border-b border-slate-100 w-12 text-center">No</th>
-                            <th className="p-4 border-b border-slate-100">NIP</th>
-                            <th className="p-4 border-b border-slate-100">Nama & Email</th>
-                            <th className="p-4 border-b border-slate-100">Jabatan</th>
-                            <th className="p-4 border-b border-slate-100">Alamat</th>
-                            <th className="p-4 border-b border-slate-100">No. Telepon</th>
-                            <th className="p-4 border-b border-slate-100 w-20 text-center">Aksi</th>
+                            <th className="p-4 border-b border-slate-100 w-12 text-center">
+                                No
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                NIP
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Nama Lengkap
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Jabatan
+                            </th>
+                            <th className="p-4 border-b border-slate-100">
+                                Telepon
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr>
-                                <td colSpan="7" className="p-10 text-center">
-                                    <span className="loading loading-spinner text-info"></span>
-                                    <p className="text-xs mt-2 text-slate-400">Memuat data unit...</p>
+                                <td colSpan="5" className="p-10 text-center">
+                                    <span className="loading loading-spinner text-sky-500"></span>
+                                    <p className="text-xs mt-2 text-slate-400">
+                                        Memuat data pegawai...
+                                    </p>
                                 </td>
                             </tr>
                         ) : units.length > 0 ? (
                             currentUnits.map((unit, index) => (
-                                <tr key={unit.id || index} className="hover:bg-slate-50 transition-colors group">
-                                    <td className="p-4 text-sm text-center text-slate-500">{indexOfFirst + index + 1}</td>
-                                    <td className="p-4 text-sm font-mono text-sky-600 font-medium">{unit.nip || "N/A"}</td>
-                                    <td className="p-4">
-                                        <div className="text-sm font-bold text-slate-700 uppercase">{unit.nama_pegawai || "N/A"}</div>
-                                        <div className="text-xs text-slate-400 lowercase">{unit.email || "-"}</div>
+                                <tr
+                                    key={unit.id || index}
+                                    className="hover:bg-slate-50 transition-colors"
+                                >
+                                    <td className="p-4 text-sm text-center text-slate-500">
+                                        {indexOfFirst + index + 1}
                                     </td>
-                                    <td className="p-4 text-sm font-semibold text-slate-700">{unit.jabatan || "-"}</td>
-                                    <td className="p-4 text-sm text-slate-500 max-w-xs truncate">{unit.alamat || "-"}</td>
-                                    <td className="p-4 text-sm text-slate-600">{unit.telepon || "-"}</td>
-                                    <td className="p-4 text-center">
-                                        <button 
-                                            onClick={() => openEditModal(unit)}
-                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
-                                            </svg>
-                                        </button>
+                                    <td className="p-4 text-sm font-mono text-sky-600 font-medium">
+                                        {unit.nip || "-"}
+                                    </td>
+                                    <td className="p-4 text-sm font-bold text-slate-700 uppercase">
+                                        {unit.nama_pegawai || "-"}
+                                    </td>
+                                    <td className="p-4 text-sm font-semibold text-slate-500">
+                                        {unit.jabatan || "-"}
+                                    </td>
+                                    <td className="p-4 text-sm text-slate-600">
+                                        {unit.telepon || "-"}
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7" className="p-10 text-center text-slate-400 italic">Belum ada data unit kerja.</td>
+                                <td
+                                    colSpan="5"
+                                    className="p-10 text-center text-slate-400 italic"
+                                >
+                                    Belum ada pegawai di unit ini.
+                                </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination */}
-            {units.length > itemsPerPage && (
-                <div className="p-4 border-t border-slate-100 flex justify-center items-center space-x-2">
-                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="btn btn-xs btn-outline">Prev</button>
-                    {[...Array(totalPages)].map((_, idx) => (
-                        <button key={idx} onClick={() => handlePageChange(idx + 1)} className={`btn btn-xs ${currentPage === idx + 1 ? "btn-primary" : "btn-outline"}`}>{idx + 1}</button>
-                    ))}
-                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="btn btn-xs btn-outline">Next</button>
+            {/* Pagination Controls */}
+            {units.length > 0 && (
+                <div className="p-4 border-t border-slate-100 flex justify-between items-center">
+                    <span className="text-sm text-slate-500">
+                        Menampilkan {indexOfFirst + 1} -{" "}
+                        {Math.min(indexOfLast, units.length)} dari{" "}
+                        {units.length}
+                    </span>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="btn btn-xs btn-outline"
+                        >
+                            Prev
+                        </button>
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="btn btn-xs btn-outline"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
-
-            {/* --- MODAL EDIT --- */}
-            <dialog id="modal_edit_pegawai" className="modal modal-bottom sm:modal-middle">
-                <div className="modal-box bg-white max-w-2xl rounded-2xl border border-slate-100 shadow-xl">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-lg text-slate-800 uppercase">Edit Data Pegawai</h3>
-                        <form method="dialog">
-                            <button className="btn btn-sm btn-circle btn-ghost">✕</button>
-                        </form>
-                    </div>
-
-                    <form className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="form-control">
-                                <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">NIP</label>
-                                <input type="text" value={selectedUnit?.nip} className="input input-bordered w-full bg-slate-50 text-sm font-semibold" readOnly />
-                            </div>
-                            <div className="form-control">
-                                <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">Nama Lengkap</label>
-                                <input type="text" defaultValue={selectedUnit?.nama_pegawai} className="input input-bordered w-full bg-slate-50 text-sm font-semibold" />
-                            </div>
-                            <div className="form-control">
-                                <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">Email</label>
-                                <input type="email" defaultValue={selectedUnit?.email} className="input input-bordered w-full bg-slate-50 text-sm font-semibold" />
-                            </div>
-                            <div className="form-control">
-                                <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">No. Telepon</label>
-                                <input type="text" defaultValue={selectedUnit?.telepon} className="input input-bordered w-full bg-slate-50 text-sm font-semibold" />
-                            </div>
-                        </div>
-
-                        <div className="form-control">
-                            <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">Jabatan</label>
-                            <input type="text" defaultValue={selectedUnit?.jabatan} className="input input-bordered w-full bg-slate-50 text-sm font-semibold" />
-                        </div>
-
-                        <div className="form-control">
-                            <label className="label-text font-bold text-slate-500 uppercase text-[10px] mb-1">Alamat Lengkap</label>
-                            <textarea defaultValue={selectedUnit?.alamat} className="textarea textarea-bordered w-full bg-slate-50 text-sm font-semibold min-h-[80px]" />
-                        </div>
-
-                        <div className="modal-action flex gap-2">
-                            <form method="dialog">
-                                <button className="btn btn-ghost btn-sm uppercase text-xs">Batal</button>
-                            </form>
-                            <button type="submit" className="btn btn-primary btn-sm px-6 uppercase text-xs text-white">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-                <form method="dialog" className="modal-backdrop">
-                    <button>close</button>
-                </form>
-            </dialog>
         </div>
     );
 }
