@@ -191,4 +191,23 @@ class PegawaiController extends Controller
             'data' => $pegawai
         ]);
     }
+
+    // FUNGSI BARU: MENGAMBIL STATISTIK UNTUK DASHBOARD
+    // =======================================================
+    public function getDashboardStats()
+    {
+        // Hitung total seluruh baris di tabel pegawai
+        $totalPegawai = \App\Models\Pegawai::count();
+
+        // Hitung total seluruh baris di tabel users (admin)
+        $totalAdmin = \App\Models\User::count();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_pegawai' => $totalPegawai,
+                'total_admin' => $totalAdmin
+            ]
+        ]);
+    }
 }

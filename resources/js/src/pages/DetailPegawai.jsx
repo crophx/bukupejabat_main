@@ -249,13 +249,18 @@ export default function DetailPegawai() {
                                     {/* --- TOOLTIP PADA EMAIL --- */}
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500">
                                         {unit.email ? (
-                                            <div className="tooltip tooltip-top" data-tip={unit.email}>
+                                            <div
+                                                className="tooltip tooltip-top"
+                                                data-tip={unit.email}
+                                            >
                                                 <span className="cursor-help line-clamp-1 max-w-[150px] lowercase italic">
                                                     {unit.email}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className="text-slate-300">-</span>
+                                            <span className="text-slate-300">
+                                                -
+                                            </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-slate-600">
