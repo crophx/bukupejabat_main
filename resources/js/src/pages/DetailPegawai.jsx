@@ -14,13 +14,32 @@ export default function DetailPegawai() {
     const [selectedUnit, setSelectedUnit] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
 
+    // STATE BARU UNTUK PENCARIAN
+    const [searchTerm, setSearchTerm] = useState("");
+
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // LOGIKA FILTER PENCARIAN (Berdasarkan nama, nip, atau jabatan)
+    const filteredUnits = units.filter((unit) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            (unit.nama_pegawai || "").toLowerCase().includes(searchLower) ||
+            (unit.nip || "").toLowerCase().includes(searchLower) ||
+            (unit.jabatan || "").toLowerCase().includes(searchLower)
+        );
+    });
+
+    // Reset halaman ke 1 setiap kali user mengetik pencarian
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    // PAGINATION SEKARANG MENGGUNAKAN filteredUnits
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
-    const currentUnits = units.slice(indexOfFirst, indexOfLast);
-    const totalPages = Math.ceil(units.length / itemsPerPage);
+    const currentUnits = filteredUnits.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
 
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
@@ -93,7 +112,8 @@ export default function DetailPegawai() {
             doc.setFont("helvetica", "normal");
             const namaUnit = unitName ? unitName : "Semua Unit";
             doc.text(`Unit Kerja : ${namaUnit}`, 14, 28);
-            doc.text(`Total Data : ${units.length} Pegawai`, 14, 34);
+            // PDF juga menggunakan data yang sudah terfilter
+            doc.text(`Total Data : ${filteredUnits.length} Pegawai`, 14, 34);
 
             const tableColumn = [
                 "No",
@@ -105,7 +125,7 @@ export default function DetailPegawai() {
             ];
             const tableRows = [];
 
-            units.forEach((unit, index) => {
+            filteredUnits.forEach((unit, index) => {
                 const rowData = [
                     index + 1,
                     unit.nip || "-",
@@ -153,28 +173,54 @@ export default function DetailPegawai() {
                     </h2>
 
                     <p className="text-xs text-slate-500 font-medium">
-                        Total {units.length} pegawai ditemukan
+                        Total {filteredUnits.length} pegawai ditemukan
                     </p>
                 </div>
 
                 {/* Tombol Aksi di Header */}
                 <div className="flex items-center gap-2">
-                    {/* Filter aearch */}
+                    {/* Filter search */}
                     <div className="relative w-full sm:w-64 pt-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
                         </svg>
-                        <input type="text" placeholder="Cari pegawai..." // value={searchTerm} // onChange={(e) => setSearchTerm(e.target.value)} 
-                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50" />
+                        {/* INPUT PENCARIAN DIAKTIFKAN DI SINI */}
+                        <input
+                            type="text"
+                            placeholder="Cari pegawai..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
+                        />
                     </div>
-                    {units.length > 0 && (
+                    {filteredUnits.length > 0 && (
                         <button
                             onClick={downloadPDF}
                             className="btn btn-sm bg-rose-500 hover:bg-rose-600 border-none text-white flex items-center gap-2 shadow-sm"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4"
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="size-4"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
                                 />
                             </svg>
                             Unduh PDF
@@ -185,9 +231,18 @@ export default function DetailPegawai() {
                         onClick={() => navigate(-1)}
                         className="btn btn-sm btn-ghost text-slate-500 hover:text-slate-800 flex items-center gap-2"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4"
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="size-4"
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
                             />
                         </svg>
                         Kembali
@@ -219,7 +274,6 @@ export default function DetailPegawai() {
                             <th className="px-4 py-4 border-b border-slate-100">
                                 Telepon
                             </th>
-                            {/* Kolom aksi dibuat sticky agar selalu terlihat di sebelah kanan */}
                             <th className="px-4 py-4 border-b border-slate-100 w-16 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] z-10">
                                 Aksi
                             </th>
@@ -235,7 +289,7 @@ export default function DetailPegawai() {
                                     </p>
                                 </td>
                             </tr>
-                        ) : units.length > 0 ? (
+                        ) : filteredUnits.length > 0 ? (
                             currentUnits.map((unit, index) => (
                                 <tr
                                     key={unit.id || index}
@@ -247,15 +301,12 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
                                         {unit.nip || "-"}
                                     </td>
-                                    {/* Mencegah patah, dan diberi min-w agar nama tidak tertekan */}
                                     <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase whitespace-normal min-w-[200px] leading-snug">
                                         {unit.nama_pegawai || "-"}
                                     </td>
-                                    {/* Mencegah patah, dan diberi min-w agar jabatan terbaca jelas */}
                                     <td className="px-4 py-3 text-sm font-semibold text-slate-500 whitespace-normal min-w-[200px] leading-snug">
                                         {unit.jabatan || "-"}
                                     </td>
-                                    {/* --- TOOLTIP PADA EMAIL --- */}
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500">
                                         {unit.email ? (
                                             <div
@@ -275,7 +326,6 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
-                                    {/* Tombol aksi dibuat sticky agar menempel saat di-scroll ke kanan */}
                                     <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] z-10">
                                         <button
                                             onClick={() => openEditModal(unit)}
@@ -306,7 +356,7 @@ export default function DetailPegawai() {
                                     colSpan="7"
                                     className="p-10 text-center text-slate-400 italic"
                                 >
-                                    Belum ada pegawai di unit ini.
+                                    Pencarian tidak menemukan hasil.
                                 </td>
                             </tr>
                         )}
@@ -315,12 +365,12 @@ export default function DetailPegawai() {
             </div>
 
             {/* Pagination Controls */}
-            {units.length > 0 && (
+            {filteredUnits.length > 0 && (
                 <div className="p-4 border-t border-slate-100 flex justify-between items-center">
                     <span className="text-sm text-slate-500 font-medium">
                         Menampilkan {indexOfFirst + 1} -{" "}
-                        {Math.min(indexOfLast, units.length)} dari{" "}
-                        {units.length}
+                        {Math.min(indexOfLast, filteredUnits.length)} dari{" "}
+                        {filteredUnits.length}
                     </span>
                     <div className="flex space-x-2">
                         <button
