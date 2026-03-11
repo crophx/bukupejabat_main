@@ -147,19 +147,19 @@ export default function UnitKerja() {
             </div>
 
             {/* Content Tabel */}
-            <div className="overflow-x-auto">
+            <div className="w-full overflow-x-auto border-t border-slate-100">
                 {/* Perbaikan utama ada di tag table ini dan isinya:
                   - whitespace-nowrap secara default untuk mencegah teks tumpang tindih
                 */}
-                <table className="w-full text-left border-collapse whitespace-nowrap">
+                <table className="w-full text-left border-collapse min-w-[1000px] table-auto">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
                                 No
                             </th>
-                            <th className="px-4 py-4 border-b border-slate-100">
+                            {/* <th className="px-4 py-4 border-b border-slate-100">
                                 Kode
-                            </th>
+                            </th> */}
                             <th className="px-4 py-4 border-b border-slate-100">
                                 Nama Unit Kerja
                             </th>
@@ -200,36 +200,62 @@ export default function UnitKerja() {
                                         {indexOfFirst + index + 1}
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
+                                    {/* <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
                                         {unit.kode_unit_kerja || "-"}
+                                    </td> */}
+
+                                    {/* 1. NAMA UNIT KERJA - Tetap 2 Baris */}
+                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 w-[200px]">
+                                        <div
+                                            className="tooltip tooltip-right before:normal-case"
+                                            data-tip={unit.nama_unit_kerja}
+                                        >
+                                            {/* Tambahkan w-[180px] agar line-clamp punya acuan lebar */}
+                                            <div className="line-clamp-2 leading-snug text-left w-[180px]">
+                                                {unit.nama_unit_kerja || "-"}
+                                            </div>
+                                        </div>
                                     </td>
 
-                                    {/* Mencegah patah secara tidak wajar, berikan min-width agar luas */}
-                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 whitespace-normal min-w-[250px] leading-snug">
-                                        {unit.nama_unit_kerja || "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3 text-sm text-slate-600">
-                                        {unit.email || "-"}
+                                    {/* --- TOOLTIP EMAIL --- */}
+                                    <td className="px-4 py-3 text-sm text-slate-600 w-[100px] max-w-[150px]">
+                                        <div
+                                            className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case"
+                                            data-tip={unit.email}
+                                        >
+                                            <div className="truncate text-left italic">
+                                                {unit.email || "-"}
+                                            </div>
+                                        </div>
                                     </td>
 
                                     <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
 
-                                    {/* Truncate untuk Alamat dan Website agar tidak merusak lebar tabel */}
-                                    <td
-                                        title={unit.alamat || "-"}
-                                        className="px-4 py-3 text-sm text-slate-600 max-w-[200px] truncate"
-                                    >
-                                        {unit.alamat || "-"}
+                                    {/* 2. ALAMAT - Satu Baris dengan Titik-titik */}
+                                    <td className="px-4 py-3 text-sm text-slate-600 w-[150px]">
+                                        <div
+                                            className="tooltip tooltip-top before:normal-case"
+                                            data-tip={unit.alamat}
+                                        >
+                                            {/* Gunakan truncate dan berikan lebar pasti */}
+                                            <div className="truncate text-left w-[230px] leading-relaxed italic">
+                                                {unit.alamat || "-"}
+                                            </div>
+                                        </div>
                                     </td>
 
-                                    <td
-                                        title={unit.website || "-"}
-                                        className="px-4 py-3 text-sm text-sky-600 max-w-[150px] truncate"
-                                    >
-                                        {unit.website || "-"}
+                                    {/* 3. WEBSITE - Biru dan Terpotong Rapi */}
+                                    <td className="px-4 py-3 text-sm text-sky-600 w-[150px]">
+                                        <div
+                                            className="tooltip tooltip-left before:normal-case"
+                                            data-tip={unit.website}
+                                        >
+                                            <div className="truncate text-left w-[130px] underline decoration-sky-100 underline-offset-4">
+                                                {unit.website || "-"}
+                                            </div>
+                                        </div>
                                     </td>
 
                                     {/* Kolom Aksi menempel di kanan (sticky) */}
@@ -239,18 +265,9 @@ export default function UnitKerja() {
                                             className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
                                             title="Edit Unit Kerja"
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                                className="size-4"
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4"
                                             >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
                                                 />
                                             </svg>
                                         </button>
@@ -295,13 +312,12 @@ export default function UnitKerja() {
                                     handlePageChange(page)
                                 }
                                 disabled={page === "..."}
-                                className={`btn btn-xs ${
-                                    page === currentPage
-                                        ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
-                                        : page === "..."
-                                          ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
-                                          : "btn-outline text-slate-500"
-                                }`}
+                                className={`btn btn-xs ${page === currentPage
+                                    ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                    : page === "..."
+                                        ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                        : "btn-outline text-slate-500"
+                                    }`}
                             >
                                 {page}
                             </button>
