@@ -208,7 +208,7 @@ export default function UnitKerja() {
                                     <td className="px-4 py-3 text-sm font-bold text-slate-700 w-[200px]">
                                         <div
                                             className="tooltip tooltip-right before:normal-case"
-                                            data-tip={unit.nama_unit_kerja}
+                                            data-tip={unit.deskripsi}
                                         >
                                             {/* Tambahkan w-[180px] agar line-clamp punya acuan lebar */}
                                             <div className="line-clamp-2 leading-snug text-left w-[180px]">
@@ -218,19 +218,26 @@ export default function UnitKerja() {
                                     </td>
 
                                     {/* --- TOOLTIP EMAIL --- */}
-                                    <td className="px-4 py-3 text-sm text-slate-600 w-[100px] max-w-[150px]">
+                                    <td className="px-4 py-3 text-sm text-slate-600 w-[70px]">
                                         <div
                                             className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case"
                                             data-tip={unit.email}
                                         >
-                                            <div className="truncate text-left italic">
+                                            <div className="truncate text-left w-[70px] leading-relaxed italic">
                                                 {unit.email || "-"}
                                             </div>
                                         </div>
                                     </td>
 
-                                    <td className="px-4 py-3 text-sm text-slate-600">
-                                        {unit.telepon || "-"}
+                                    <td className="px-4 py-3 text-sm text-slate-600 w-[70px]">
+                                        <div
+                                            className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case"
+                                            data-tip={unit.telepon}
+                                        >
+                                            <div className="truncate text-left w-[70px] leading-relaxed italic">
+                                                {unit.telepon || "-"}
+                                            </div>
+                                        </div>
                                     </td>
 
                                     {/* 2. ALAMAT - Satu Baris dengan Titik-titik */}
