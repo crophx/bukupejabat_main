@@ -18,7 +18,7 @@ export default function DetailPegawai() {
     const [searchTerm, setSearchTerm] = useState("");
 
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // LOGIKA FILTER PENCARIAN (Berdasarkan nama, nip, atau jabatan)
     const filteredUnits = units.filter((unit) => {
@@ -44,6 +44,28 @@ export default function DetailPegawai() {
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
+    };
+
+    // FUNGSI BARU: Generate nomor halaman dengan ellipsis
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push("...");
+
+            let start = Math.max(2, currentPage - 1);
+            let end = Math.min(totalPages - 1, currentPage + 1);
+
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (currentPage < totalPages - 2) pages.push("...");
+            pages.push(totalPages);
+        }
+        return pages;
     };
 
     const openEditModal = (unit) => {
@@ -174,12 +196,9 @@ export default function DetailPegawai() {
                             <span className="text-sky-600"> - {unitName}</span>
                         )}
                     </h2>
-                    {/* <p className="text-xs text-slate-500 font-medium">
-                        Total {filteredUnits.length} pegawai ditemukan
-                    </p> */}
 
                     {/* Tombol Aksi di Header */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                         {/* Filter search */}
                         <div className="relative w-full sm:w-64 pt-1">
                             <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -190,48 +209,51 @@ export default function DetailPegawai() {
                                 className="pl-9 pr-4 py-1 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-[250px] bg-slate-50" />
                         </div>
 
-{/* Dropdown Export */}
-    {filteredUnits.length > 0 && (
-        <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn btn-sm bg-sky-600 hover:bg-sky-700 border-none text-white rounded-xl flex items-center gap-2 shadow-sm px-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Unduh Data
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 opacity-50">
-                    <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                </svg>
-            </label>
-            <ul tabIndex={0} className="dropdown-content z-[100] menu p-2 shadow-2xl bg-white border border-slate-100 rounded-2xl w-44 mt-2">
-                <li className="menu-title text-[10px] uppercase tracking-widest text-slate-400 font-black">Format File</li>
-                <li>
-                    <button onClick={downloadPDF} className="flex items-center gap-3 text-slate-600 hover:text-rose-600 font-medium">
-                        <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
-                            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg>
-                        </span>
-                        Dokumen PDF
-                    </button>
-                </li>
-                <li>
-                    <button onClick={() => {/* logic excel */}} className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 font-medium">
-                        <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
-                            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-                        </span>
-                        Excel (.xlsx)
-                    </button>
-                </li>
-                <li>
-                    <button onClick={() => {/* logic csv */}} className="flex items-center gap-3 text-slate-600 hover:text-amber-600 font-medium">
-                        <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg">
-                            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM8 18l-1-1 2-2-2-2 1-1 3 3-3 3zm7 0h-4v-2h4v2z"/></svg>
-                        </span>
-                        File CSV
-                    </button>
-                </li>
-            </ul>
-        </div>
-    )}
+                        {/* Dropdown Export */}
+                        {filteredUnits.length > 0 && (
+                            <div className="dropdown dropdown-end">
+                                <label tabIndex={0} className="btn btn-sm bg-sky-600 hover:bg-sky-700 border-none text-white rounded-xl flex items-center gap-2 shadow-sm px-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    Unduh Data
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="size-4 opacity-50">
+                                        <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                                    </svg>
+                                </label>
+                                <ul tabIndex={0} className="dropdown-content z-[100] menu p-2 shadow-2xl bg-white border border-slate-100 rounded-2xl w-44 mt-2">
+                                    <li className="menu-title text-[10px] uppercase tracking-widest text-slate-400 font-black">Format File</li>
+                                    <li>
+                                        <button onClick={downloadPDF} className="flex items-center gap-3 text-slate-600 hover:text-rose-600 font-medium">
+                                            <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+                                                <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z" /></svg>
+                                            </span>
+                                            Dokumen PDF
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button onClick={() => {/* logic excel */ }} className="flex items-center gap-3 text-slate-600 hover:text-emerald-600 font-medium">
+                                            <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                                                <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
+                                            </span>
+                                            Excel (.xlsx)
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button onClick={() => {/* logic csv */ }} className="flex items-center gap-3 text-slate-600 hover:text-amber-600 font-medium">
+                                            <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg">
+                                                <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zM8 18l-1-1 2-2-2-2 1-1 3 3-3 3zm7 0h-4v-2h4v2z" /></svg>
+                                            </span>
+                                            File CSV
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                        )}
                     </div>
+                    <p className="text-xs text-slate-500 font-medium mt-2">
+                        Total {filteredUnits.length} pegawai ditemukan
+                    </p>
                 </div>
             </div>
 
@@ -349,14 +371,28 @@ export default function DetailPegawai() {
                 </table>
             </div>
 
-            {/* Pagination Controls */}
+            {/* Pagination Controls - HANYA BAGIAN INI YANG DIUBAH */}
             {filteredUnits.length > 0 && (
                 <div className="p-4 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-sm text-slate-500 font-medium">
-                        Menampilkan {indexOfFirst + 1} -{" "}
-                        {Math.min(indexOfLast, filteredUnits.length)} dari{" "}
-                        {filteredUnits.length}
-                    </span>
+                    {/* Kiri: Tampilkan X per halaman */}
+                    <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                        Tampilkan
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500"
+                        >
+                            {[10, 25, 50, 100].map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                        per halaman
+                    </div>
+
+                    {/* Kanan: Tombol navigasi halaman */}
                     <div className="flex space-x-2">
                         <button
                             onClick={() => handlePageChange(currentPage - 1)}
@@ -365,6 +401,23 @@ export default function DetailPegawai() {
                         >
                             Prev
                         </button>
+                        {getPageNumbers().map((page, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() =>
+                                    typeof page === "number" && handlePageChange(page)
+                                }
+                                disabled={page === "..."}
+                                className={`btn btn-xs ${page === currentPage
+                                    ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                    : page === "..."
+                                        ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                        : "btn-outline text-slate-500"
+                                    }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
                         <button
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}

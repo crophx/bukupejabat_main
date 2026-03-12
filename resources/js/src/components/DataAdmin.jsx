@@ -10,6 +10,8 @@ export default function DataAdmin() {
     const [isEditOpen, setEditOpen] = useState(false);
     const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selected, setSelected] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // 2. FETCH DATA DARI DATABASE SAAT HALAMAN DIBUKA
     useEffect(() => {
@@ -101,6 +103,38 @@ export default function DataAdmin() {
             .includes(query.toLowerCase()),
     );
 
+    // Reset ke halaman 1 saat pencarian berubah
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [query]);
+
+    const indexOfLast = currentPage * itemsPerPage;
+    const indexOfFirst = indexOfLast - itemsPerPage;
+    const currentAdmins = filtered.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+    const handlePageChange = (page) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page);
+    };
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push("...");
+            let start = Math.max(2, currentPage - 1);
+            let end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (currentPage < totalPages - 2) pages.push("...");
+            pages.push(totalPages);
+        }
+        return pages;
+    };
+
     return (
         <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6 text-slate-700">
             <section className="bg-white rounded-xl p-4">
@@ -148,7 +182,7 @@ export default function DataAdmin() {
                         </thead>
                         <tbody>
                             {filtered.length > 0 ? (
-                                filtered.map((a) => (
+                                currentAdmins.map((a) => (
                                     <tr
                                         key={a.id}
                                         className="hover:bg-slate-50"
@@ -211,9 +245,58 @@ export default function DataAdmin() {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                    <div>
-                        Showing {filtered.length} of {admins.length}
+                    <div className="flex items-center gap-2">
+                        Tampilkan
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500"
+                        >
+                            {[10, 25, 50, 100].map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                        per halaman
                     </div>
+                    {filtered.length > 0 && (
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="btn btn-xs btn-outline"
+                            >
+                                Prev
+                            </button>
+                            {getPageNumbers().map((page, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() =>
+                                        typeof page === "number" && handlePageChange(page)
+                                    }
+                                    disabled={page === "..."}
+                                    className={`btn btn-xs ${
+                                        page === currentPage
+                                            ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                            : page === "..."
+                                            ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                            : "btn-outline text-slate-500"
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="btn btn-xs btn-outline"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             </section>
 

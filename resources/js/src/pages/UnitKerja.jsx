@@ -306,11 +306,22 @@ export default function UnitKerja() {
             {/* Pagination controls */}
             {units.length > 0 && (
                 <div className="p-4 border-t border-slate-100 flex justify-between items-center">
-                    <span className="text-sm text-slate-500">
-                        Menampilkan {indexOfFirst + 1} -{" "}
-                        {Math.min(indexOfLast, units.length)} dari{" "}
-                        {units.length} unit
-                    </span>
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                        Tampilkan
+                        <select
+                            value={itemsPerPage}
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500"
+                        >
+                            {[10, 25, 50, 100].map((n) => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                        per halaman
+                    </div>
                     <div className="flex space-x-2">
                         <button
                             onClick={() => handlePageChange(currentPage - 1)}
