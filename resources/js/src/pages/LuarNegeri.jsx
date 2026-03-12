@@ -144,43 +144,15 @@ export default function LuarNegeri() {
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         {/* Kotak Pencarian */}
                         <div className="relative w-full sm:w-64">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <input
-                                type="text"
-                                placeholder="Cari unit kerja..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
-                            />
+                            <input type="text" placeholder="Cari unit kerja..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50" />
                         </div>
 
                         <button className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                                className="size-4"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
                             <span className="text-xs font-bold uppercase tracking-tight">
                                 Unduh PDF
@@ -199,29 +171,15 @@ export default function LuarNegeri() {
                     </div>
                 ) : currentUnits.length > 0 ? (
                     currentUnits.map((unit) => (
-                        <details
-                            key={unit.id}
-                            className="group mb-4 bg-slate-50 border-slate-200 border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
-                        >
+                        <details key={unit.id} className="group mb-4 bg-slate-50 border-slate-200 border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <summary className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-100 transition-colors list-none">
                                 <div className="flex items-center gap-4">
                                     <span className="font-bold text-slate-800 uppercase text-medium tracking-wider">
                                         {unit.nama_unit_kerja || unit.deskripsi}
                                     </span>
                                 </div>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2.5}
-                                    stroke="currentColor"
-                                    className="size-4 text-slate-400 group-open:rotate-180 transition-transform"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                                    />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="size-4 text-slate-400 group-open:rotate-180 transition-transform">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </summary>
 
@@ -340,13 +298,12 @@ export default function LuarNegeri() {
                                         typeof page === "number" && handlePageChange(page)
                                     }
                                     disabled={page === "..."}
-                                    className={`btn btn-xs ${
-                                        page === currentPage
+                                    className={`btn btn-xs ${page === currentPage
                                             ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
                                             : page === "..."
-                                              ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
-                                              : "btn-outline text-slate-500"
-                                    }`}
+                                                ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                                : "btn-outline text-slate-500"
+                                        }`}
                                 >
                                     {page}
                                 </button>
@@ -385,12 +342,7 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Alamat
                                     </label>
-                                    <textarea
-                                        name="alamat"
-                                        value={editData.alamat}
-                                        onChange={handleInputChange}
-                                        className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                        rows="3"
+                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="3"
                                     />
                                 </div>
 
@@ -399,22 +351,8 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Kontak
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="telepon"
-                                        value={editData.telepon}
-                                        onChange={handleInputChange}
-                                        placeholder="Telepon"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="fax"
-                                        value={editData.fax}
-                                        onChange={handleInputChange}
-                                        placeholder="Fax"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
+                                    <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} placeholder="Telepon" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} placeholder="Fax" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
                                 {/* Digital */}
@@ -422,22 +360,8 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Digital
                                     </label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={editData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="Email"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="website"
-                                        value={editData.website}
-                                        onChange={handleInputChange}
-                                        placeholder="Website"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
+                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
                                 {/* Operasional - khusus Luar Negeri */}
@@ -445,38 +369,18 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Operasional
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="hari_kerja"
-                                        value={editData.hari_kerja}
-                                        onChange={handleInputChange}
-                                        placeholder="Hari Kerja (Cth: Senin - Jumat)"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="beda_jam"
-                                        value={editData.beda_jam}
-                                        onChange={handleInputChange}
-                                        placeholder="Beda Jam"
-                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
-                                    />
+                                    <input type="text" name="hari_kerja" value={editData.hari_kerja} onChange={handleInputChange} placeholder="Hari Kerja (Cth: Senin - Jumat)" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <input type="text" name="beda_jam" value={editData.beda_jam} onChange={handleInputChange} placeholder="Beda Jam" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
-                                    className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100"
-                                >
+                                <button type="button"
+                                    onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100">
                                     Batal
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={isUpdating}
-                                    className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none"
-                                >
+                                <button type="submit"
+                                    disabled={isUpdating} className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
                                     {isUpdating ? "Menyimpan..." : "Simpan Perubahan"}
                                 </button>
                             </div>

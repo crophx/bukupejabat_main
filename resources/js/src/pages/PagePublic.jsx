@@ -15,11 +15,7 @@ export default function PublicPage() {
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 h-20 flex items-center justify-between px-6">
                         {/* LOGO SECTION */}
                         <div className="flex items-center gap-4">
-                            <img
-                                src={Logo}
-                                alt="logo"
-                                className="max-h-12 object-contain"
-                            />
+                            <img src={Logo} alt="logo" className="max-h-12 object-contain" />
                             <div className="hidden sm:block border-l border-slate-200 pl-4">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Republik Indonesia</p>
                                 <p className="text-sm font-bold text-slate-800 leading-none">Kementerian Luar Negeri</p>
