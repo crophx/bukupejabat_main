@@ -286,8 +286,7 @@ export default function LuarNegeri() {
                         <div className="flex space-x-2">
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="btn btn-xs btn-outline"
+                                disabled={currentPage === 1} className="btn btn-xs btn-outline"
                             >
                                 Prev
                             </button>
@@ -322,15 +321,8 @@ export default function LuarNegeri() {
 
             {/* --- KOMPONEN MODAL EDIT luar negeri --- */}
             {isEditModalOpen && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
-                    style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-                    onClick={() => setIsEditModalOpen(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }} onClick={() => setIsEditModalOpen(false)}>
+                    <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
                             Edit Luar Negeri - {editData.nama_unit_kerja || editData.deskripsi}
                         </h3>
@@ -342,8 +334,7 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Alamat
                                     </label>
-                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="3"
-                                    />
+                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="3"/>
                                 </div>
 
                                 {/* Kontak */}
@@ -375,12 +366,10 @@ export default function LuarNegeri() {
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                                <button type="button"
-                                    onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100">
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100">
                                     Batal
                                 </button>
-                                <button type="submit"
-                                    disabled={isUpdating} className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
+                                <button type="submit" disabled={isUpdating} className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
                                     {isUpdating ? "Menyimpan..." : "Simpan Perubahan"}
                                 </button>
                             </div>

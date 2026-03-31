@@ -44,19 +44,8 @@ export default function DashboardAdmin() {
                 {/* Header Section */}
                 <div className="mb-12">
                     <div className="inline-block p-4 bg-sky-50 rounded-3xl mb-6">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-10 text-sky-600"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"
-                            />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-10 text-sky-600">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"/>
                         </svg>
                     </div>
                     <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase mb-2">
@@ -70,29 +59,11 @@ export default function DashboardAdmin() {
                 {/* Main Actions */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* BUTTON VIEW */}
-                    <button
-                        onClick={() => navigate("/unit-kerja")}
-                        className="group p-8 bg-white border-2 border-slate-100 hover:border-sky-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-sky-100 flex flex-col items-center gap-4 cursor-pointer w-full"
-                    >
+                    <button onClick={() => navigate("/unit-kerja")} className="group p-8 bg-white border-2 border-slate-100 hover:border-sky-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-sky-100 flex flex-col items-center gap-4 cursor-pointer w-full">
                         <div className="p-4 bg-sky-50 text-sky-600 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                                className="size-8"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                                />
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                             </svg>
                         </div>
                         <span className="font-black text-slate-800 uppercase tracking-widest text-sm">
@@ -101,24 +72,10 @@ export default function DashboardAdmin() {
                     </button>
 
                     {/* BUTTON DALAM NEGERI (DOWNLOAD) */}
-                    <button
-                        onClick={() => navigate("/satkerja/dalam-negeri")}
-                        className="group p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-4 cursor-pointer w-full"
-                    >
+                    <button onClick={() => navigate("/satkerja/dalam-negeri")} className="group p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-4 cursor-pointer w-full">
                         <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                                className="size-8"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                             </svg>
                         </div>
                         <div className="text-center">
@@ -137,19 +94,8 @@ export default function DashboardAdmin() {
                         className="group p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-4 cursor-pointer w-full"
                     >
                         <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                                className="size-8"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/>
                             </svg>
                         </div>
                         <div className="text-center">
@@ -174,11 +120,7 @@ export default function DashboardAdmin() {
                 <div className="bg-white rounded-2xl p-1 shadow-md border border-slate-100 w-full md:w-1/3">
                     <div className="pt-3 text-sm text-slate-700">
                         <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:gap-6 sm:py-4">
-                            <img
-                                className="h-24 w-24 rounded-full object-cover sm:mx-0 sm:shrink-0"
-                                src={AdminProfile}
-                                alt="Profile"
-                            />
+                            <img className="h-24 w-24 rounded-full object-cover sm:mx-0 sm:shrink-0" src={AdminProfile} alt="Profile"/>
                             <div className="space-y-0 text-center sm:text-left">
                                 <div className="space-y-0.5">
                                     <p className="text-lg font-semibold text-black">
@@ -259,20 +201,8 @@ function Sparkline({ values = [], stroke = "#065f46" }) {
         .join(" ");
 
     return (
-        <svg
-            width={w}
-            height={h}
-            viewBox={`0 0 ${w} ${h}`}
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <polyline
-                fill="none"
-                stroke={stroke}
-                strokeWidth="2"
-                points={points}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
+        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
+            <polyline fill="none" stroke={stroke} strokeWidth="2" points={points} strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
     );
 }
