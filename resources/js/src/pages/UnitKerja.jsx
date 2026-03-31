@@ -5,6 +5,9 @@ export default function UnitKerja() {
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    // STATE BARU UNTUK PENCARIAN
+    const [searchTerm, setSearchTerm] = useState("");
+
     // pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -13,7 +16,6 @@ export default function UnitKerja() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Sesuaikan state dengan semua kolom di database
     const [editData, setEditData] = useState({
         id: "",
         kode_unit_kerja: "",
@@ -28,10 +30,27 @@ export default function UnitKerja() {
         deskripsi: "",
     });
 
+    // LOGIKA FILTER PENCARIAN
+    const filteredUnits = units.filter((unit) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            (unit.nama_unit_kerja || "").toLowerCase().includes(searchLower) ||
+            (unit.kode_unit_kerja || "").toLowerCase().includes(searchLower) ||
+            (unit.email || "").toLowerCase().includes(searchLower) ||
+            (unit.deskripsi || "").toLowerCase().includes(searchLower)
+        );
+    });
+
+    // Reset halaman ke 1 setiap kali user mengetik pencarian
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    // PAGINATION SEKARANG MENGGUNAKAN filteredUnits
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
-    const currentUnits = units.slice(indexOfFirst, indexOfLast);
-    const totalPages = Math.ceil(units.length / itemsPerPage);
+    const currentUnits = filteredUnits.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
 
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
@@ -72,6 +91,7 @@ export default function UnitKerja() {
             const result = response.data.data || [];
             setUnits(result);
             setCurrentPage(1);
+            setSearchTerm(""); // Kosongkan pencarian saat refresh data
         } catch (error) {
             console.error("Gagal mengambil data unit kerja:", error);
         } finally {
@@ -133,40 +153,55 @@ export default function UnitKerja() {
                         Daftar Unit Kerja
                     </h2>
                     <p className="text-xs text-slate-500 font-medium">
-                        Total {units.length} unit tersedia
+                        Total {filteredUnits.length} unit tersedia
                     </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     {/* Kotak Pencarian */}
                     <div className="relative w-full sm:w-64">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
                         </svg>
-                        <input type="text" placeholder="Cari unit kerja..." // value={searchTerm} // onChange={(e) => setSearchTerm(e.target.value)} 
-                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50" />
+                        {/* INPUT PENCARIAN DIAKTIFKAN DI SINI */}
+                        <input
+                            type="text"
+                            placeholder="Cari unit kerja..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
+                        />
                     </div>
                     <div className="flex items-center gap-3">
-                        <button onClick={fetchUnits} className="btn btn-sm btn-ghost text-sky-600 hover:bg-sky-50 border border-sky-600 rounded-xl">↻ Refresh</button>
+                        <button
+                            onClick={fetchUnits}
+                            className="btn btn-sm btn-ghost text-sky-600 hover:bg-sky-50 border border-sky-600 rounded-xl"
+                        >
+                            ↻ Refresh
+                        </button>
                     </div>
                 </div>
-
             </div>
 
             {/* Content Tabel */}
             <div className="w-full overflow-x-auto border-t border-slate-100">
-                {/* Perbaikan utama ada di tag table ini dan isinya:
-                  - whitespace-nowrap secara default untuk mencegah teks tumpang tindih
-                */}
                 <table className="w-full text-left border-collapse min-w-[1000px] table-auto">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
                                 No
                             </th>
-                            {/* <th className="px-4 py-4 border-b border-slate-100">
-                                Kode
-                            </th> */}
                             <th className="px-4 py-4 border-b border-slate-100">
                                 Nama Unit Kerja
                             </th>
@@ -197,30 +232,32 @@ export default function UnitKerja() {
                                     </p>
                                 </td>
                             </tr>
-                        ) : units.length > 0 ? (
+                        ) : filteredUnits.length > 0 ? (
                             currentUnits.map((unit, index) => (
-                                <tr key={unit.id || index} className="hover:bg-sky-50/40 transition-colors group align-middle">
+                                <tr
+                                    key={unit.id || index}
+                                    className="hover:bg-sky-50/40 transition-colors group align-middle"
+                                >
                                     <td className="px-4 py-3 text-sm text-center text-slate-500">
                                         {indexOfFirst + index + 1}
                                     </td>
 
-                                    {/* <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
-                                        {unit.kode_unit_kerja || "-"}
-                                    </td> */}
-
-                                    {/* 1. NAMA UNIT KERJA - Tetap 2 Baris */}
                                     <td className="px-4 py-3 text-sm font-bold text-slate-700 w-[200px]">
-                                        <div className="tooltip tooltip-right before:normal-case" data-tip={unit.deskripsi}>
-                                            {/* Tambahkan w-[180px] agar line-clamp punya acuan lebar */}
+                                        <div
+                                            className="tooltip tooltip-right before:normal-case"
+                                            data-tip={unit.deskripsi}
+                                        >
                                             <div className="line-clamp-2 leading-snug text-left w-[180px]">
                                                 {unit.nama_unit_kerja || "-"}
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* --- TOOLTIP EMAIL --- */}
                                     <td className="px-4 py-3 text-sm text-slate-600 w-[70px]">
-                                        <div className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case" data-tip={unit.email}>
+                                        <div
+                                            className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case"
+                                            data-tip={unit.email}
+                                        >
                                             <div className="truncate text-left w-[70px] leading-relaxed italic">
                                                 {unit.email || "-"}
                                             </div>
@@ -228,38 +265,56 @@ export default function UnitKerja() {
                                     </td>
 
                                     <td className="px-4 py-3 text-sm text-slate-600 w-[70px]">
-                                        <div className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case" data-tip={unit.telepon}>
+                                        <div
+                                            className="tooltip tooltip-top before:content-[attr(data-tip)] before:normal-case"
+                                            data-tip={unit.telepon}
+                                        >
                                             <div className="truncate text-left w-[70px] leading-relaxed italic">
                                                 {unit.telepon || "-"}
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* 2. ALAMAT - Satu Baris dengan Titik-titik */}
                                     <td className="px-4 py-3 text-sm text-slate-600 w-[150px]">
-                                        <div className="tooltip tooltip-top before:normal-case" data-tip={unit.alamat}>
-                                            {/* Gunakan truncate dan berikan lebar pasti */}
+                                        <div
+                                            className="tooltip tooltip-top before:normal-case"
+                                            data-tip={unit.alamat}
+                                        >
                                             <div className="truncate text-left w-[230px] leading-relaxed italic">
                                                 {unit.alamat || "-"}
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* 3. WEBSITE - Biru dan Terpotong Rapi */}
                                     <td className="px-4 py-3 text-sm text-sky-600 w-[150px]">
-                                        <div className="tooltip tooltip-left before:normal-case" data-tip={unit.website}>
+                                        <div
+                                            className="tooltip tooltip-left before:normal-case"
+                                            data-tip={unit.website}
+                                        >
                                             <div className="truncate text-left w-[130px] underline decoration-sky-100 underline-offset-4">
                                                 {unit.website || "-"}
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* Kolom Aksi menempel di kanan (sticky) */}
                                     <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] z-10">
-                                        <button onClick={() => openEditModal(unit)} className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100" title="Edit Unit Kerja">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4"
+                                        <button
+                                            onClick={() => openEditModal(unit)}
+                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
+                                            title="Edit Unit Kerja"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.5}
+                                                stroke="currentColor"
+                                                className="size-4"
                                             >
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
                                                 />
                                             </svg>
                                         </button>
@@ -268,8 +323,11 @@ export default function UnitKerja() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="8" className="p-10 text-center text-slate-400 italic">
-                                    Belum ada data unit kerja.
+                                <td
+                                    colSpan="8"
+                                    className="p-10 text-center text-slate-400 italic"
+                                >
+                                    Pencarian tidak menemukan hasil.
                                 </td>
                             </tr>
                         )}
@@ -278,7 +336,7 @@ export default function UnitKerja() {
             </div>
 
             {/* Pagination controls */}
-            {units.length > 0 && (
+            {filteredUnits.length > 0 && (
                 <div className="p-4 border-t border-slate-100 flex justify-between items-center">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                         Tampilkan
@@ -291,7 +349,9 @@ export default function UnitKerja() {
                             className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500"
                         >
                             {[10, 25, 50, 100].map((n) => (
-                                <option key={n} value={n}>{n}</option>
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
                             ))}
                         </select>
                         per halaman
@@ -312,12 +372,13 @@ export default function UnitKerja() {
                                     handlePageChange(page)
                                 }
                                 disabled={page === "..."}
-                                className={`btn btn-xs ${page === currentPage
-                                    ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
-                                    : page === "..."
-                                        ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
-                                        : "btn-outline text-slate-500"
-                                    }`}
+                                className={`btn btn-xs ${
+                                    page === currentPage
+                                        ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                        : page === "..."
+                                          ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                          : "btn-outline text-slate-500"
+                                }`}
                             >
                                 {page}
                             </button>
@@ -354,63 +415,86 @@ export default function UnitKerja() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Kode Unit Kerja
                                     </label>
-                                    <input type="text" name="kode_unit_kerja"
+                                    <input
+                                        type="text"
+                                        name="kode_unit_kerja"
                                         value={editData.kode_unit_kerja}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" disabled
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        disabled
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Nama Unit Kerja
                                     </label>
-                                    <input type="text" name="nama_unit_kerja"
+                                    <input
+                                        type="text"
+                                        name="nama_unit_kerja"
                                         value={editData.nama_unit_kerja}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-slate-50 text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" disabled
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-slate-50 text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        disabled
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Email
                                     </label>
-                                    <input type="email" name="email"
+                                    <input
+                                        type="email"
+                                        name="email"
                                         value={editData.email}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Telepon
                                     </label>
-                                    <input type="text" name="telepon"
+                                    <input
+                                        type="text"
+                                        name="telepon"
                                         value={editData.telepon}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Fax
                                     </label>
-                                    <input type="text" name="fax"
+                                    <input
+                                        type="text"
+                                        name="fax"
                                         value={editData.fax}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Website
                                     </label>
-                                    <input type="text" name="website"
+                                    <input
+                                        type="text"
+                                        name="website"
                                         value={editData.website}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Hari Kerja
                                     </label>
-                                    <input type="text" name="hari_kerja"
+                                    <input
+                                        type="text"
+                                        name="hari_kerja"
                                         value={editData.hari_kerja}
-                                        onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                        onChange={handleInputChange}
+                                        className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
                                         placeholder="Cth: Senin - Jumat"
                                     />
                                 </div>
@@ -418,7 +502,9 @@ export default function UnitKerja() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Beda Jam
                                     </label>
-                                    <input type="text" name="beda_jam"
+                                    <input
+                                        type="text"
+                                        name="beda_jam"
                                         value={editData.beda_jam}
                                         onChange={handleInputChange}
                                         className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
@@ -430,7 +516,8 @@ export default function UnitKerja() {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                     Alamat
                                 </label>
-                                <textarea name="alamat"
+                                <textarea
+                                    name="alamat"
                                     value={editData.alamat}
                                     onChange={handleInputChange}
                                     className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
@@ -441,7 +528,8 @@ export default function UnitKerja() {
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                     Deskripsi
                                 </label>
-                                <textarea name="deskripsi"
+                                <textarea
+                                    name="deskripsi"
                                     value={editData.deskripsi}
                                     onChange={handleInputChange}
                                     className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"
@@ -450,14 +538,18 @@ export default function UnitKerja() {
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                                <button type="button"
+                                <button
+                                    type="button"
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100" >
+                                    className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100"
+                                >
                                     Batal
                                 </button>
-                                <button type="submit"
+                                <button
+                                    type="submit"
                                     disabled={isUpdating}
-                                    className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none" >
+                                    className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none"
+                                >
                                     {isUpdating
                                         ? "Menyimpan..."
                                         : "Simpan Perubahan"}
