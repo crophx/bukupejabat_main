@@ -211,16 +211,22 @@ export default function DalamNegeri() {
                                         <p className="text-slate-700 font-semibold">
                                             {unit.telepon || "-"}
                                         </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">
+                                            Fax
+                                        </p>
                                         <p className="text-slate-500 italic text-xs">
-                                            Fax: {unit.fax || "-"}
+                                            {unit.fax || "-"}
                                         </p>
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Digital
+                                            Email
                                         </p>
                                         <p className="text-sky-600 font-bold underline">
                                             {unit.email || "-"}
+                                        </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">
+                                            Website
                                         </p>
                                         <p className="text-slate-400">
                                             {unit.website || "-"}
@@ -343,18 +349,24 @@ export default function DalamNegeri() {
                                 {/* Kontak */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Kontak
+                                        No. Telp
                                     </label>
                                     <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} placeholder="Telepon" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Fax
+                                    </label>
                                     <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} placeholder="Fax" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
                                 {/* Digital */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Digital
+                                        Email
                                     </label>
                                     <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Website
+                                    </label>
                                     <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
