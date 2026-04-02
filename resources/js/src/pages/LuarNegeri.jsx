@@ -223,7 +223,7 @@ export default function LuarNegeri() {
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Operasional
+                                            Hari Kerja
                                         </p>
                                         <p className="text-slate-700">
                                             {unit.hari_kerja || "-"}
@@ -346,25 +346,31 @@ export default function LuarNegeri() {
                                 {/* Kontak */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Kontak
+                                        No. Telepon
                                     </label>
                                     <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} placeholder="Telepon" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Fax
+                                    </label>
                                     <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} placeholder="Fax" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
                                 {/* Digital */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Digital
+                                        Email
                                     </label>
                                     <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Website
+                                    </label>
                                     <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                 </div>
 
                                 {/* Operasional - khusus Luar Negeri */}
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Operasional
+                                        Hari Kerja
                                     </label>
                                     <input type="text" name="hari_kerja" value={editData.hari_kerja} onChange={handleInputChange} placeholder="Hari Kerja (Cth: Senin - Jumat)" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
                                     <input type="text" name="beda_jam" value={editData.beda_jam} onChange={handleInputChange} placeholder="Beda Jam" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
