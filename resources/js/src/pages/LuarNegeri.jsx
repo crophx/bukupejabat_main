@@ -195,21 +195,27 @@ export default function LuarNegeri() {
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Kontak
+                                            No. Telepon
                                         </p>
                                         <p className="text-slate-700 font-semibold">
                                             {unit.telepon || "-"}
                                         </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">
+                                            Fax
+                                        </p>
                                         <p className="text-slate-500 italic text-xs">
-                                            Fax: {unit.fax || "-"}
+                                            {unit.fax || "-"}
                                         </p>
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Digital
+                                            Email
                                         </p>
                                         <p className="text-sky-600 font-bold underline">
                                             {unit.email || "-"}
+                                        </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">
+                                            Website
                                         </p>
                                         <p className="text-slate-400">
                                             {unit.website || "-"}
