@@ -243,12 +243,12 @@ export default function DetailPegawai() {
                         )} */}
                     </h2>
 
-                    <div className="flex flex-row items-center justify-between w-full mt-4 gap-90">
-                        <div className="relative">
+                    <div className="flex flex-col md:flex-row items-center justify-between w-full mt-4 gap-4">
+                        <div className="relative w-full md:w-auto">
                             <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <input type="text" placeholder="Cari pegawai..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-[250px] md:w-[300px] bg-slate-50 transition-all" />
+                            <input type="text" placeholder="Cari pegawai..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full max-w-[300px] bg-slate-50 transition-all" />
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -279,7 +279,7 @@ export default function DetailPegawai() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[1000px]">
+                <table className="w-full text-left border-collapse min-w-[850px] md:min-w-[1000px]">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">No</th>

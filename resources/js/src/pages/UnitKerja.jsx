@@ -196,7 +196,7 @@ export default function UnitKerja() {
 
             {/* Content Tabel */}
             <div className="w-full overflow-x-auto border-t border-slate-100">
-                <table className="w-full text-left border-collapse min-w-[1000px] table-auto">
+                <table className="w-full text-left border-collapse min-w-[850px] md:min-w-[1000px] table-auto">
                     <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
