@@ -38,3 +38,6 @@ Route::get('/sync-pegawai', [\App\Http\Controllers\Api\PegawaiController::class,
 Route::put('/pegawai/{id}', [\App\Http\Controllers\Api\PegawaiController::class, 'update']);
 
 Route::get('/dashboard/stats', [\App\Http\Controllers\Api\PegawaiController::class, 'getDashboardStats']);
+
+// Pastikan bagian class-nya mengarah ke UserController
+Route::get('/admin/profile/{id}', [\App\Http\Controllers\Api\UserController::class, 'getProfile']);

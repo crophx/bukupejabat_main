@@ -56,4 +56,21 @@ class UserController extends Controller
             'data' => $user
         ], 200);
     }
+
+    // =======================================================
+    // AMBIL PROFIL ADMIN UNTUK PENGATURAN AKUN
+    // =======================================================
+    public function getProfile($id)
+    {
+        // Kita gabungkan tabel users dengan unit_kerja untuk mendapatkan nama unitnya
+        $user = \App\Models\User::leftJoin('unit_kerja', 'users.unit_kerja_id', '=', 'unit_kerja.id')
+            ->select('users.id', 'users.username', 'users.email', 'users.role', 'unit_kerja.nama_unit_kerja', 'unit_kerja.deskripsi')
+            ->where('users.id', $id)
+            ->first();
+
+        if ($user) {
+            return response()->json(['success' => true, 'data' => $user]);
+        }
+        return response()->json(['success' => false, 'message' => 'User tidak ditemukan'], 404);
+    }
 }

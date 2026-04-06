@@ -10,23 +10,8 @@ export default function DalamNegeri() {
     // State untuk Pencarian dan Pagination
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(10); // Menampilkan 10 unit per halaman
 
-    // State untuk Modal Edit
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [editData, setEditData] = useState({
-        id: "",
-        nama_unit_kerja: "",
-        deskripsi: "",
-        alamat: "",
-        telepon: "",
-        fax: "",
-        email: "",
-        website: "",
-    });
-
-    // Ambil data saat halaman dibuka
     useEffect(() => {
         fetchDalamNegeri();
     }, []);
@@ -35,50 +20,13 @@ export default function DalamNegeri() {
         setLoading(true);
         try {
             const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja/dalam-negeri",
+                "http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"
             );
             setUnits(response.data.data || []);
         } catch (error) {
             console.error("Gagal mengambil data:", error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const openEditModal = (unit) => {
-        setEditData({
-            id: unit.id,
-            nama_unit_kerja: unit.nama_unit_kerja || "",
-            deskripsi: unit.deskripsi || "",
-            alamat: unit.alamat || "",
-            telepon: unit.telepon || "",
-            fax: unit.fax || "",
-            email: unit.email || "",
-            website: unit.website || "",
-        });
-        setIsEditModalOpen(true);
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setEditData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setIsUpdating(true);
-        try {
-            await axios.put(
-                `http://127.0.0.1:8000/api/unit-kerja/${editData.id}`,
-                editData,
-            );
-            setIsEditModalOpen(false);
-            fetchDalamNegeri();
-        } catch (error) {
-            console.error("Gagal mengupdate data:", error);
-            alert("Gagal menyimpan data. Silakan periksa koneksi atau console.");
-        } finally {
-            setIsUpdating(false);
         }
     };
 
@@ -90,7 +38,7 @@ export default function DalamNegeri() {
         return nama.includes(searchString) || deskripsi.includes(searchString);
     });
 
-    // Reset halaman ke 1 setiap kali user mengetik di kotak pencarian
+    // Reset halaman ke 1 setiap kali user mengetik
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
@@ -106,7 +54,6 @@ export default function DalamNegeri() {
         setCurrentPage(page);
     };
 
-    // Smart Pagination (1 2 3 ... 10)
     const getPageNumbers = () => {
         const pages = [];
         const maxVisible = 5;
@@ -131,19 +78,24 @@ export default function DalamNegeri() {
     return (
         <div className="space-y-6 min-h-screen">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 p-6 animate-in fade-in duration-500">
-                {/* Header dengan Pencarian */}
+
+                {/* Header dengan Pencarian (Search dikembalikan!) */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <h2 className="text-lg font-bold text-slate-800 tracking-tight whitespace-nowrap">
                         Data Per Unit Kerja - Dalam Negeri
                     </h2>
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                        {/* Kotak Pencarian */}
                         <div className="relative w-full sm:w-64">
                             <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                            <input type="text" placeholder="Cari unit kerja..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
+                            <input
+                                type="text"
+                                placeholder="Cari unit kerja..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
                             />
                         </div>
 
@@ -151,20 +103,15 @@ export default function DalamNegeri() {
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
-                            <span className="text-xs font-bold uppercase tracking-tight">
-                                Unduh PDF
-                            </span>
+                            <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Looping Data (Menggunakan currentUnits) */}
                 {loading ? (
                     <div className="text-center p-10">
                         <span className="loading loading-spinner text-sky-500"></span>
-                        <p className="text-sm mt-2 text-slate-400">
-                            Memuat data unit...
-                        </p>
+                        <p className="text-sm mt-2 text-slate-400">Memuat data unit...</p>
                     </div>
                 ) : currentUnits.length > 0 ? (
                     currentUnits.map((unit) => (
@@ -178,86 +125,38 @@ export default function DalamNegeri() {
                                         {unit.deskripsi || unit.nama_unit_kerja}
                                     </span>
                                 </div>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2.5}
-                                    stroke="currentColor"
-                                    className="size-4 text-slate-400 group-open:rotate-180 transition-transform"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                                    />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="size-4 text-slate-400 group-open:rotate-180 transition-transform">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </summary>
 
                             <div className="p-6 bg-white border-t border-slate-200 space-y-6">
                                 <div className="flex flex-wrap md:flex-nowrap justify-between gap-6 text-[14px] items-start">
                                     <div className="flex-1 min-w-[150px]">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Alamat
-                                        </p>
-                                        <p className="text-slate-600 leading-relaxed">
-                                            {unit.alamat || "-"}
-                                        </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">Alamat</p>
+                                        <p className="text-slate-600 leading-relaxed">{unit.alamat || "-"}</p>
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Kontak
-                                        </p>
-                                        <p className="text-slate-700 font-semibold">
-                                            {unit.telepon || "-"}
-                                        </p>
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Fax
-                                        </p>
-                                        <p className="text-slate-500 italic text-xs">
-                                            {unit.fax || "-"}
-                                        </p>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">Kontak</p>
+                                        <p className="text-slate-700 font-semibold">{unit.telepon || "-"}</p>
+                                        <p className="text-slate-500 italic text-xs">Fax: {unit.fax || "-"}</p>
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Email
-                                        </p>
-                                        <p className="text-sky-600 font-bold underline">
-                                            {unit.email || "-"}
-                                        </p>
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Website
-                                        </p>
-                                        <p className="text-slate-400">
-                                            {unit.website || "-"}
-                                        </p>
-                                    </div>
-                                    <div className="w-full md:w-auto">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Aksi
-                                        </p>
-                                        <button
-                                            onClick={() => openEditModal(unit)}
-                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
-                                            title="Edit Unit Kerja"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-                                            </svg>
-                                        </button>
+                                        <p className="font-bold text-slate-400 uppercase mb-1">Digital</p>
+                                        <p className="text-sky-600 font-bold underline">{unit.email || "-"}</p>
+                                        <p className="text-slate-400">{unit.website || "-"}</p>
                                     </div>
                                 </div>
 
+                                {/* LOGIKA NAVIGASI DALAM NEGERI DITAMBAHKAN DI SINI */}
                                 <div
-                                    onClick={() => navigate(`/detail-pegawai/${unit.id}`)}
+                                    onClick={() => navigate(`/detail-pegawai/${unit.id}?source=dalam`)}
                                     className="bg-sky-50 border border-sky-100 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-sky-100"
                                 >
                                     <span className="text-[12px] font-bold text-sky-700 uppercase">
                                         Daftar Personel ({unit.pegawai_count || 0})
                                     </span>
-                                    <span className="text-sky-400 text-[11px] font-bold uppercase">
-                                        Klik Detail ➔
-                                    </span>
+                                    <span className="text-sky-400 text-[11px] font-bold uppercase">Klik Detail ➔</span>
                                 </div>
                             </div>
                         </details>
@@ -271,126 +170,31 @@ export default function DalamNegeri() {
                 {/* Pagination Controls */}
                 {filteredUnits.length > 0 && (
                     <div className="pt-4 mt-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                            Tampilkan
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => {
-                                    setItemsPerPage(Number(e.target.value));
-                                    setCurrentPage(1);
-                                }}
-                                className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500"
-                            >
-                                {[10, 25, 50, 100].map((n) => (
-                                    <option key={n} value={n}>{n}</option>
-                                ))}
-                            </select>
-                            per halaman
-                        </div>
-
+                        <span className="text-sm text-slate-500">
+                            Menampilkan {indexOfFirst + 1} - {Math.min(indexOfLast, filteredUnits.length)} dari {filteredUnits.length} unit
+                        </span>
                         <div className="flex space-x-2">
-                            <button
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="btn btn-xs btn-outline"
-                            >
-                                Prev
-                            </button>
+                            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="btn btn-xs btn-outline">Prev</button>
                             {getPageNumbers().map((page, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() =>
-                                        typeof page === "number" && handlePageChange(page)
-                                    }
+                                    onClick={() => typeof page === "number" && handlePageChange(page)}
                                     disabled={page === "..."}
                                     className={`btn btn-xs ${page === currentPage
-                                        ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
-                                        : page === "..."
-                                            ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
-                                            : "btn-outline text-slate-500"
+                                            ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
+                                            : page === "..."
+                                                ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
+                                                : "btn-outline text-slate-500"
                                         }`}
                                 >
                                     {page}
                                 </button>
                             ))}
-                            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="btn btn-xs btn-outline"
-                            >
-                                Next
-                            </button>
+                            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="btn btn-xs btn-outline">Next</button>
                         </div>
                     </div>
                 )}
             </div>
-
-            {/* --- KOMPONEN MODAL EDIT dalam negeri --- */}
-            {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4"
-                    style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-                    onClick={() => setIsEditModalOpen(false)}
-                >
-                    <div
-                        className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
-                            Edit Dalam Negeri - {editData.deskripsi || editData.nama_unit_kerja}
-                        </h3>
-
-                        <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Alamat */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Alamat
-                                    </label>
-                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="3"/>
-                                </div>
-
-                                {/* Kontak */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        No. Telp
-                                    </label>
-                                    <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} placeholder="Telepon" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Fax
-                                    </label>
-                                    <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} placeholder="Fax" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
-                                </div>
-
-                                {/* Digital */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Website
-                                    </label>
-                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none"/>
-                                </div>
-
-                                {/* Deskripsi */}
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Deskripsi
-                                    </label>
-                                    <textarea name="deskripsi" value={editData.deskripsi} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="3"/>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100">
-                                    Batal
-                                </button>
-                                <button type="submit" disabled={isUpdating} className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
-                                    {isUpdating ? "Menyimpan..." : "Simpan Perubahan"}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
