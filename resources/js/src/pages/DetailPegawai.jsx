@@ -105,6 +105,7 @@ export default function DetailPegawai() {
             no_handphone: formData.get("no_handphone"),
             jabatan: formData.get("jabatan"),
             alamat: formData.get("alamat"),
+            wisma: formData.get("wisma"),
         };
 
         try {
@@ -188,8 +189,7 @@ export default function DetailPegawai() {
             <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                     <h2 className="text-base font-bold text-slate-800 uppercase mb-2">
-                        <button
-                            type="button"
+                        <button type="button"
                             onClick={() => navigate(-1)}
                             className="cursor-pointer hover:text-sky-600 transition-colors"
                         >
@@ -254,10 +254,9 @@ export default function DetailPegawai() {
                 </div>
             </div>
 
-            {/* Content Tabel yang Sudah Dirapikan */}
-            <div className="overflow-x-auto">
-                {/* Tambahkan whitespace-nowrap agar tabel konsisten melebar jika diperlukan */}
-                <table className="w-full text-left border-collapse min-w-[1000px]">
+            {/* Content Tabel - Desktop */}
+            <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100 w-12 text-center">
@@ -278,7 +277,7 @@ export default function DetailPegawai() {
                             <th className="px-4 py-4 border-b border-slate-100">
                                 Telepon
                             </th>
-                            <th className="px-4 py-4 border-b border-slate-100 w-16 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] z-10">
+                            <th className="px-4 py-4 border-b border-slate-100 w-16 text-center">
                                 Aksi
                             </th>
                         </tr>
@@ -305,10 +304,10 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm font-mono text-sky-600 font-medium">
                                         {unit.nip || "-"}
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase whitespace-normal min-w-[200px] leading-snug">
+                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase whitespace-normal leading-snug">
                                         {unit.nama_pegawai || "-"}
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-slate-500 whitespace-normal min-w-[200px] leading-snug">
+                                    <td className="px-4 py-3 text-sm font-semibold text-slate-500 whitespace-normal leading-snug">
                                         {unit.jabatan || "-"}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500">
@@ -317,7 +316,7 @@ export default function DetailPegawai() {
                                                 className="tooltip tooltip-top"
                                                 data-tip={unit.email}
                                             >
-                                                <span className="cursor-help line-clamp-1 max-w-[150px] lowercase italic">
+                                                <span className="cursor-help line-clamp-1 lowercase italic">
                                                     {unit.email}
                                                 </span>
                                             </div>
@@ -330,23 +329,14 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm text-slate-600">
                                         {unit.telepon || "-"}
                                     </td>
-                                    <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] transition-colors shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] z-10">
+                                    <td className="px-4 py-3 text-center">
                                         <button
                                             onClick={() => openEditModal(unit)}
                                             className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
                                             title="Edit Pegawai"
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                                className="size-4"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
+                                                <path strokeLinecap="round" strokeLinejoin="round"
                                                     d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
                                                 />
                                             </svg>
@@ -366,6 +356,74 @@ export default function DetailPegawai() {
                         )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Content Cards - Mobile */}
+            <div className="md:hidden space-y-4 p-4">
+                {loading ? (
+                    <div className="flex justify-center py-10">
+                        <span className="loading loading-spinner text-sky-500"></span>
+                        <p className="text-xs mt-2 text-slate-400 ml-2">
+                            Memuat data pegawai...
+                        </p>
+                    </div>
+                ) : filteredUnits.length > 0 ? (
+                    currentUnits.map((unit, index) => (
+                        <div
+                            key={unit.id || index}
+                            className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-slate-800 text-sm uppercase mb-1">
+                                        {unit.nama_pegawai || "-"}
+                                    </h3>
+                                    {unit.jabatan && (
+                                        <p className="text-xs text-slate-600 font-semibold">
+                                            {unit.jabatan}
+                                        </p>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => openEditModal(unit)}
+                                    className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100 ml-2 flex-shrink-0"
+                                    title="Edit Pegawai"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="space-y-2 text-xs">
+                                {unit.nip && (
+                                    <div className="flex items-center">
+                                        <span className="text-slate-500 w-12 flex-shrink-0">NIP:</span>
+                                        <span className="text-sky-600 font-mono font-medium ml-2">{unit.nip}</span>
+                                    </div>
+                                )}
+                                {unit.email && (
+                                    <div className="flex items-center">
+                                        <span className="text-slate-500 w-12 flex-shrink-0">Email:</span>
+                                        <span className="text-slate-700 lowercase italic truncate ml-2">{unit.email}</span>
+                                    </div>
+                                )}
+                                {unit.telepon && (
+                                    <div className="flex items-center">
+                                        <span className="text-slate-500 w-12 flex-shrink-0">Telepon:</span>
+                                        <span className="text-slate-700 italic truncate ml-2">{unit.telepon}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-10 text-slate-400 italic">
+                        Pencarian tidak menemukan hasil.
+                    </div>
+                )}
             </div>
 
             {/* Pagination Controls - HANYA BAGIAN INI YANG DIUBAH */}
@@ -452,9 +510,7 @@ export default function DetailPegawai() {
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
                                     NIP
                                 </label>
-                                <input
-                                    type="text"
-                                    value={selectedUnit?.nip || ""}
+                                <input type="text" value={selectedUnit?.nip || ""}
                                     className="input input-bordered w-full bg-slate-50 text-slate-500 border-slate-200 rounded-2xl text-sm font-semibold h-12"
                                     readOnly
                                 />
@@ -463,35 +519,26 @@ export default function DetailPegawai() {
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
                                     Nama Lengkap
                                 </label>
-                                <input
-                                    type="text"
-                                    name="nama"
+                                <input type="text" name="nama"
                                     defaultValue={
                                         selectedUnit?.nama_pegawai || ""
-                                    }
-                                    className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
+                                    } className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                                 />
                             </div>
                             <div className="form-control">
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
                                     Email
                                 </label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    defaultValue={selectedUnit?.email || ""}
-                                    className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
+                                <input type="email" name="email"
+                                    defaultValue={selectedUnit?.email || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                                 />
                             </div>
                             <div className="form-control">
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
                                     No. Telepon
                                 </label>
-                                <input
-                                    type="text"
-                                    name="no_handphone"
-                                    defaultValue={selectedUnit?.telepon || ""}
-                                    className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
+                                <input type="text" name="no_handphone"
+                                    defaultValue={selectedUnit?.telepon || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
                                 />
                             </div>
                         </div>
@@ -510,11 +557,22 @@ export default function DetailPegawai() {
 
                         <div className="form-control">
                             <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
-                                Alamat Lengkap
+                                Alamat
                             </label>
                             <textarea
                                 name="alamat"
                                 defaultValue={selectedUnit?.alamat || ""}
+                                className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3"
+                            />
+                        </div>
+
+                        <div className="form-control">
+                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">
+                                Wisma
+                            </label>
+                            <textarea
+                                name="wisma"
+                                defaultValue={selectedUnit?.wisma || ""}
                                 className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3"
                             />
                         </div>
@@ -527,7 +585,7 @@ export default function DetailPegawai() {
                                         .getElementById("modal_edit_pegawai")
                                         .close()
                                 }
-                                className="btn btn-ghost text-slate-400 font-bold uppercase text-[10px] tracking-widest"
+                                className="btn btn-ghost text-slate-400 font-bold uppercase text-[10px] rounded-2xl tracking-widest"
                             >
                                 Batal
                             </button>

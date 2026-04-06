@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -20,10 +20,22 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="w-55 hidden md:block">
-            <div className="sticky top-8">
-                <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 h-full">
-                    <nav className="space-y-1">
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`w-55 fixed md:static top-0 left-0 h-full z-50 transform transition-transform duration-300 ease-in-out md:transform-none ${
+                isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            } md:block`}>
+                <div className="sticky top-8 md:static">
+                    <div className="bg-white rounded-2xl md:rounded-2xl shadow-md border border-slate-100 h-full md:h-auto p-4">
+                        <nav className="space-y-1">
                         {/* --- Dashboard Admin --- */}
                         <NavLink
                             to="/dashboard"
@@ -339,5 +351,6 @@ export default function Sidebar() {
                 </div>
             </div>
         </aside>
+        </>
     );
 }

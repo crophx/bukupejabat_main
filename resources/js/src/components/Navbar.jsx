@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import Logo from "../assets/images/logo-kemlu.png";
 
-export default function Navbar({ onSignOut }) {
+export default function Navbar({ onSignOut, onToggleSidebar }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     // AMBIL DATA DARI SESSION
@@ -42,17 +42,40 @@ export default function Navbar({ onSignOut }) {
     return (
         <header className="w-full pt-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="bg-white rounded-2xl shadow-md border border-slate-100 h-20 flex items-center justify-between px-4 sm:px-6">
+                <div className="bg-white rounded-2xl shadow-md border border-slate-100 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6">
                     {/* LOGO SECTION */}
                     <div className="flex items-center gap-4">
-                        <div className="h-32 w-42 flex items-center justify-center">
+                        {/* Hamburger Menu for Mobile */}
+                        <button
+                            onClick={onToggleSidebar}
+                            className="md:hidden p-2 rounded-lg hover:bg-slate-50 transition-colors"
+                            aria-label="Toggle sidebar"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="size-6 text-slate-600"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                                />
+                            </svg>
+                        </button>
+                        <div className="h-auto max-h-12 sm:max-h-14 flex items-center justify-center">
                             <img
                                 src={Logo}
                                 alt="logo"
-                                className="max-h-14 object-contain"
+                                className="h-12 sm:h-14 object-contain"
                             />
                         </div>
                     </div>
+
+                    
 
                     {/* RIGHT SECTION */}
                     <div className="flex items-center gap-3">
@@ -78,7 +101,7 @@ export default function Navbar({ onSignOut }) {
                             </button>
 
                             {menuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-slate-100 z-50 overflow-hidden animation-fade-in">
+                                <div className="absolute right-0 mt-2 w-48 sm:w-48 bg-white rounded-2xl shadow-lg border border-slate-100 z-50 overflow-hidden animation-fade-in">
                                     <div className="block sm:hidden px-4 py-3 border-b border-slate-100 bg-slate-50">
                                         <p className="text-sm font-medium text-slate-900 truncate">
                                             {userName}
