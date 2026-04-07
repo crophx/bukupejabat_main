@@ -410,6 +410,9 @@ export default function DetailPegawai() {
                                 <option value="III">III</option>
                                 <option value="IV">IV</option>
                             </select>
+                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-sm italic mt-2 font-semibold cursor-pointer">
+                                📖 Notes Bobot
+                            </button>
                         </div>
 
                         <div className="form-control">
@@ -449,6 +452,56 @@ export default function DetailPegawai() {
                             <button type="submit" disabled={isUpdating} className="btn bg-sky-600 hover:bg-sky-700 border-none text-white px-10 rounded-2xl shadow-xl shadow-sky-100 transition-all font-bold text-xs uppercase">{isUpdating ? "Menyimpan..." : "Simpan Perubahan"}</button>
                         </div>
                     </form>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            {/* --- MODAL NOTES BOBOT --- */}
+            <dialog id="modal_notes_bobot" className="modal modal-bottom sm:modal-middle">
+                <div className="modal-box bg-white max-w-2xl rounded-3xl p-8 border border-slate-100 shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">📖 Penjelasan Bobot</h3>
+                        <form method="dialog"><button className="btn btn-sm btn-circle btn-ghost text-slate-400">✕</button></form>
+                    </div>
+
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                            <h4 className="font-bold text-blue-800 text-lg mb-2">Bobot I</h4>
+                            <p className="text-sm text-blue-700 leading-relaxed">
+                                Pejabat tingkat tertinggi dengan tanggung jawab strategis dan pengambilan keputusan utama. Termasuk pejabat eselon I dan posisi setara dengan wewenang penuh dalam organisasi.
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-2xl">
+                            <h4 className="font-bold text-green-800 text-lg mb-2">Bobot II</h4>
+                            <p className="text-sm text-green-700 leading-relaxed">
+                                Pejabat tingkat menengah atas dengan tanggung jawab signifikan dalam pelaksanaan kebijakan. Termasuk pejabat eselon II dan posisi manajerial utama dengan supervisi langsung.
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                            <h4 className="font-bold text-amber-800 text-lg mb-2">Bobot III</h4>
+                            <p className="text-sm text-amber-700 leading-relaxed">
+                                Pejabat tingkat menengah dengan tanggung jawab operasional dan koordinasi unit kerja. Termasuk pejabat eselon III dan kepala seksi dengan fungsi administratif dan teknis.
+                            </p>
+                        </div>
+
+                        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
+                            <h4 className="font-bold text-rose-800 text-lg mb-2">Bobot IV</h4>
+                            <p className="text-sm text-rose-700 leading-relaxed">
+                                Pejabat tingkat staf dengan tanggung jawab pada level operasional dan pendukung. Termasuk pejabat eselon IV, koordinator, dan staf ahli dengan fokus pada implementasi teknis.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* <div className="modal-action flex gap-3 pt-6 border-t border-slate-100 mt-6">
+                        <form method="dialog">
+                            <button className="btn bg-sky-600 hover:bg-sky-700 border-none text-white px-8 rounded-2xl shadow-xl shadow-sky-100 transition-all font-bold text-xs uppercase">
+                                Tutup</button>
+                        </form>
+                    </div> */}
                 </div>
                 <form method="dialog" className="modal-backdrop">
                     <button>close</button>
