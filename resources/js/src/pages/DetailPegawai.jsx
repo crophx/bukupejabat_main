@@ -126,6 +126,8 @@ export default function DetailPegawai() {
             no_handphone: formData.get("no_handphone"),
             jabatan: formData.get("jabatan"),
             alamat: formData.get("alamat"),
+            wisma: formData.get("wisma"),
+            bobot: formData.get("bobot"),
         };
 
         try {
@@ -179,6 +181,13 @@ export default function DetailPegawai() {
                 } else {
                     addressDetails += `\nEmail : -`;
                 }
+
+                if (unit.wisma && unit.wisma !== "-") {
+                    addressDetails += `\nWisma : ${unit.wisma}`;
+                } else {
+                    addressDetails += `\nWisma : -`;
+                }
+
 
                 const rowData = [
                     `${index + 1}.`,
@@ -393,8 +402,46 @@ export default function DetailPegawai() {
                         </div>
 
                         <div className="form-control">
-                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Alamat Lengkap</label>
-                            <textarea name="alamat" defaultValue={selectedUnit?.alamat || ""} className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3" />
+                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Bobot</label>
+                            <select name="bobot" defaultValue={selectedUnit?.bobot || ""} className="select select-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12">
+                                <option value="">Pilih Bobot</option>
+                                <option value="I">I</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                            </select>
+                        </div>
+
+                        <div className="form-control">
+                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Wisma</label>
+                            <textarea name="wisma" defaultValue={selectedUnit?.wisma || ""} className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="form-control">
+                                <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT</label>
+                                <div className="relative">
+                                    <input type="date" name="tmt" defaultValue={selectedUnit?.tmt || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12 pr-10" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="form-control">
+                                <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT Credential</label>
+                                <div className="relative">
+                                    <input type="date" name="tmt_credential" defaultValue={selectedUnit?.tmt_credential || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12 pr-10" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="modal-action flex gap-3 pt-4 border-t border-slate-100">
