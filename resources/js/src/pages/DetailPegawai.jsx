@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import Pagination from "../components/Pagination";
 
 export default function DetailPegawai() {
     const navigate = useNavigate();
@@ -66,27 +67,6 @@ export default function DetailPegawai() {
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
-    };
-
-    const getPageNumbers = () => {
-        const pages = [];
-        const maxVisible = 5;
-
-        if (totalPages <= maxVisible) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            pages.push(1);
-            if (currentPage > 3) pages.push("...");
-
-            let start = Math.max(2, currentPage - 1);
-            let end = Math.min(totalPages - 1, currentPage + 1);
-
-            for (let i = start; i <= end; i++) pages.push(i);
-
-            if (currentPage < totalPages - 2) pages.push("...");
-            pages.push(totalPages);
-        }
-        return pages;
     };
 
     const openEditModal = (unit) => {
@@ -342,30 +322,16 @@ export default function DetailPegawai() {
             </div>
 
             {filteredUnits.length > 0 && (
-                <div className="p-4 border-t border-slate-100 flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
-                        Tampilkan
-                        <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="select select-bordered select-xs text-slate-700 bg-slate-50 border-slate-300 focus:outline-none focus:border-sky-500">
-                            {[10, 25, 50, 100].map((n) => (<option key={n} value={n}>{n}</option>))}
-                        </select>
-                        per halaman
-                    </div>
-
-                    <div className="flex space-x-2">
-                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="btn btn-xs btn-outline">Prev</button>
-                        {getPageNumbers().map((page, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => typeof page === "number" && handlePageChange(page)}
-                                disabled={page === "..."}
-                                className={`btn btn-xs ${page === currentPage ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600" : page === "..." ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent" : "btn-outline text-slate-500"}`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="btn btn-xs btn-outline">Next</button>
-                    </div>
-                </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalItems={filteredUnits.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={handlePageChange}
+                    onItemsPerPageChange={(newSize) => {
+                        setItemsPerPage(newSize);
+                        setCurrentPage(1);
+                    }}
+                />
             )}
 
             {/* --- MODAL EDIT --- */}

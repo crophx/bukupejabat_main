@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Pagination from "../components/Pagination";
 
 export default function DalamNegeri() {
     const navigate = useNavigate();
@@ -110,27 +111,6 @@ export default function DalamNegeri() {
         setCurrentPage(page);
     };
 
-    const getPageNumbers = () => {
-        const pages = [];
-        const maxVisible = 5;
-
-        if (totalPages <= maxVisible) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            pages.push(1);
-            if (currentPage > 3) pages.push("...");
-
-            let start = Math.max(2, currentPage - 1);
-            let end = Math.min(totalPages - 1, currentPage + 1);
-
-            for (let i = start; i <= end; i++) pages.push(i);
-
-            if (currentPage < totalPages - 2) pages.push("...");
-            pages.push(totalPages);
-        }
-        return pages;
-    };
-
     return (
         <div className="space-y-6 min-h-screen">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 p-6 animate-in fade-in duration-500">
@@ -235,32 +215,18 @@ export default function DalamNegeri() {
                     </div>
                 )}
 
-                {/* Pagination Controls */}
                 {filteredUnits.length > 0 && (
-                    <div className="pt-4 mt-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <span className="text-sm text-slate-500">
-                            Menampilkan {indexOfFirst + 1} - {Math.min(indexOfLast, filteredUnits.length)} dari {filteredUnits.length} unit
-                        </span>
-                        <div className="flex space-x-2">
-                            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="btn btn-xs btn-outline">Prev</button>
-                            {getPageNumbers().map((page, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => typeof page === "number" && handlePageChange(page)}
-                                    disabled={page === "..."}
-                                    className={`btn btn-xs ${page === currentPage
-                                        ? "bg-sky-500 text-white border-sky-500 hover:bg-sky-600"
-                                        : page === "..."
-                                            ? "btn-outline border-transparent text-slate-400 cursor-default hover:bg-transparent"
-                                            : "btn-outline text-slate-500"
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="btn btn-xs btn-outline">Next</button>
-                        </div>
-                    </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalItems={filteredUnits.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={(value) => {
+                            setItemsPerPage(value);
+                            setCurrentPage(1);
+                        }}
+                        itemsPerPageOptions={[10, 25, 50, 100]}
+                    />
                 )}
             </div>
 
