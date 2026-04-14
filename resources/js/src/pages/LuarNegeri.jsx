@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
+import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
 
 export default function LuarNegeri() {
     const navigate = useNavigate();
@@ -16,8 +17,11 @@ export default function LuarNegeri() {
     // State untuk Modal Edit
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // PERBAIKAN: Menambahkan 'kode_unit_kerja' agar lolos validasi wajib di Controller
     const [editData, setEditData] = useState({
         id: "",
+        kode_unit_kerja: "",
         nama_unit_kerja: "",
         deskripsi: "",
         alamat: "",
@@ -49,8 +53,10 @@ export default function LuarNegeri() {
     };
 
     const openEditModal = (unit) => {
+        // PERBAIKAN: Masukkan kode_unit_kerja ke dalam state
         setEditData({
             id: unit.id,
+            kode_unit_kerja: unit.kode_unit_kerja || "",
             nama_unit_kerja: unit.nama_unit_kerja || "",
             deskripsi: unit.deskripsi || "",
             alamat: unit.alamat || "",
@@ -79,9 +85,24 @@ export default function LuarNegeri() {
             );
             setIsEditModalOpen(false);
             fetchLuarNegeri();
+
+            // TAMBAHAN: SweetAlert Sukses
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Data Luar Negeri berhasil diperbarui.',
+                confirmButtonColor: '#0ea5e9'
+            });
+
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
-            alert("Gagal menyimpan data. Silakan periksa koneksi atau console.");
+            // TAMBAHAN: SweetAlert Error
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Gagal menyimpan data. Silakan periksa koneksi atau console.',
+                confirmButtonColor: '#0ea5e9'
+            });
         } finally {
             setIsUpdating(false);
         }

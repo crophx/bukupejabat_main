@@ -57,6 +57,22 @@ class UserController extends Controller
         ], 200);
     }
 
+    // ==========================================
+    // FUNGSI BARU: MENGHAPUS DATA ADMIN
+    // ==========================================
+    public function destroy($id)
+    {
+        $user = \App\Models\User::find($id);
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Data admin tidak ditemukan'], 404);
+        }
+
+        $user->delete();
+
+        return response()->json(['success' => true, 'message' => 'Data admin berhasil dihapus']);
+    }
+
     // =======================================================
     // AMBIL PROFIL ADMIN UNTUK PENGATURAN AKUN
     // =======================================================

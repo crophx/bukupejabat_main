@@ -41,3 +41,5 @@ Route::get('/dashboard/stats', [\App\Http\Controllers\Api\PegawaiController::cla
 
 // Pastikan bagian class-nya mengarah ke UserController
 Route::get('/admin/profile/{id}', [\App\Http\Controllers\Api\UserController::class, 'getProfile']);
+
+Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
