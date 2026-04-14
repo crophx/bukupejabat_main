@@ -107,7 +107,7 @@ class PegawaiController extends Controller
                 $kodeUnkerJson = strtoupper(trim($item['kd_unker'] ?? ''));
                 $namaJabatanJson = strtolower(trim($item['Jabatan'] ?? ''));
 
-                // SATPAM: Cek Unit Kerja
+                // Cek Unit Kerja
                 if (!isset($unitKerjaMap[$kodeUnkerJson]) || $kodeUnkerJson === '') {
                     $countSkipped++;
                     continue;
@@ -156,9 +156,9 @@ class PegawaiController extends Controller
         }
     }
 
-    // =======================================================
-    // FUNGSI BARU: UPDATE DATA PEGAWAI DARI MODAL
-    // =======================================================
+    // ==============================
+    // UPDATE DATA PEGAWAI DARI MODAL
+    // ==============================
     public function update(Request $request, $id)
     {
         $pegawai = Pegawai::find($id);
@@ -172,6 +172,11 @@ class PegawaiController extends Controller
         $pegawai->email = $request->email ?? $pegawai->email;
         $pegawai->no_handphone = $request->no_handphone ?? $pegawai->no_handphone;
         $pegawai->alamat = $request->alamat ?? $pegawai->alamat;
+
+        $pegawai->bobot = $request->bobot ?? $pegawai->bobot;
+        $pegawai->wisma = $request->wisma ?? $pegawai->wisma;
+        $pegawai->tmt_jabatan = $request->tmt_jabatan ?? $pegawai->tmt_jabatan;
+        $pegawai->tmt_credential = $request->tmt_credential ?? $pegawai->tmt_credential;
 
         // 2. Jika jabatannya diubah teksnya, kita cek ke tabel Jabatan (Buat otomatis jika belum ada)
         if ($request->filled('jabatan')) {
@@ -192,8 +197,8 @@ class PegawaiController extends Controller
         ]);
     }
 
-    // FUNGSI BARU: MENGAMBIL STATISTIK UNTUK DASHBOARD
-    // =======================================================
+    // MENGAMBIL STATISTIK UNTUK DASHBOARD
+    // ===================================
     public function getDashboardStats()
     {
         // Hitung total seluruh baris di tabel pegawai
