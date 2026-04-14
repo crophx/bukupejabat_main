@@ -14,7 +14,7 @@ export default function MainLayout({ children, onSignOut }) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <div className="flex flex-col md:flex-row mt-6 -mt-8 gap-6">
                     <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-                    <main className="flex-1">{children}</main>
+                    <main className="flex-1 min-w-0">{children}</main>
                 </div>
             </div>
         </div>

@@ -30,7 +30,7 @@ export default function Sidebar({ isOpen, onClose }) {
             )}
 
             {/* Sidebar */}
-            <aside className={`w-full max-w-[280px] fixed md:static top-0 left-0 h-full z-50 transform transition-transform duration-300 ease-in-out md:transform-none ${
+            <aside className={`w-full max-w-[210px] md:w-[210px] md:flex-shrink-0 fixed md:static top-0 left-0 h-full z-50 transform transition-transform duration-300 ease-in-out md:transform-none ${
                 isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
             } md:block`}>
                 <div className="sticky top-0 md:static">

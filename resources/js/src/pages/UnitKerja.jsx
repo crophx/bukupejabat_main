@@ -260,7 +260,7 @@ export default function UnitKerja() {
                                             className="tooltip tooltip-top before:normal-case"
                                             data-tip={unit.alamat}
                                         >
-                                            <div className="truncate text-left w-[230px] leading-relaxed italic">
+                                            <div className="truncate text-left w-[150px] leading-relaxed italic">
                                                 {unit.alamat || "-"}
                                             </div>
                                         </div>
