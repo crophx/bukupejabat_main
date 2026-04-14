@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Swal from "sweetalert2"; // IMPORT SWEETALERT DI SINI
 
 export default function AccountSettings() {
     const [loading, setLoading] = useState(false);
@@ -75,8 +76,14 @@ export default function AccountSettings() {
     const handleUpdate = async (e) => {
         e.preventDefault();
 
+        // SWEETALERT UNTUK VALIDASI ID KOSONG
         if (!formData.id) {
-            alert("ID User belum ditemukan, tunggu proses memuat selesai.");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Data Belum Siap',
+                text: 'ID User belum ditemukan, tunggu proses memuat selesai.',
+                confirmButtonColor: '#0ea5e9' // Warna biru senada dengan tombol
+            });
             return;
         }
 
@@ -96,10 +103,24 @@ export default function AccountSettings() {
             // Update nama di local storage agar header pojok kanan atas ikut berubah jika namanya diganti
             localStorage.setItem('user_name', formData.nama);
 
-            alert("Perubahan profil berhasil disimpan!");
-            window.location.reload(); // Refresh halaman agar header ikut terupdate
+            // SWEETALERT UNTUK SUKSES
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Perubahan profil berhasil disimpan!',
+                confirmButtonColor: '#0ea5e9'
+            }).then(() => {
+                window.location.reload(); // Refresh halaman setelah user klik OK
+            });
+
         } catch (error) {
-            alert(error.response?.data?.message || "Terjadi kesalahan saat menyimpan.");
+            // SWEETALERT UNTUK ERROR
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error.response?.data?.message || "Terjadi kesalahan saat menyimpan.",
+                confirmButtonColor: '#0ea5e9'
+            });
         } finally {
             setLoading(false);
         }

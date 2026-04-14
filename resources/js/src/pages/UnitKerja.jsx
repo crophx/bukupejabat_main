@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "../components/Pagination";
+import Swal from "sweetalert2";
 
 export default function UnitKerja() {
     const [units, setUnits] = useState([]);
@@ -114,11 +115,24 @@ export default function UnitKerja() {
             );
             setIsEditModalOpen(false);
             fetchUnits();
+
+            // TAMBAHAN: SweetAlert Sukses
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Data Unit Kerja berhasil diperbarui.',
+                confirmButtonColor: '#0ea5e9'
+            });
+
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
-            alert(
-                "Gagal menyimpan data. Silakan periksa koneksi atau console.",
-            );
+            // TAMBAHAN: SweetAlert Error (Menggantikan alert bawaan)
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Gagal menyimpan data. Silakan periksa koneksi atau console.',
+                confirmButtonColor: '#0ea5e9'
+            });
         } finally {
             setIsUpdating(false);
         }

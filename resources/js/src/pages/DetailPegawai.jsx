@@ -5,6 +5,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Pagination from "../components/Pagination";
+import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
 
 export default function DetailPegawai() {
     const navigate = useNavigate();
@@ -108,6 +109,8 @@ export default function DetailPegawai() {
             alamat: formData.get("alamat"),
             wisma: formData.get("wisma"),
             bobot: formData.get("bobot"),
+            tmt_jabatan: formData.get("tmt_jabatan"), // memastikan field baru ikut
+            tmt_credential: formData.get("tmt_credential"), // memastikan field baru ikut
         };
 
         try {
@@ -117,9 +120,24 @@ export default function DetailPegawai() {
             );
             document.getElementById("modal_edit_pegawai").close();
             fetchPegawai();
+
+            // TAMBAHAN: SweetAlert Sukses
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Data Pegawai berhasil diperbarui.',
+                confirmButtonColor: '#0ea5e9'
+            });
+
         } catch (error) {
             console.error("Gagal menyimpan data:", error);
-            alert("Gagal menyimpan data. Silakan periksa koneksi.");
+            // TAMBAHAN: SweetAlert Error
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Gagal menyimpan data. Silakan periksa koneksi.',
+                confirmButtonColor: '#0ea5e9'
+            });
         } finally {
             setIsUpdating(false);
         }
@@ -207,7 +225,13 @@ export default function DetailPegawai() {
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
-            alert("Terjadi kesalahan saat membuat PDF. Coba periksa console browser.");
+            // TAMBAHAN: SweetAlert Error PDF
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal PDF',
+                text: 'Terjadi kesalahan saat membuat PDF. Coba periksa console browser.',
+                confirmButtonColor: '#0ea5e9'
+            });
         }
     };
 
@@ -461,13 +485,6 @@ export default function DetailPegawai() {
                             </p>
                         </div>
                     </div>
-
-                    {/* <div className="modal-action flex gap-3 pt-6 border-t border-slate-100 mt-6">
-                        <form method="dialog">
-                            <button className="btn bg-sky-600 hover:bg-sky-700 border-none text-white px-8 rounded-2xl shadow-xl shadow-sky-100 transition-all font-bold text-xs uppercase">
-                                Tutup</button>
-                        </form>
-                    </div> */}
                 </div>
                 <form method="dialog" className="modal-backdrop">
                     <button>close</button>
