@@ -103,7 +103,7 @@ export default function DalamNegeri() {
     };
 
     // =======================================================
-    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER)
+    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER)    
     // =======================================================
     const downloadPDF = async () => {
         Swal.fire({
