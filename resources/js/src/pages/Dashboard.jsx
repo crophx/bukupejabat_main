@@ -15,7 +15,7 @@ export default function Dashboard({ onSignOut }) {
         {page === 'tambah-pegawai' && (
           <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">Tambah Pegawai (placeholder)</div>
         )}
-        {page === 'data-admin' && <DataAdmin/>}
+        {page === 'data-admin' && <DataAdmin />}
         {page === 'unit-kerja' && (
           <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100">Unit Kerja (placeholder)</div>
         )}
