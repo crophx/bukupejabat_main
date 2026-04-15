@@ -124,19 +124,10 @@ export default function DetailPegawai() {
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Pegawai");
-
         const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Data_Pegawai";
         XLSX.writeFile(workbook, `Buku_Pejabat_${fileName}.xlsx`);
 
-        // TAMBAHAN: SweetAlert Sukses Download Excel
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'File Excel berhasil diunduh.',
-            confirmButtonColor: '#0ea5e9',
-            timer: 2000,
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File Excel berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
     };
 
     const downloadCSV = () => {
@@ -160,36 +151,97 @@ export default function DetailPegawai() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Data_Pegawai";
-
         link.setAttribute("href", url);
         link.setAttribute("download", `Buku_Pejabat_${fileName}.csv`);
         link.click();
 
-        // TAMBAHAN: SweetAlert Sukses Download CSV
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'File CSV berhasil diunduh.',
-            confirmButtonColor: '#0ea5e9',
-            timer: 2000,
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File CSV berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
     };
 
+    // ==========================================
+    // PERBAIKAN: KEMBALI KE FORMAT PDF TABEL RAPI
+    // ==========================================
     const downloadPDF = () => {
         try {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
-            doc.setFont("times", "bold"); doc.setFontSize(12);
-            doc.text(unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT", pageWidth / 2, 20, { align: "center" });
-            const tableRows = filteredUnits.map((unit, index) => [
-                `${index + 1}.`, unit.nama_pegawai || "-", unit.jabatan || "-",
-                `Kantor: ${unit.alamat || "s.d.a"}\nTelp: ${unit.telepon || "-"}\nEmail: ${unit.email || "-"}\nWisma: ${unit.wisma || "-"}`
-            ]);
-            autoTable(doc, { head: [["No.", "Nama", "Jabatan", "Alamat & Kantor"]], body: tableRows, startY: 40, theme: "plain", styles: { font: "times", fontSize: 10 } });
-            doc.save(`Buku_Pejabat_${unitName.replace(/\s+/g, "_")}.pdf`);
 
-            // TAMBAHAN: SweetAlert Sukses Download PDF
+            // Header Dokumen
+            doc.setFont("times", "bold");
+            doc.setFontSize(12);
+            const titleText = unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT";
+            doc.text(titleText, pageWidth / 2, 20, { align: "center" });
+
+            doc.setFont("times", "normal");
+            doc.setFontSize(10);
+            doc.text("Alamat Kantor: Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
+            doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
+
+            const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
+            const tableRows = [];
+
+            filteredUnits.forEach((unit, index) => {
+                let addressDetails = "";
+
+                if (unit.alamat && unit.alamat !== "-") {
+                    addressDetails += `Kantor : ${unit.alamat}\n`;
+                } else {
+                    addressDetails += `Kantor : s.d.a.\n`;
+                }
+
+                if (unit.telepon && unit.telepon !== "-") {
+                    addressDetails += `Telp. : ${unit.telepon}\n`;
+                }
+
+                if (unit.email && unit.email !== "-") {
+                    addressDetails += `Email : ${unit.email}\n`;
+                } else {
+                    addressDetails += `Email : -\n`;
+                }
+
+                if (unit.wisma && unit.wisma !== "-") {
+                    addressDetails += `Wisma : ${unit.wisma}`;
+                } else {
+                    addressDetails += `Wisma : -`;
+                }
+
+                const rowData = [
+                    `${index + 1}.`,
+                    unit.nama_pegawai || "-",
+                    unit.jabatan || "-",
+                    addressDetails
+                ];
+                tableRows.push(rowData);
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: "plain",
+                styles: {
+                    font: "times",
+                    fontSize: 10,
+                    cellPadding: 4,
+                    textColor: [0, 0, 0],
+                },
+                headStyles: {
+                    fontStyle: "bold",
+                    lineWidth: { top: 0.5, bottom: 0.5 },
+                    lineColor: [0, 0, 0],
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 45 },
+                    2: { cellWidth: 55 },
+                    3: { cellWidth: 'auto' }
+                },
+            });
+
+            const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
+            doc.save(`Buku_Pejabat_${fileName}.pdf`);
+
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
@@ -199,6 +251,7 @@ export default function DetailPegawai() {
                 showConfirmButton: false
             });
         } catch (error) {
+            console.error(error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
         }
     };
