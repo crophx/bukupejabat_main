@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "axios"; // Pastikan axios diimport
 import Modal from "./Modal";
+import ConfirmModal from "./ConfirmModal";
 import Pagination from "./Pagination";
-import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
+
+const defaultUnitOptions = [
+    "Pusat / Semua Unit",
+    "Biro Sumber Daya Manusia",
+    "Biro Hukum dan Organisasi",
+    "KBRI Tokyo",
+    "KJRI New York",
+    "KJRI Sydney",
+];
 
 export default function DataAdmin() {
+    // 1. Ganti sampleAdmins dengan array kosong dulu
     const [admins, setAdmins] = useState([]);
     const [query, setQuery] = useState("");
+    const [isAddOpen, setAddOpen] = useState(false);
     const [isEditOpen, setEditOpen] = useState(false);
+    const [isDeleteOpen, setDeleteOpen] = useState(false);
     const [selected, setSelected] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -57,49 +69,39 @@ export default function DataAdmin() {
         setEditOpen(true);
     };
 
-    // =======================================================
-    // FUNGSI BARU: HAPUS DENGAN SWEETALERT & AXIOS
-    // =======================================================
     const openDelete = (item) => {
-        Swal.fire({
-            title: 'Apakah Anda yakin?',
-            text: `Data admin ${item.username} akan dihapus secara permanen!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e11d48', // Warna merah rose-600
-            cancelButtonColor: '#94a3b8',  // Warna abu-abu slate-400
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    // Panggil API Delete Laravel
-                    await axios.delete(`http://127.0.0.1:8000/api/users/${item.id}`);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Terhapus!',
-                        text: 'Data admin berhasil dihapus.',
-                        confirmButtonColor: '#0ea5e9'
-                    });
-
-                    fetchAdmins(); // Refresh data tabel setelah dihapus
-                } catch (error) {
-                    console.error("Gagal menghapus admin:", error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Gagal menghapus data. Silakan periksa koneksi.',
-                        confirmButtonColor: '#0ea5e9'
-                    });
-                }
-            }
-        });
+        setSelected(item);
+        setDeleteOpen(true);
     };
 
-    // =======================================================
-    // PERBAIKAN: SAVE DENGAN SWEETALERT NOTIFIKASI
-    // =======================================================
+    const openAdd = () => {
+        setAddOpen(true);
+    };
+
+    const handleAdd = (newAdmin) => {
+        const createdAt = new Date().toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
+
+        setAdmins((prev) => [
+            {
+                id: Date.now(),
+                unit: newAdmin.unit || defaultUnitOptions[0],
+                email: newAdmin.email,
+                username: newAdmin.username,
+                role: newAdmin.role || "admin",
+                createdAt,
+            },
+            ...prev,
+        ]);
+        setAddOpen(false);
+    };
+
+    // Note: Handle Save & Delete sementara hanya update di layar (Frontend)
+    // Nanti bisa ditambahkan logika API-nya
+    // Fungsi Edit yang sudah disambungkan ke Backend
     const handleSave = async (updated) => {
         try {
             // Mengirim data ke API Laravel
@@ -116,23 +118,19 @@ export default function DataAdmin() {
                 // Jika sukses, tutup modal dan refresh tabel
                 setEditOpen(false);
                 fetchAdmins();
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Data admin berhasil diperbarui.',
-                    confirmButtonColor: '#0ea5e9'
-                });
             }
         } catch (error) {
             console.error("Gagal mengupdate admin:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Gagal menyimpan data. Silakan periksa koneksi atau console.',
-                confirmButtonColor: '#0ea5e9'
-            });
+            alert(
+                "Gagal menyimpan data. Silakan periksa koneksi atau console.",
+            );
         }
+    };
+
+    const handleDelete = () => {
+        if (!selected) return;
+        setAdmins((prev) => prev.filter((a) => a.id !== selected.id));
+        setSelected(null);
     };
 
     const filtered = admins.filter((a) =>
@@ -155,6 +153,15 @@ export default function DataAdmin() {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
     };
+
+    const unitOptions = [
+        ...new Set([
+            ...defaultUnitOptions,
+            ...admins
+                .map((item) => item.unit)
+                .filter((unit) => unit && unit !== "-"),
+        ]),
+    ];
 
     return (
         <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6 text-slate-700">
@@ -187,6 +194,14 @@ export default function DataAdmin() {
                             />
                         </label>
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={openAdd}
+                        className="btn btn-sm btn-primary text-white"
+                    >
+                        Tambah Admin
+                    </button>
                 </div>
 
                 <div className="mt-4 overflow-x-auto">
@@ -286,26 +301,57 @@ export default function DataAdmin() {
             </section>
 
             <Modal
+                open={isAddOpen}
+                onClose={() => setAddOpen(false)}
+                title="Tambah Admin"
+            >
+                <AdminForm
+                    initialData={{
+                        unit: defaultUnitOptions[0],
+                        email: "",
+                        username: "",
+                        role: "admin",
+                    }}
+                    unitOptions={unitOptions}
+                    submitLabel="Tambah"
+                    onCancel={() => setAddOpen(false)}
+                    onSave={(u) => {
+                        handleAdd(u);
+                    }}
+                />
+            </Modal>
+
+            <Modal
                 open={isEditOpen}
                 onClose={() => setEditOpen(false)}
                 title="Edit Admin"
             >
                 {selected && (
-                    <AdminEditForm
+                    <AdminForm
                         initialData={selected}
+                        unitOptions={unitOptions}
+                        submitLabel="Simpan"
                         onCancel={() => setEditOpen(false)}
                         onSave={(u) => {
                             handleSave(u);
+                            setEditOpen(false);
                         }}
+                        isEdit={true}
                     />
                 )}
             </Modal>
 
+            <ConfirmModal
+                open={isDeleteOpen}
+                onClose={() => setDeleteOpen(false)}
+                onConfirm={handleDelete}
+                message={`Hapus akun ${selected?.username ?? "item"}?`}
+            />
         </div>
     );
 }
 
-function AdminEditForm({ initialData = {}, onSave, onCancel }) {
+function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan", unitOptions = [], isEdit = false }) {
     const [form, setForm] = useState({ ...initialData });
 
     return (
@@ -320,37 +366,46 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
                     <label className="text-sm text-black">
                         Unit Organisasi
                     </label>
-                    <input
-                        value={form.unit || ""}
-                        onChange={(e) =>
-                            setForm({ ...form, unit: e.target.value })
-                        }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700 bg-slate-50"
-                        readOnly // Unit Kerja biasanya tidak diedit manual text, sebaiknya dropdown nanti
-                    />
+                    {isEdit ? (
+                        <input
+                            value={form.unit || ""}
+                            disabled
+                            className="w-full border p-2 rounded-md text-sm text-slate-500 bg-slate-100 cursor-not-allowed"
+                        />
+                    ) : (
+                        <select
+                            value={form.unit || unitOptions[0] || ""}
+                            onChange={(e) =>
+                                setForm({ ...form, unit: e.target.value })
+                            }
+                            className="w-full border p-2 rounded-md text-sm text-slate-700"
+                        >
+                            {unitOptions.map((unit) => (
+                                <option key={unit} value={unit}>
+                                    {unit}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                 </div>
                 <div>
                     <label className="text-sm text-black">Email</label>
                     <input
-                        type="email"
                         value={form.email || ""}
                         onChange={(e) =>
                             setForm({ ...form, email: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700 bg-white"
-                        required
+                        className="w-full border p-2 rounded-md text-sm text-slate-700"
                     />
                 </div>
                 <div>
                     <label className="text-sm text-black">Username</label>
                     <input
-                        type="text"
                         value={form.username || ""}
                         onChange={(e) =>
                             setForm({ ...form, username: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700 bg-white"
-                        required
+                        className="w-full border p-2 rounded-md text-sm text-slate-700"
                     />
                 </div>
                 <div>
@@ -360,7 +415,7 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
                         onChange={(e) =>
                             setForm({ ...form, role: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700 bg-white"
+                        className="w-full border p-2 rounded-md text-sm text-slate-700"
                     >
                         <option value="superadmin">Super Admin</option>
                         <option value="admin">Admin</option>
@@ -368,16 +423,16 @@ function AdminEditForm({ initialData = {}, onSave, onCancel }) {
                 </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-4 flex justify-end gap-2">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-3 py-1 btn btn-soft"
                 >
                     Batal
                 </button>
-                <button type="submit" className="btn btn-sm bg-sky-600 hover:bg-sky-700 border-none text-white px-6 rounded-lg">
-                    Simpan
+                <button type="submit" className="btn btn-info text-white">
+                    {submitLabel}
                 </button>
             </div>
         </form>
