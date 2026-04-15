@@ -12,16 +12,36 @@ use Illuminate\Support\Facades\File;
 class PegawaiController extends Controller
 {
     // =======================================================
-    // FUNGSI 1: MENGAMBIL SEMUA DATA PEGAWAI (Lama)
+    // FUNGSI 1: MENGAMBIL SEMUA DATA PEGAWAI (DIPERBARUI)
     // =======================================================
     public function index(Request $request)
     {
+        // Ambil data beserta relasinya
         $pegawais = Pegawai::with(['unitKerja', 'jabatan'])->get();
+
+        // Format data agar properti 'jabatan' dan 'nama_unit_kerja' menjadi string
+        $formatted = $pegawais->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'nip' => $p->nip,
+                'nama' => $p->nama,
+                'nama_pegawai' => $p->nama, // Tambahan untuk kompatibilitas React
+                'email' => $p->email,
+                'no_handphone' => $p->no_handphone,
+                'jabatan' => $p->jabatan ? $p->jabatan->nama_jabatan : '-',
+                'unit_kerja_id' => $p->unit_kerja_id,
+                'nama_unit_kerja' => $p->unitKerja ? $p->unitKerja->nama_unit_kerja : '-',
+                'bobot' => $p->bobot,
+                'wisma' => $p->wisma,
+                'tmt_jabatan' => $p->tmt_jabatan,
+                'tmt_credential' => $p->tmt_credential
+            ];
+        });
 
         return response()->json([
             'success' => true,
             'message' => 'Data pegawai berhasil diambil dari database',
-            'data' => $pegawais
+            'data' => $formatted
         ]);
     }
 

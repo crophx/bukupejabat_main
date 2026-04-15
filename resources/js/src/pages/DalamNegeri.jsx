@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
-import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
+import Swal from "sweetalert2";
+import { jsPDF } from "jspdf"; // TAMBAHAN: Import jsPDF
+import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
 
 export default function DalamNegeri() {
     const navigate = useNavigate();
@@ -20,7 +22,6 @@ export default function DalamNegeri() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // PERBAIKAN: Menambahkan 'kode_unit_kerja' agar lolos validasi wajib di Controller
     const [editData, setEditData] = useState({
         id: "",
         kode_unit_kerja: "",
@@ -51,11 +52,7 @@ export default function DalamNegeri() {
         }
     };
 
-    // ==========================================
-    // FUNGSI UNTUK MODAL EDIT
-    // ==========================================
     const openEditModal = (unit) => {
-        // PERBAIKAN: Masukkan kode_unit_kerja ke dalam state
         setEditData({
             id: unit.id,
             kode_unit_kerja: unit.kode_unit_kerja || "",
@@ -84,9 +81,8 @@ export default function DalamNegeri() {
                 editData
             );
             setIsEditModalOpen(false);
-            fetchDalamNegeri(); // Refresh data setelah berhasil update
+            fetchDalamNegeri();
 
-            // TAMBAHAN: SweetAlert Sukses
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
@@ -95,12 +91,10 @@ export default function DalamNegeri() {
             });
 
         } catch (error) {
-            console.error("Gagal mengupdate data:", error);
-            // TAMBAHAN: SweetAlert Error
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Gagal menyimpan data. Silakan periksa koneksi atau console.',
+                text: 'Gagal menyimpan data.',
                 confirmButtonColor: '#0ea5e9'
             });
         } finally {
@@ -108,7 +102,110 @@ export default function DalamNegeri() {
         }
     };
 
-    // 1. Logika Filter (Pencarian)
+    // =======================================================
+    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER)
+    // =======================================================
+    const downloadPDF = async () => {
+        Swal.fire({
+            title: 'Memproses PDF...',
+            text: 'Sedang menyusun daftar pejabat per orang...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            // Ambil data dari API Pegawai yang sudah kita perbaiki formatnya
+            const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const allPegawai = response.data.data || [];
+
+            // Filter kata kunci jabatan sesuai permintaan
+            const allowedKeywords = [
+                "menteri", "wakil menteri", "staf ahli",
+                "kepala biro", "kepala bagian", "kepala subbagian"
+            ];
+
+            const pejabatList = allPegawai.filter(p => {
+                const jabatanStr = (p.jabatan || "").toLowerCase();
+                const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
+
+                // Pastikan hanya dari unit kerja Dalam Negeri yang saat ini ada di list
+                const isInUnitList = units.some(u => u.id === p.unit_kerja_id);
+
+                return isPejabat && isInUnitList;
+            });
+
+            if (pejabatList.length === 0) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat sesuai kriteria di unit ini.', 'info');
+                return;
+            }
+
+            // Pengelompokan berdasarkan Unit Kerja agar rapi per Satker
+            const grouped = pejabatList.reduce((acc, p) => {
+                const unitName = p.nama_unit_kerja || "Unit Tidak Diketahui";
+                if (!acc[unitName]) acc[unitName] = [];
+                acc[unitName].push(p);
+                return acc;
+            }, {});
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+
+            doc.setFont("times", "bold");
+            doc.setFontSize(14);
+            doc.text("DAFTAR PEJABAT DALAM NEGERI", pageWidth / 2, 20, { align: "center" });
+
+            doc.setFontSize(10);
+            doc.setFont("times", "normal");
+            doc.text("Kementerian Luar Negeri Republik Indonesia", pageWidth / 2, 26, { align: "center" });
+
+            let currentY = 35;
+
+            // Loop melalui setiap Satker
+            Object.keys(grouped).forEach((unitName) => {
+                if (currentY > 240) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+
+                // HEADER SATKER
+                doc.setFillColor(245, 245, 245);
+                doc.rect(14, currentY - 5, pageWidth - 28, 8, 'F');
+                doc.setFont("times", "bold");
+                doc.setFontSize(10);
+                doc.text(unitName.toUpperCase(), 16, currentY);
+                currentY += 5;
+
+                const tableRows = grouped[unitName].map((p, i) => [
+                    `${i + 1}.`,
+                    p.nama_pegawai || p.nama || "-",
+                    p.jabatan || "-",
+                    `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
+                ]);
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    body: tableRows,
+                    theme: "plain",
+                    styles: { font: "times", fontSize: 9, cellPadding: 2 },
+                    headStyles: { fontStyle: "bold", lineWidth: { bottom: 0.1 } },
+                    columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 50 }, 2: { cellWidth: 55 } },
+                    margin: { left: 14, right: 14 },
+                });
+
+                currentY = doc.lastAutoTable.finalY + 15;
+            });
+
+            doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat berhasil diunduh.', timer: 2000, showConfirmButton: false });
+
+        } catch (error) {
+            console.error("Gagal Download PDF:", error);
+            Swal.fire('Error', 'Terjadi kesalahan teknis saat menyusun data PDF.', 'error');
+        }
+    };
+
     const filteredUnits = units.filter((unit) => {
         const searchString = searchTerm.toLowerCase();
         const nama = (unit.nama_unit_kerja || "").toLowerCase();
@@ -116,12 +213,10 @@ export default function DalamNegeri() {
         return nama.includes(searchString) || deskripsi.includes(searchString);
     });
 
-    // Reset halaman ke 1 setiap kali user mengetik
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    // 2. Logika Pagination
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
     const currentUnits = filteredUnits.slice(indexOfFirst, indexOfLast);
@@ -136,7 +231,6 @@ export default function DalamNegeri() {
         <div className="space-y-6 min-h-screen">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 p-6 animate-in fade-in duration-500">
 
-                {/* Header dengan Pencarian */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <h2 className="text-lg font-bold text-slate-800 tracking-tight whitespace-nowrap">
                         Data Per Unit Kerja - Dalam Negeri
@@ -156,11 +250,15 @@ export default function DalamNegeri() {
                             />
                         </div>
 
-                        <button className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
+                        {/* TOMBOL PDF AKTIF DENGAN LOGIKA PER ORANG */}
+                        <button
+                            onClick={downloadPDF}
+                            className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap"
+                        >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
-                            <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
+                            <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF Pejabat</span>
                         </button>
                     </div>
                 </div>
@@ -203,7 +301,6 @@ export default function DalamNegeri() {
                                         <p className="text-sky-600 font-bold underline">{unit.email || "-"}</p>
                                         <p className="text-slate-400">{unit.website || "-"}</p>
                                     </div>
-                                    {/* TAMBAHAN KOLOM AKSI EDIT */}
                                     <div className="w-full md:w-auto">
                                         <p className="font-bold text-slate-400 uppercase mb-1">Aksi</p>
                                         <button
@@ -246,61 +343,38 @@ export default function DalamNegeri() {
                             setItemsPerPage(value);
                             setCurrentPage(1);
                         }}
-                        itemsPerPageOptions={[10, 25, 50, 100]}
                     />
                 )}
             </div>
 
-            {/* --- KOMPONEN MODAL EDIT DALAM NEGERI --- */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }} onClick={() => setIsEditModalOpen(false)}>
                     <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl p-6 text-slate-800 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2">
                             Edit Dalam Negeri - {editData.deskripsi || editData.nama_unit_kerja}
                         </h3>
-
                         <form onSubmit={handleUpdate} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Alamat */}
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Alamat
-                                    </label>
-                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" rows="2" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
+                                    <textarea name="alamat" value={editData.alamat} onChange={handleInputChange} className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:outline-none" rows="2" />
                                 </div>
-
-                                {/* Kontak */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        No. Telepon
-                                    </label>
-                                    <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} placeholder="Telepon" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Fax
-                                    </label>
-                                    <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} placeholder="Fax" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">No. Telepon</label>
+                                    <input type="text" name="telepon" value={editData.telepon} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Fax</label>
+                                    <input type="text" name="fax" value={editData.fax} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
                                 </div>
-
-                                {/* Digital */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Email
-                                    </label>
-                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Website
-                                    </label>
-                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
+                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
                                 </div>
                             </div>
-
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100">
-                                    Batal
-                                </button>
-                                <button type="submit" disabled={isUpdating} className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
-                                    {isUpdating ? "Menyimpan..." : "Simpan Perubahan"}
-                                </button>
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-sm btn-ghost text-slate-500">Batal</button>
+                                <button type="submit" disabled={isUpdating} className="btn btn-sm bg-sky-500 text-white border-none">{isUpdating ? "Menyimpan..." : "Simpan Perubahan"}</button>
                             </div>
                         </form>
                     </div>
