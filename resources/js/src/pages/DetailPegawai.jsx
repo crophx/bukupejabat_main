@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx"; // TAMBAHAN: Import library Excel
+import * as XLSX from "xlsx";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
 
@@ -106,9 +106,6 @@ export default function DetailPegawai() {
         }
     };
 
-    // ==========================================
-    // FUNGSI DOWNLOAD EXCEL
-    // ==========================================
     const downloadExcel = () => {
         const dataToExport = filteredUnits.map((unit, index) => ({
             "No": index + 1,
@@ -130,11 +127,18 @@ export default function DetailPegawai() {
 
         const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Data_Pegawai";
         XLSX.writeFile(workbook, `Buku_Pejabat_${fileName}.xlsx`);
+
+        // TAMBAHAN: SweetAlert Sukses Download Excel
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'File Excel berhasil diunduh.',
+            confirmButtonColor: '#0ea5e9',
+            timer: 2000,
+            showConfirmButton: false
+        });
     };
 
-    // ==========================================
-    // FUNGSI DOWNLOAD CSV
-    // ==========================================
     const downloadCSV = () => {
         const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Jabatan", "TMT Credential"];
         const rows = filteredUnits.map((unit, index) => [
@@ -160,6 +164,16 @@ export default function DetailPegawai() {
         link.setAttribute("href", url);
         link.setAttribute("download", `Buku_Pejabat_${fileName}.csv`);
         link.click();
+
+        // TAMBAHAN: SweetAlert Sukses Download CSV
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'File CSV berhasil diunduh.',
+            confirmButtonColor: '#0ea5e9',
+            timer: 2000,
+            showConfirmButton: false
+        });
     };
 
     const downloadPDF = () => {
@@ -174,6 +188,16 @@ export default function DetailPegawai() {
             ]);
             autoTable(doc, { head: [["No.", "Nama", "Jabatan", "Alamat & Kantor"]], body: tableRows, startY: 40, theme: "plain", styles: { font: "times", fontSize: 10 } });
             doc.save(`Buku_Pejabat_${unitName.replace(/\s+/g, "_")}.pdf`);
+
+            // TAMBAHAN: SweetAlert Sukses Download PDF
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'File PDF berhasil diunduh.',
+                confirmButtonColor: '#0ea5e9',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
         }
@@ -194,9 +218,7 @@ export default function DetailPegawai() {
                         </div>
                         <div className="flex items-center gap-3">
                             <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">PDF</span></button>
-                            {/* TOMBOL EXCEL DIAKTIFKAN */}
                             <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Excel</span></button>
-                            {/* TOMBOL CSV DIAKTIFKAN */}
                             <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">CSV</span></button>
                         </div>
                     </div>
@@ -244,7 +266,6 @@ export default function DetailPegawai() {
                 <Pagination currentPage={currentPage} totalItems={filteredUnits.length} itemsPerPage={itemsPerPage} onPageChange={handlePageChange} onItemsPerPageChange={(newSize) => { setItemsPerPage(newSize); setCurrentPage(1); }} />
             )}
 
-            {/* MODAL EDIT & NOTES BOBOT TETAP SAMA SEPERTI SEBELUMNYA */}
             <dialog id="modal_edit_pegawai" className="modal modal-bottom sm:modal-middle">
                 <div className="modal-box bg-white max-w-2xl rounded-3xl p-8 border border-slate-100 shadow-2xl">
                     <div className="flex justify-between items-center mb-6">
