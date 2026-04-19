@@ -4,7 +4,6 @@ import axios from "axios";
 import { jsPDF } from "jspdf"; // TAMBAHAN: Import jsPDF
 import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
 import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
-import AdminProfile from "../assets/images/rispo.jpg";
 import LogHistory from "./LogHistory";
 
 export default function DashboardAdmin() {
@@ -13,6 +12,8 @@ export default function DashboardAdmin() {
     const [stats, setStats] = useState({
         totalPegawai: 0,
         totalAdmin: 0,
+        totalUnitDalamNegeri: 0,
+        totalUnitLuarNegeri: 0,
         sparkline: [3, 5, 4, 6, 8, 6, 7, 9, 8, 10, 9],
         bars: [5, 6, 9, 8, 7],
     });
@@ -23,14 +24,22 @@ export default function DashboardAdmin() {
 
     const fetchStats = async () => {
         try {
-            const response = await axios.get(
-                "http://127.0.0.1:8000/api/dashboard/stats",
-            );
-            if (response.data.success) {
+            const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse] =
+                await Promise.all([
+                    axios.get("http://127.0.0.1:8000/api/dashboard/stats"),
+                    axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
+                    axios.get("http://127.0.0.1:8000/api/unit-kerja/luar-negeri"),
+                ]);
+
+            if (dashboardResponse.data.success) {
                 setStats((prev) => ({
                     ...prev,
-                    totalPegawai: response.data.data.total_pegawai,
-                    totalAdmin: response.data.data.total_admin,
+                    totalPegawai: dashboardResponse.data.data.total_pegawai,
+                    totalAdmin: dashboardResponse.data.data.total_admin,
+                    totalUnitDalamNegeri:
+                        dalamNegeriResponse.data.data?.length || 0,
+                    totalUnitLuarNegeri:
+                        luarNegeriResponse.data.data?.length || 0,
                 }));
             }
         } catch (error) {
@@ -302,47 +311,63 @@ export default function DashboardAdmin() {
                 </p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-                {/* Profile card */}
-                <div className="bg-white rounded-2xl p-1 shadow-md border border-slate-100 w-full md:w-1/3">
-                    <div className="pt-3 text-sm text-slate-700">
-                        <div className="flex flex-col gap-2 p-2 sm:flex-row sm:items-center sm:gap-6 sm:py-4">
-                            <img className="h-24 w-24 rounded-full object-cover sm:mx-0 sm:shrink-0" src={AdminProfile} alt="Profile" />
-                            <div className="space-y-0 text-center sm:text-left">
-                                <div className="space-y-0.5">
-                                    <p className="text-lg font-semibold text-black">
-                                        Admin Utama
-                                    </p>
-                                    <p className="font-medium text-gray-500">
-                                        admin@kemlu.go.id
-                                    </p>
-                                </div>
-                                <button className="text-purple-800">
-                                    Super Admin
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                <StatCard title="Total Pegawai" value={stats.totalPegawai}>
+                    <BarChart values={stats.bars} />
+                </StatCard>
 
-                {/* Stats grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full md:flex-1">
-                    <StatCard title="Total Pegawai" value={stats.totalPegawai}>
-                        <BarChart values={stats.bars} />
-                    </StatCard>
+                <StatCard
+                    title="Total Admin"
+                    value={stats.totalAdmin}
+                    tone="emerald"
+                >
+                    <Sparkline values={stats.sparkline} />
+                </StatCard>
 
-                    <StatCard
-                        title="Total Admin"
-                        value={stats.totalAdmin}
-                        tone="emerald"
-                    >
-                        <Sparkline values={stats.sparkline} />
-                    </StatCard>
-                </div>
+                <StatCard
+                    title="Unit Kerja Dalam Negeri"
+                    value={stats.totalUnitDalamNegeri}
+                    tone="amber"
+                >
+                    <UnitOfficeIcon tone="amber" />
+                </StatCard>
+
+                <StatCard
+                    title="Unit Kerja Luar Negeri"
+                    value={stats.totalUnitLuarNegeri}
+                    tone="indigo"
+                >
+                    <UnitOfficeIcon tone="indigo" />
+                </StatCard>
             </div>
 
             <LogHistory />
         </div>
+    );
+}
+
+function UnitOfficeIcon({ tone = "amber" }) {
+    const strokeMap = {
+        amber: "#b45309",
+        indigo: "#4338ca",
+    };
+
+    return (
+        <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
+                d="M3.75 21h16.5M6 21V7.8c0-.67 0-1.004.13-1.259.114-.224.296-.406.52-.52C6.896 5.9 7.23 5.9 7.9 5.9h8.2c.67 0 1.004 0 1.259.13.224.114.406.296.52.52.13.255.13.589.13 1.259V21M9 10.5h1.5M13.5 10.5H15M9 14.25h1.5M13.5 14.25H15"
+                stroke={strokeMap[tone] || strokeMap.amber}
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
     );
 }
 

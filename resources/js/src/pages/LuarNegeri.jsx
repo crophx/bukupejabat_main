@@ -31,6 +31,8 @@ export default function LuarNegeri() {
         website: "",
         hari_kerja: "",
         beda_jam: "",
+        musim_panas: "",
+        musim_dingin: "",
     });
 
     // Ambil data saat halaman dibuka
@@ -66,6 +68,8 @@ export default function LuarNegeri() {
             website: unit.website || "",
             hari_kerja: unit.hari_kerja || "",
             beda_jam: unit.beda_jam || "",
+            musim_panas: unit.musim_panas || "",
+            musim_dingin: unit.musim_dingin || "",
         });
         setIsEditModalOpen(true);
     };
@@ -185,7 +189,7 @@ export default function LuarNegeri() {
 
                             <div className="p-6 bg-white border-t border-slate-200 space-y-6">
                                 <div className="flex flex-wrap md:flex-nowrap justify-between gap-6 text-[14px] items-start">
-                                    <div className="flex-1 min-w-[150px]">
+                                    <div className="flex-1 min-w-[130px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
                                             Alamat
                                         </p>
@@ -230,6 +234,17 @@ export default function LuarNegeri() {
                                         </p>
                                         <p className="text-emerald-600 font-bold">
                                             {unit.beda_jam || "-"}
+                                        </p>
+                                    </div>
+                                    <div className="flex-1 min-w-[150px]">
+                                        <p className="font-bold text-slate-400 uppercase mb-1">
+                                            Musim
+                                        </p>
+                                        <p className="text-slate-700">
+                                            {unit.musim_panas || "-"}
+                                        </p>
+                                        <p className="text-emerald-600 font-bold">
+                                            {unit.musim_dingin || "-"}
                                         </p>
                                     </div>
                                     {/* Aksi */}
@@ -335,6 +350,11 @@ export default function LuarNegeri() {
                                     </label>
                                     <input type="text" name="hari_kerja" value={editData.hari_kerja} onChange={handleInputChange} placeholder="Hari Kerja (Cth: Senin - Jumat)" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
                                     <input type="text" name="beda_jam" value={editData.beda_jam} onChange={handleInputChange} placeholder="Beda Jam" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        Musim
+                                    </label>
+                                    <input type="text" name="musim_panas" value={editData.musim_panas} onChange={handleInputChange} placeholder="Musim Panas" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <input type="text" name="musim_dingin" value={editData.musim_dingin} onChange={handleInputChange} placeholder="Musim Dingin" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
                                 </div>
                             </div>
 
