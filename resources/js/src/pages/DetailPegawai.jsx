@@ -90,7 +90,7 @@ export default function DetailPegawai() {
             alamat: formData.get("alamat"),
             wisma: formData.get("wisma"),
             bobot: formData.get("bobot"),
-            tmt_jabatan: formData.get("tmt_jabatan"),
+            tmt_kedatangan: formData.get("tmt_kedatangan"), // SUDAH DIUBAH
             tmt_credential: formData.get("tmt_credential"),
         };
 
@@ -117,7 +117,7 @@ export default function DetailPegawai() {
             "Alamat Kantor": unit.alamat || "-",
             "Wisma": unit.wisma || "-",
             "Bobot": unit.bobot || "-",
-            "TMT Jabatan": unit.tmt_jabatan || "-",
+            "TMT Kedatangan": unit.tmt_kedatangan || "-", // SUDAH DIUBAH
             "TMT Credential": unit.tmt_credential || "-",
         }));
 
@@ -131,7 +131,7 @@ export default function DetailPegawai() {
     };
 
     const downloadCSV = () => {
-        const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Jabatan", "TMT Credential"];
+        const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"]; // SUDAH DIUBAH
         const rows = filteredUnits.map((unit, index) => [
             index + 1,
             `"${unit.nip || "-"}"`,
@@ -142,7 +142,7 @@ export default function DetailPegawai() {
             `"${unit.alamat || "-"}"`,
             `"${unit.wisma || "-"}"`,
             `"${unit.bobot || "-"}"`,
-            `"${unit.tmt_jabatan || "-"}"`,
+            `"${unit.tmt_kedatangan || "-"}"`, // SUDAH DIUBAH
             `"${unit.tmt_credential || "-"}"`
         ]);
 
@@ -158,9 +158,6 @@ export default function DetailPegawai() {
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File CSV berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
     };
 
-    // ==========================================
-    // PERBAIKAN: KEMBALI KE FORMAT PDF TABEL RAPI
-    // ==========================================
     const downloadPDF = () => {
         try {
             const doc = new jsPDF();
@@ -365,8 +362,9 @@ export default function DetailPegawai() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="form-control">
-                                <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT Jabatan</label>
-                                <input type="date" name="tmt_jabatan" defaultValue={selectedUnit?.tmt_jabatan || ""} className="input input-bordered w-full bg-white border-slate-200 rounded-2xl text-sm font-semibold h-12" />
+                                {/* PERUBAHAN LABEL DAN NAME MENJADI TMT KEDATANGAN */}
+                                <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT Kedatangan</label>
+                                <input type="date" name="tmt_kedatangan" defaultValue={selectedUnit?.tmt_kedatangan || ""} className="input input-bordered w-full bg-white border-slate-200 rounded-2xl text-sm font-semibold h-12" />
                             </div>
                             <div className="form-control">
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT Credential</label>

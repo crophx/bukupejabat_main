@@ -33,7 +33,7 @@ class PegawaiController extends Controller
                 'nama_unit_kerja' => $p->unitKerja ? $p->unitKerja->nama_unit_kerja : '-',
                 'bobot' => $p->bobot,
                 'wisma' => $p->wisma,
-                'tmt_jabatan' => $p->tmt_jabatan,
+                'tmt_kedatangan' => $p->tmt_kedatangan, // SUDAH DIUBAH
                 'tmt_credential' => $p->tmt_credential
             ];
         });
@@ -195,7 +195,7 @@ class PegawaiController extends Controller
 
         $pegawai->bobot = $request->bobot ?? $pegawai->bobot;
         $pegawai->wisma = $request->wisma ?? $pegawai->wisma;
-        $pegawai->tmt_jabatan = $request->tmt_jabatan ?? $pegawai->tmt_jabatan;
+        $pegawai->tmt_kedatangan = $request->tmt_kedatangan ?? $pegawai->tmt_kedatangan; // SUDAH DIUBAH
         $pegawai->tmt_credential = $request->tmt_credential ?? $pegawai->tmt_credential;
 
         // 2. Jika jabatannya diubah teksnya, kita cek ke tabel Jabatan (Buat otomatis jika belum ada)
