@@ -279,13 +279,13 @@ export default function DetailPegawai() {
                 <table className="w-full text-left border-collapse min-w-[850px]">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
-                            <th className="px-4 py-4 border-b w-12 text-center">No</th>
-                            <th className="px-4 py-4 border-b">NIP</th>
-                            <th className="px-4 py-4 border-b">Nama Lengkap</th>
-                            <th className="px-4 py-4 border-b">Jabatan</th>
-                            <th className="px-4 py-4 border-b">Email</th>
-                            <th className="px-4 py-4 border-b">Telepon</th>
-                            <th className="px-4 py-4 border-b w-16 text-center sticky right-0 bg-slate-50">Aksi</th>
+                            <th className="px-4 py-4 w-12 text-center">No</th>
+                            <th className="px-4 py-4">NIP</th>
+                            <th className="px-4 py-4 "> Nama Lengkap</th>
+                            <th className="px-4 py-4">Jabatan</th>
+                            <th className="px-4 py-4">Email</th>
+                            <th className="px-4 py-4">Telepon</th>
+                            <th className="px-4 py-4 w-16 text-center sticky right-0 bg-slate-50">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">

@@ -164,77 +164,98 @@ export default function DataAdmin() {
     ];
 
     return (
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6 space-y-6 text-slate-700">
-            <section className="bg-white rounded-xl p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <label className="input bg-white border border-slate-400 text-slate-400 rounded-xl">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 relative mb-6">
+            <section>
+                <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Data Admin
+                        </h2>
+                        <p className="text-xs text-slate-500 font-medium">
+                            {query
+                                ? `Ditemukan ${filtered.length} hasil`
+                                : `Total ${admins.length} admin tersedia`}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <div className="relative w-full sm:w-64">
                             <svg
-                                className="h-[1em]"
                                 xmlns="http://www.w3.org/2000/svg"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                                fill="none"
                                 viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
-                                <g
-                                    strokeLinejoin="round"
+                                <path
                                     strokeLinecap="round"
-                                    strokeWidth="2.5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                >
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.3-4.3"></path>
-                                </g>
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
                             </svg>
                             <input
                                 type="search"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search"
-                                className="pl-1 text-slate-700"
+                                placeholder="Cari admin..."
+                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50 text-slate-700"
                             />
-                        </label>
-                    </div>
+                        </div>
 
-                    <button
-                        type="button"
-                        onClick={openAdd}
-                        className="btn btn-sm btn-primary text-white"
-                    >
-                        Tambah Admin
-                    </button>
+                        <button
+                            type="button"
+                            onClick={openAdd}
+                            className="px-4 py-2 text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-colors text-sm font-semibold whitespace-nowrap"
+                        >
+                            Tambah Admin
+                        </button>
+                    </div>
                 </div>
 
-                <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-sm table-auto">
-                        <thead className="text-left text-xs text-slate-500 border-b">
+                <div className="w-full overflow-x-auto border-t border-slate-100">
+                    <table className="w-full text-left border-collapse min-w-[900px] table-auto">
+                        <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                             <tr>
-                                <th className="py-2">Unit Organisasi</th>
-                                <th className="py-2">Email</th>
-                                <th className="py-2">Username</th>
-                                <th className="py-2">Role</th>
-                                <th className="py-2">Akun dibuat</th>
-                                <th className="py-2">Aksi</th>
+                                <th className="px-4 py-4 border-b border-slate-100">
+                                    Unit Organisasi
+                                </th>
+                                <th className="px-4 py-4 border-b border-slate-100">
+                                    Email
+                                </th>
+                                <th className="px-4 py-4 border-b border-slate-100">
+                                    Username
+                                </th>
+                                <th className="px-4 py-4 border-b border-slate-100">
+                                    Role
+                                </th>
+                                <th className="px-4 py-4 border-b border-slate-100">
+                                    Akun dibuat
+                                </th>
+                                <th className="px-4 py-4 border-b border-slate-100 w-24 text-center sticky right-0 bg-slate-50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] z-10">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-slate-100">
                             {filtered.length > 0 ? (
                                 currentAdmins.map((a) => (
                                     <tr
                                         key={a.id}
-                                        className="hover:bg-slate-50"
+                                        className="hover:bg-slate-50 transition-colors"
                                     >
-                                        <td className="py-2 text-slate-500">
+                                        <td className="px-4 py-4 text-slate-600 font-bold">
                                             {a.unit}
                                         </td>
-                                        <td className="py-2 text-slate-500">
+                                        <td className="px-4 py-4 text-slate-500 break-all whitespace-normal">
                                             {a.email}
                                         </td>
-                                        <td className="py-2 text-slate-500">
+                                        <td className="px-4 py-4 text-slate-500">
                                             {a.username}
                                         </td>
-                                        <td className="py-2">
+                                        <td className="px-4 py-4">
                                             <span
-                                                className={`px-2 py-0.5 rounded text-xs ${a.role === "superadmin"
+                                                className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${a.role === "superadmin"
                                                     ? "bg-purple-100 text-purple-700"
                                                     : "bg-emerald-100 text-emerald-700"
                                                     }`}
@@ -242,16 +263,16 @@ export default function DataAdmin() {
                                                 {a.role}
                                             </span>
                                         </td>
-                                        <td className="py-2 text-slate-500">
+                                        <td className="px-4 py-4 text-slate-500 whitespace-nowrap">
                                             {a.createdAt}
                                         </td>
-                                        <td className="py-2">
+                                        <td className="px-4 py-4 text-center sticky right-0 bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
                                             {/* edit */}
                                             <button
                                                 onClick={() => {
                                                     openEdit(a)
                                                 }}
-                                                className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-50"
+                                                className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
@@ -262,7 +283,7 @@ export default function DataAdmin() {
                                                 onClick={() => {
                                                     openDelete(a)
                                                 }}
-                                                className="btn btn-sm btn-square btn-ghost text-rose-500 hover:bg-rose-50"
+                                                className="btn btn-sm btn-square btn-ghost text-rose-500 hover:bg-rose-100"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -275,7 +296,7 @@ export default function DataAdmin() {
                                 <tr>
                                     <td
                                         colSpan="6"
-                                        className="py-4 text-center text-slate-400"
+                                        className="py-10 text-center text-slate-400"
                                     >
                                         Data tidak ditemukan
                                     </td>
@@ -361,16 +382,16 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                 onSave && onSave(form);
             }}
         >
-            <div className="grid gap-3">
+            <div className="grid gap-4">
                 <div>
-                    <label className="text-sm text-black">
+                    <label className="block text-xl font-bold text-slate-700 mb-1">
                         Unit Organisasi
                     </label>
                     {isEdit ? (
                         <input
                             value={form.unit || ""}
                             disabled
-                            className="w-full border p-2 rounded-md text-sm text-slate-500 bg-slate-100 cursor-not-allowed"
+                            className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed"
                         />
                     ) : (
                         <select
@@ -378,7 +399,7 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                             onChange={(e) =>
                                 setForm({ ...form, unit: e.target.value })
                             }
-                            className="w-full border p-2 rounded-md text-sm text-slate-700"
+                            className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                         >
                             {unitOptions.map((unit) => (
                                 <option key={unit} value={unit}>
@@ -389,33 +410,33 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                     )}
                 </div>
                 <div>
-                    <label className="text-sm text-black">Email</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
                     <input
                         value={form.email || ""}
                         onChange={(e) =>
                             setForm({ ...form, email: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700"
+                        className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-black">Username</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
                     <input
                         value={form.username || ""}
                         onChange={(e) =>
                             setForm({ ...form, username: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700"
+                        className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                     />
                 </div>
                 <div>
-                    <label className="text-sm text-black">Role</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                     <select
                         value={form.role || "admin"}
                         onChange={(e) =>
                             setForm({ ...form, role: e.target.value })
                         }
-                        className="w-full border p-2 rounded-md text-sm text-slate-700"
+                        className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                     >
                         <option value="superadmin">Super Admin</option>
                         <option value="admin">Admin</option>
@@ -423,15 +444,15 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                 </div>
             </div>
 
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="px-3 py-1 btn btn-soft"
+                    className="btn btn-sm btn-ghost text-slate-500 hover:bg-slate-100"
                 >
                     Batal
                 </button>
-                <button type="submit" className="btn btn-info text-white">
+                <button type="submit" className="btn btn-sm bg-sky-500 hover:bg-sky-600 text-white border-none">
                     {submitLabel}
                 </button>
             </div>
