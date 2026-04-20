@@ -215,13 +215,13 @@ export default function LuarNegeri() {
                                         <p className="font-bold text-slate-400 uppercase mb-1">
                                             Email
                                         </p>
-                                        <p className="text-sky-600 font-bold underline">
+                                        <p className="text-sky-600 font-bold underline break-all whitespace-normal">
                                             {unit.email || "-"}
                                         </p>
                                         <p className="font-bold text-slate-400 uppercase mb-1">
                                             Website
                                         </p>
-                                        <p className="text-slate-400">
+                                        <p className="text-slate-400 break-all whitespace-normal">
                                             {unit.website || "-"}
                                         </p>
                                     </div>
@@ -336,11 +336,25 @@ export default function LuarNegeri() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Email
                                     </label>
-                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} placeholder="Email" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <textarea
+                                        name="email"
+                                        value={editData.email}
+                                        onChange={handleInputChange}
+                                        placeholder="Email"
+                                        rows="2"
+                                        className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none resize-none"
+                                    />
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
                                         Website
                                     </label>
-                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} placeholder="Website" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
+                                    <textarea
+                                        name="website"
+                                        value={editData.website}
+                                        onChange={handleInputChange}
+                                        placeholder="Website"
+                                        rows="2"
+                                        className="textarea w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none resize-none"
+                                    />
                                 </div>
 
                                 {/* Operasional - khusus Luar Negeri */}
