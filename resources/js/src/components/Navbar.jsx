@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import Logo from "../assets/images/logo-kemlu.png";
 
-export default function Navbar({ onSignOut, onToggleSidebar }) {
+export default function Navbar({ onSignOut, onToggleSidebar, sidebarOpen }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     // AMBIL DATA DARI SESSION
@@ -50,6 +50,7 @@ export default function Navbar({ onSignOut, onToggleSidebar }) {
                             onClick={onToggleSidebar}
                             className="md:hidden inline-flex items-center justify-center p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
                             aria-label="Toggle menu"
+                            aria-expanded={sidebarOpen}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -57,9 +58,13 @@ export default function Navbar({ onSignOut, onToggleSidebar }) {
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="2"
-                                className="h-5 w-5"
+                                className="h-5 w-5 transition-transform duration-300"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                {sidebarOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                )}
                             </svg>
                         </button>
 

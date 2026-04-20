@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function Sidebar({ isOpen, onClose }) {
     const location = useLocation();
@@ -13,32 +13,90 @@ export default function Sidebar({ isOpen, onClose }) {
         location.pathname.startsWith("/satkerja") ||
         location.pathname.startsWith("/unit-kerja");
 
+    useEffect(() => {
+        if (isUnitActive) {
+            setIsUnitOpen(true);
+        }
+        if (location.pathname.startsWith("/pengaturan")) {
+            setIsSettingsOpen(true);
+        }
+    }, [isUnitActive, location.pathname]);
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, [isOpen]);
+
     const handleLogout = () => {
         // Logika logout (sesuaikan dengan sistem auth Anda)
         localStorage.removeItem("isLoggedIn");
         navigate("/login");
     };
 
+    const handleMobileClose = () => {
+        if (typeof onClose === "function") {
+            onClose();
+        }
+    };
+
     return (
         <>
-            {/* Mobile Overlay */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-                    onClick={onClose}
-                />
-            )}
+            <div
+                className={`fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px] transition-opacity duration-300 md:hidden ${
+                    isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={handleMobileClose}
+                aria-hidden={!isOpen}
+            />
 
             {/* Sidebar */}
-            <aside className={`w-full max-w-[210px] md:w-[210px] md:flex-shrink-0 fixed md:static top-0 left-0 h-full z-50 transform transition-transform duration-300 ease-in-out md:transform-none ${
-                isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-            } md:block`}>
-                <div className="sticky top-0 md:static">
-                    <div className="bg-white rounded-2xl md:rounded-2xl shadow-md border border-slate-100 h-full md:h-auto p-4">
-                        <nav className="space-y-1">
+            <aside
+                className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] -translate-x-full transform transition-transform duration-300 ease-out md:static md:z-auto md:w-full md:max-w-[210px] md:translate-x-0 md:flex-shrink-0 ${
+                    isOpen ? "translate-x-0" : ""
+                }`}
+                aria-hidden={!isOpen}
+            >
+                <div className="h-full md:h-auto md:sticky md:top-6">
+                    <div className="flex h-full flex-col bg-white p-4 shadow-2xl border-r border-slate-200 md:rounded-2xl md:border md:border-slate-100 md:shadow-md">
+                        <div className="mb-4 flex items-center justify-between md:hidden">
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                    Menu
+                                </p>
+                                <h2 className="text-base font-bold text-slate-800">
+                                    Navigasi Admin
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleMobileClose}
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-colors hover:bg-slate-100"
+                                aria-label="Tutup sidebar"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    className="h-4 w-4"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <nav className="space-y-1 overflow-y-auto pr-1">
                         {/* --- Dashboard Admin --- */}
                         <NavLink
                             to="/dashboard"
+                            onClick={handleMobileClose}
                             className={({ isActive }) =>
                                 `relative w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 ${
                                     isActive ? "bg-slate-200" : ""
@@ -75,6 +133,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         <NavLink
                             to="/pegawai"
                             end
+                            onClick={handleMobileClose}
                             className={({ isActive }) =>
                                 `relative w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 ${isActive ? "bg-slate-200" : ""}`
                             }
@@ -144,6 +203,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1 animate-in slide-in-from-top-1">
                                     <NavLink
                                         to="/satkerja/dalam-negeri"
+                                        onClick={handleMobileClose}
                                         className={({ isActive }) =>
                                             `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
                                         }
@@ -152,6 +212,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                     </NavLink>
                                     <NavLink
                                         to="/satkerja/luar-negeri"
+                                        onClick={handleMobileClose}
                                         className={({ isActive }) =>
                                             `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
                                         }
@@ -203,6 +264,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1 animate-in slide-in-from-top-1">
                                     <NavLink
                                         to="/satkerja/dalam-negeri"
+                                        onClick={handleMobileClose}
                                         className={({ isActive }) =>
                                             `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
                                         }
@@ -211,6 +273,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                     </NavLink>
                                     <NavLink
                                         to="/satkerja/luar-negeri"
+                                        onClick={handleMobileClose}
                                         className={({ isActive }) =>
                                             `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
                                         }
@@ -224,6 +287,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         {/* --- Data Admin --- */}
                         <NavLink
                             to="/admin"
+                            onClick={handleMobileClose}
                             className={({ isActive }) =>
                                 `relative w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 ${isActive ? "bg-slate-200" : ""}`
                             }
@@ -253,6 +317,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         {/* --- Unit Kerja --- */}
                         <NavLink
                             to="/unit-kerja"
+                            onClick={handleMobileClose}
                             className={({ isActive }) =>
                                 `relative w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 ${isActive ? "bg-slate-200" : ""}`
                             }
@@ -328,6 +393,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                 <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1 animate-in slide-in-from-top-1">
                                     <NavLink
                                         to="/pengaturan/akun"
+                                        onClick={handleMobileClose}
                                         className={({ isActive }) =>
                                             `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
                                                 isActive
