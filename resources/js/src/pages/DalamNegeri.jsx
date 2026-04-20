@@ -297,9 +297,10 @@ export default function DalamNegeri() {
                                         <p className="text-slate-500 italic text-xs">Fax: {unit.fax || "-"}</p>
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">Digital</p>
-                                        <p className="text-sky-600 font-bold underline">{unit.email || "-"}</p>
-                                        <p className="text-slate-400">{unit.website || "-"}</p>
+                                        <p className="font-bold text-slate-400 uppercase mt-1">Email</p>
+                                        <p className="text-sky-600 font-bold underline break-all whitespace-normal">{unit.email || "-"}</p>
+                                        <p className="font-bold text-slate-400 uppercase mt-1">Website</p>
+                                        <p className="text-slate-400 break-all whitespace-normal">{unit.website || "-"}</p>
                                     </div>
                                     <div className="w-full md:w-auto">
                                         <p className="font-bold text-slate-400 uppercase mb-1">Aksi</p>
@@ -367,9 +368,21 @@ export default function DalamNegeri() {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                                    <input type="email" name="email" value={editData.email} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
+                                    <textarea
+                                        name="email"
+                                        value={editData.email}
+                                        onChange={handleInputChange}
+                                        rows="2"
+                                        className="textarea w-full bg-white text-slate-800 border border-slate-300 resize-none"
+                                    />
                                     <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
-                                    <input type="text" name="website" value={editData.website} onChange={handleInputChange} className="input input-sm w-full bg-white text-slate-800 border border-slate-300" />
+                                    <textarea
+                                        name="website"
+                                        value={editData.website}
+                                        onChange={handleInputChange}
+                                        rows="2"
+                                        className="textarea w-full bg-white text-slate-800 border border-slate-300 resize-none"
+                                    />
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
