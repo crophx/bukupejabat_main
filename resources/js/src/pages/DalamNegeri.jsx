@@ -103,7 +103,7 @@ export default function DalamNegeri() {
     };
 
     // =======================================================
-    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER)    
+    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER - PAGE BARU)    
     // =======================================================
     const downloadPDF = async () => {
         Swal.fire({
@@ -114,7 +114,7 @@ export default function DalamNegeri() {
         });
 
         try {
-            // Ambil data dari API Pegawai yang sudah kita perbaiki formatnya
+            // Ambil data dari API Pegawai
             const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
             const allPegawai = response.data.data || [];
 
@@ -124,58 +124,58 @@ export default function DalamNegeri() {
                 "kepala biro", "kepala bagian", "kepala subbagian"
             ];
 
-            const pejabatList = allPegawai.filter(p => {
-                const jabatanStr = (p.jabatan || "").toLowerCase();
-                const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
-
-                // Pastikan hanya dari unit kerja Dalam Negeri yang saat ini ada di list
-                const isInUnitList = units.some(u => u.id === p.unit_kerja_id);
-
-                return isPejabat && isInUnitList;
-            });
-
-            if (pejabatList.length === 0) {
-                Swal.fire('Informasi', 'Tidak ditemukan data pejabat sesuai kriteria di unit ini.', 'info');
-                return;
-            }
-
-            // Pengelompokan berdasarkan Unit Kerja agar rapi per Satker
-            const grouped = pejabatList.reduce((acc, p) => {
-                const unitName = p.nama_unit_kerja || "Unit Tidak Diketahui";
-                if (!acc[unitName]) acc[unitName] = [];
-                acc[unitName].push(p);
-                return acc;
-            }, {});
-
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
+            let isFirstPage = true;
+            let hasData = false;
 
-            doc.setFont("times", "bold");
-            doc.setFontSize(14);
-            doc.text("DAFTAR PEJABAT DALAM NEGERI", pageWidth / 2, 20, { align: "center" });
+            // Looping berdasarkan filteredUnits agar informasi Unit Lengkap (termasuk alamat) bisa diambil
+            filteredUnits.forEach((unit) => {
+                // Cari pejabat yang ada di unit ini dan jabatannya sesuai kriteria
+                const pejabatForUnit = allPegawai.filter(p => {
+                    const jabatanStr = (p.jabatan || "").toLowerCase();
+                    const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
+                    return isPejabat && p.unit_kerja_id === unit.id;
+                });
 
-            doc.setFontSize(10);
-            doc.setFont("times", "normal");
-            doc.text("Kementerian Luar Negeri Republik Indonesia", pageWidth / 2, 26, { align: "center" });
+                // Jika tidak ada pejabat yang memenuhi syarat di unit ini, lewati (jangan buat halamannya)
+                if (pejabatForUnit.length === 0) return;
 
-            let currentY = 35;
+                hasData = true;
 
-            // Loop melalui setiap Satker
-            Object.keys(grouped).forEach((unitName) => {
-                if (currentY > 240) {
+                // Tambah Halaman Baru untuk setiap Satker (kecuali satker yang pertama)
+                if (!isFirstPage) {
                     doc.addPage();
-                    currentY = 20;
                 }
+                isFirstPage = false;
 
-                // HEADER SATKER
-                doc.setFillColor(245, 245, 245);
-                doc.rect(14, currentY - 5, pageWidth - 28, 8, 'F');
+                // --- HEADER HALAMAN ---
                 doc.setFont("times", "bold");
-                doc.setFontSize(10);
-                doc.text(unitName.toUpperCase(), 16, currentY);
-                currentY += 5;
+                doc.setFontSize(12);
+                doc.text("DAFTAR PEJABAT DALAM NEGERI", pageWidth / 2, 20, { align: "center" });
 
-                const tableRows = grouped[unitName].map((p, i) => [
+                // --- NAMA PANJANG SATKER ---
+                doc.setFontSize(11);
+                // Mengambil nama panjang dari kolom deskripsi, pastikan tidak error (typo dekripsi diperbaiki)
+                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+
+                // Mencegah teks terlalu panjang keluar dari margin kertas
+                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 30);
+                doc.text(splitUnitName, pageWidth / 2, 28, { align: "center" });
+
+                // --- ALAMAT SATKER ---
+                let currentY = 28 + (splitUnitName.length * 5); // Dinamis mengikuti baris nama satker
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+                const alamatText = `Alamat: ${unit.alamat || "-"}`;
+                const splitAlamat = doc.splitTextToSize(alamatText, pageWidth - 30);
+                doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
+
+                currentY += (splitAlamat.length * 5) + 8; // Tambah margin bawah sebelum tabel
+
+                // --- ISI TABEL ---
+                const tableRows = pejabatForUnit.map((p, i) => [
                     `${i + 1}.`,
                     p.nama_pegawai || p.nama || "-",
                     p.jabatan || "-",
@@ -187,14 +187,23 @@ export default function DalamNegeri() {
                     head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
                     body: tableRows,
                     theme: "plain",
-                    styles: { font: "times", fontSize: 9, cellPadding: 2 },
-                    headStyles: { fontStyle: "bold", lineWidth: { bottom: 0.1 } },
-                    columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 50 }, 2: { cellWidth: 55 } },
-                    margin: { left: 14, right: 14 },
+                    styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                    headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
+                    columnStyles: {
+                        0: { cellWidth: 13, halign: 'center' },
+                        1: { cellWidth: 50, halign: 'center' },
+                        2: { cellWidth: 60, halign: 'left' },
+                        3: { cellWidth: 'auto' }
+                    },
+                    margin: { left: 15, right: 15 },
                 });
-
-                currentY = doc.lastAutoTable.finalY + 15;
             });
+
+            // Jika setelah dilooping ternyata benar-benar tidak ada data
+            if (!hasData) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat sesuai kriteria di daftar unit ini.', 'info');
+                return;
+            }
 
             doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
             Swal.close();

@@ -244,13 +244,13 @@ export default function DataAdmin() {
                                         key={a.id}
                                         className="hover:bg-slate-50 transition-colors"
                                     >
-                                        <td className="px-4 py-4 text-slate-600 font-bold">
+                                        <td className="px-4 py-4 text-xs text-slate-600 font-bold">
                                             {a.unit}
                                         </td>
-                                        <td className="px-4 py-4 text-slate-500 break-all whitespace-normal">
+                                        <td className="px-4 py-4 text-xs text-slate-500 break-all whitespace-normal">
                                             {a.email}
                                         </td>
-                                        <td className="px-4 py-4 text-slate-500">
+                                        <td className="px-4 py-4 text-xs text-slate-500">
                                             {a.username}
                                         </td>
                                         <td className="px-4 py-4">
@@ -263,7 +263,7 @@ export default function DataAdmin() {
                                                 {a.role}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-4 text-slate-500 whitespace-nowrap">
+                                        <td className="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">
                                             {a.createdAt}
                                         </td>
                                         <td className="px-4 py-4 text-center sticky right-0 bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)]">
