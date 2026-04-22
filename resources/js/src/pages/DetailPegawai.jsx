@@ -258,20 +258,46 @@ export default function DetailPegawai() {
             <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                     <h2 className="text-base font-bold text-slate-800 uppercase mb-2">
-                        <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">Detail Pegawai </button>
+                        <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">
+                            Detail Pegawai
+                        </button>
                         {unitName && <span className="text-sky-600"> - {unitName}</span>}
                     </h2>
-                    <div className="flex flex-col md:flex-row items-center justify-between w-full mt-4 gap-4">
+
+                    {/* Container utama untuk kiri */}
+                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
                         <div className="relative w-full md:w-auto">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            <input type="text" placeholder="Cari pegawai..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:border-sky-500 w-full max-w-[300px] bg-slate-50" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Cari pegawai..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:border-sky-500 w-full max-w-[300px] bg-slate-50"
+                            />
                         </div>
+
                         <div className="flex items-center gap-3">
-                            <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">PDF</span></button>
-                            <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Excel</span></button>
-                            <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">CSV</span></button>
+                            <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
+                                <span className="text-xs font-bold uppercase">PDF</span>
+                            </button>
+                            <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
+                                <span className="text-xs font-bold uppercase">Excel</span>
+                            </button>
+                            <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
+                                <span className="text-xs font-bold uppercase">CSV</span>
+                            </button>
                         </div>
                     </div>
+                </div>
+
+                {/* Sync */}
+                <div className="flex md:ml-auto mt-5">
+                    <button onClick="/" className="btn btn-md bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
+                        <span className="text-xs font-bold uppercase">Sync</span>
+                    </button>
                 </div>
             </div>
 
