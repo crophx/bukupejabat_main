@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -20,14 +21,13 @@ class UserController extends Controller
     }
 
     // ==========================================
-    // FUNGSI BARU: UPDATE DATA ADMIN
+    // FUNGSI UPDATE DATA ADMIN & PASSWORD
     // ==========================================
     public function update(Request $request, $id)
     {
         // 1. Cari data user berdasarkan ID
         $user = User::find($id);
 
-        // Jika user tidak ditemukan, kembalikan error 404
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -35,21 +35,31 @@ class UserController extends Controller
             ], 404);
         }
 
-        // 2. Validasi input dari frontend (React)
-        $request->validate([
-            'username' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'role' => 'required|string',
-        ]);
+        // 2. Update data dasar (Username, Email, Role)
+        $user->username = $request->username ?? $user->username;
+        $user->email = $request->email ?? $user->email;
+        if ($request->has('role')) {
+            $user->role = $request->role;
+        }
 
-        // 3. Simpan perubahan ke database
-        $user->update([
-            'username' => $request->username,
-            'email' => $request->email,
-            'role' => $request->role,
-        ]);
+        // 3. Logika Update Password
+        // Jika ada input password baru, kita proses
+        if ($request->filled('new_password')) {
+            // Cek apakah password lama yang dimasukkan cocok dengan yang ada di database
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Password saat ini (lama) salah!'
+                ], 400); // 400 Bad Request
+            }
 
-        // 4. Kembalikan response sukses ke React
+            // Jika cocok, enkripsi (hash) password baru dan timpa ke database
+            $user->password = Hash::make($request->new_password);
+        }
+
+        // 4. Simpan ke database
+        $user->save();
+
         return response()->json([
             'success' => true,
             'message' => 'Data admin berhasil diperbarui',
