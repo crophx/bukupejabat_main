@@ -174,16 +174,21 @@ export default function UnitKerja() {
                             placeholder="Cari unit kerja..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
+                            className="pl-9 pr-1 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={fetchUnits}
-                            className="btn btn-sm btn-ghost text-sky-600 hover:bg-sky-50 border border-sky-600 rounded-xl"
-                        >
-                            ↻ Refresh
-                        </button>
+                        {/* Dropdown Filter Jenis Unit Kerja */}
+<div className="relative w-full sm:w-40">
+    <select
+        className="select select-sm w-full py-2 px-4 bg-white text-slate-700 border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none rounded-xl"
+        style={{ height: '36px' }}
+    >
+        <option value="all">Semua</option>
+        <option value="dalam_negeri">Dalam Negeri</option>
+        <option value="luar_negeri">Luar Negeri</option>
+    </select>
+</div>
                     </div>
                 </div>
             </div>
