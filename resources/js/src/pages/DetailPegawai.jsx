@@ -171,7 +171,7 @@ export default function DetailPegawai() {
 
             doc.setFont("times", "normal");
             doc.setFontSize(10);
-            doc.text("Alamat Kantor: Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
+            doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
             doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
 
             const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
