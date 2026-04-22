@@ -57,63 +57,73 @@ export default function LogHistory() {
     };
 
     return (
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-100 mb-6">
-            <div className="flex items-center justify-between mb-3">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 relative mb-6">
+            <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h3 className="text-sm font-semibold text-slate-900">
+                    <h3 className="text-lg font-bold text-slate-800">
                         Activity Log
                     </h3>
-                    <p className="text-xs text-slate-500">
-                        Riwayat aktivitas terbaru sistem
+                    <p className="text-xs text-slate-500 font-medium">
+                        {searchTerm
+                            ? `Ditemukan ${filteredLogs.length} aktivitas`
+                            : `Total ${logs.length} aktivitas sistem`}
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <label className="input input-sm bg-white border border-slate-300 text-slate-600 rounded-xl flex items-center gap-2 focus-within:border-sky-500 transition-all w-full md:w-64">
-                        <svg
-                            className="h-4 w-4 opacity-50"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
+                <div className="relative w-full md:w-64">
+                    <svg
+                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                    >
+                        <g
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            strokeWidth="2.5"
                         >
-                            <g
-                                strokeLinejoin="round"
-                                strokeLinecap="round"
-                                strokeWidth="2.5"
-                                fill="none"
-                                stroke="currentColor"
-                            >
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.3-4.3"></path>
-                            </g>
-                        </svg>
-                        <input
-                            type="search"
-                            placeholder="Search..."
-                            className="grow"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </label>
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </g>
+                    </svg>
+                    <input
+                        type="search"
+                        placeholder="Cari aktivitas..."
+                        className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50 text-slate-700"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
             </div>
 
-            <div className="overflow-y-auto max-h-72">
-                <table className="w-full text-sm table-auto">
-                    <thead className="text-left text-xs text-slate-500 border-b">
+            <div className="w-full overflow-x-auto border-t border-slate-100 max-h-72">
+                <table className="w-full text-left border-collapse min-w-[820px] table-auto">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
                         <tr>
-                            <th className="py-2 pl-2">Date</th>
-                            <th className="py-2">Time</th>
-                            <th className="py-2">User</th>
-                            <th className="py-2">Action</th>
-                            <th className="py-2">Details</th>
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                Date
+                            </th>
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                Time
+                            </th>
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                User
+                            </th>
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                Action
+                            </th>
+                            <th className="px-4 py-4 border-b border-slate-100">
+                                Details
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                         {isLoading ? (
                             <tr>
                                 <td
                                     colSpan="5"
-                                    className="py-4 text-center text-slate-400"
+                                    className="py-10 text-center text-slate-400"
                                 >
                                     Loading...
                                 </td>
@@ -122,10 +132,9 @@ export default function LogHistory() {
                             filteredLogs.map((log) => (
                                 <tr
                                     key={log.id}
-                                    className="hover:bg-slate-50 cursor-default text-slate-500 border-b border-slate-50 last:border-0"
+                                    className="hover:bg-slate-50 cursor-default text-slate-500 transition-colors"
                                 >
-                                    <td className="py-3 pl-2 align-top font-medium text-slate-700">
-                                        {/* Format Tanggal Indonesia */}
+                                    <td className="px-4 py-4 align-top font-medium text-slate-700 whitespace-nowrap">
                                         {new Date(
                                             log.created_at,
                                         ).toLocaleDateString("id-ID", {
@@ -134,8 +143,7 @@ export default function LogHistory() {
                                             year: "numeric",
                                         })}
                                     </td>
-                                    <td className="py-3 align-top">
-                                        {/* Format Jam */}
+                                    <td className="px-4 py-4 align-top whitespace-nowrap">
                                         {new Date(
                                             log.created_at,
                                         ).toLocaleTimeString("id-ID", {
@@ -143,7 +151,7 @@ export default function LogHistory() {
                                             minute: "2-digit",
                                         })}
                                     </td>
-                                    <td className="py-3 align-top">
+                                    <td className="px-4 py-4 align-top">
                                         <div className="flex flex-col">
                                             <span className="text-sm font-semibold text-slate-700">
                                                 {log.user?.username ||
@@ -154,14 +162,14 @@ export default function LogHistory() {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="py-3 align-top">
+                                    <td className="px-4 py-4 align-top">
                                         <span
-                                            className={`px-2 py-1 rounded text-xs font-bold ${getActionColor(log.action)}`}
+                                            className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${getActionColor(log.action)}`}
                                         >
                                             {log.action}
                                         </span>
                                     </td>
-                                    <td className="py-3 align-top text-slate-600">
+                                    <td className="px-4 py-4 align-top text-slate-600">
                                         {log.description}
                                     </td>
                                 </tr>
@@ -170,7 +178,7 @@ export default function LogHistory() {
                             <tr>
                                 <td
                                     colSpan="5"
-                                    className="py-8 text-center text-slate-400"
+                                    className="py-10 text-center text-slate-400"
                                 >
                                     Tidak ada data aktivitas ditemukan.
                                 </td>
@@ -180,14 +188,14 @@ export default function LogHistory() {
                 </table>
             </div>
 
-            <div className="flex items-center justify-between mt-3 px-2">
-                <div className="text-xs text-slate-500">
+            <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="text-xs text-slate-500 font-medium">
                     Showing {filteredLogs.length} activity
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setSearchTerm("")}
-                        className="text-sm text-slate-500 hover:text-sky-600"
+                        className="text-sm text-slate-500 hover:text-sky-600 transition-colors"
                     >
                         Reset
                     </button>
