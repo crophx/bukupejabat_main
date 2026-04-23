@@ -43,3 +43,6 @@ Route::get('/dashboard/stats', [\App\Http\Controllers\Api\PegawaiController::cla
 Route::get('/admin/profile/{id}', [\App\Http\Controllers\Api\UserController::class, 'getProfile']);
 
 Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
+
+// Rute untuk menjalankan Cleansing Data
+Route::get('/pegawai/cleanse', [\App\Http\Controllers\Api\PegawaiController::class, 'cleanseData']);
