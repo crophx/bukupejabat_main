@@ -22,6 +22,17 @@ export default function DetailPegawai() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // =======================================================
+    // LOGIKA PENGURUTAN (ORDERING) MURNI DARI DB
+    // =======================================================
+    const getBobotRank = (bobot) => {
+        if (bobot === 'I') return 1;
+        if (bobot === 'II') return 2;
+        if (bobot === 'III') return 3;
+        if (bobot === 'IV') return 4;
+        return 99;
+    };
+
     const filteredUnits = units.filter((unit) => {
         const searchLower = searchTerm.toLowerCase();
         const matchSearch =
@@ -34,12 +45,33 @@ export default function DetailPegawai() {
             const jabatanLower = (unit.jabatan || "").toLowerCase();
             matchJabatan =
                 jabatanLower.includes("menteri") ||
+                jabatanLower.includes("sekretaris") ||
                 jabatanLower.includes("staf ahli") ||
+                jabatanLower.includes("direktur") ||
+                jabatanLower.includes("inspektur") ||
+                jabatanLower.includes("kepala pusat") ||
+                jabatanLower.includes("kepala bidang") ||
                 jabatanLower.includes("kepala biro") ||
                 jabatanLower.includes("kepala bagian") ||
                 jabatanLower.includes("kepala subbagian");
         }
         return matchSearch && matchJabatan;
+    });
+
+    // EKSEKUSI SORTING: BOBOT -> KODE JABATAN DB -> NAMA
+    const sortedUnits = [...filteredUnits].sort((a, b) => {
+        // 1. Cek Bobot (Manual Priority Override)
+        const rankA = getBobotRank(a.bobot);
+        const rankB = getBobotRank(b.bobot);
+        if (rankA !== rankB) return rankA - rankB;
+
+        // 2. Cek Kode Jabatan langsung dari Database
+        const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-') ? a.kode_jabatan : "ZZZZ";
+        const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-') ? b.kode_jabatan : "ZZZZ";
+        if (kodeA !== kodeB) return kodeA.localeCompare(kodeB);
+
+        // 3. Abjad Nama Pegawai
+        return (a.nama_pegawai || "").localeCompare(b.nama_pegawai || "");
     });
 
     useEffect(() => {
@@ -48,8 +80,8 @@ export default function DetailPegawai() {
 
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
-    const currentUnits = filteredUnits.slice(indexOfFirst, indexOfLast);
-    const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
+    const currentUnits = sortedUnits.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(sortedUnits.length / itemsPerPage);
 
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
@@ -90,7 +122,7 @@ export default function DetailPegawai() {
             alamat: formData.get("alamat"),
             wisma: formData.get("wisma"),
             bobot: formData.get("bobot"),
-            tmt_kedatangan: formData.get("tmt_kedatangan"), // SUDAH DIUBAH
+            tmt_kedatangan: formData.get("tmt_kedatangan"),
             tmt_credential: formData.get("tmt_credential"),
         };
 
@@ -107,7 +139,7 @@ export default function DetailPegawai() {
     };
 
     const downloadExcel = () => {
-        const dataToExport = filteredUnits.map((unit, index) => ({
+        const dataToExport = sortedUnits.map((unit, index) => ({
             "No": index + 1,
             "NIP": unit.nip || "-",
             "Nama Lengkap": unit.nama_pegawai || "-",
@@ -117,35 +149,21 @@ export default function DetailPegawai() {
             "Alamat Kantor": unit.alamat || "-",
             "Wisma": unit.wisma || "-",
             "Bobot": unit.bobot || "-",
-            "TMT Kedatangan": unit.tmt_kedatangan || "-", // SUDAH DIUBAH
+            "TMT Kedatangan": unit.tmt_kedatangan || "-",
             "TMT Credential": unit.tmt_credential || "-",
         }));
-
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Pegawai");
         const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Data_Pegawai";
         XLSX.writeFile(workbook, `Buku_Pejabat_${fileName}.xlsx`);
-
-        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File Excel berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
     };
 
     const downloadCSV = () => {
-        const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"]; // SUDAH DIUBAH
-        const rows = filteredUnits.map((unit, index) => [
-            index + 1,
-            `"${unit.nip || "-"}"`,
-            `"${unit.nama_pegawai || "-"}"`,
-            `"${unit.jabatan || "-"}"`,
-            `"${unit.email || "-"}"`,
-            `"${unit.telepon || "-"}"`,
-            `"${unit.alamat || "-"}"`,
-            `"${unit.wisma || "-"}"`,
-            `"${unit.bobot || "-"}"`,
-            `"${unit.tmt_kedatangan || "-"}"`, // SUDAH DIUBAH
-            `"${unit.tmt_credential || "-"}"`
+        const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"];
+        const rows = sortedUnits.map((unit, index) => [
+            index + 1, `"${unit.nip || "-"}"`, `"${unit.nama_pegawai || "-"}"`, `"${unit.jabatan || "-"}"`, `"${unit.email || "-"}"`, `"${unit.telepon || "-"}"`, `"${unit.alamat || "-"}"`, `"${unit.wisma || "-"}"`, `"${unit.bobot || "-"}"`, `"${unit.tmt_kedatangan || "-"}"`, `"${unit.tmt_credential || "-"}"`
         ]);
-
         const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -154,101 +172,42 @@ export default function DetailPegawai() {
         link.setAttribute("href", url);
         link.setAttribute("download", `Buku_Pejabat_${fileName}.csv`);
         link.click();
-
-        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File CSV berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
     };
 
     const downloadPDF = () => {
         try {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
-
-            // Header Dokumen
             doc.setFont("times", "bold");
             doc.setFontSize(12);
             const titleText = unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT";
             doc.text(titleText, pageWidth / 2, 20, { align: "center" });
-
             doc.setFont("times", "normal");
             doc.setFontSize(10);
             doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
             doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
-
             const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
-            const tableRows = [];
-
-            filteredUnits.forEach((unit, index) => {
+            const tableRows = sortedUnits.map((unit, index) => {
                 let addressDetails = "";
-
-                if (unit.alamat && unit.alamat !== "-") {
-                    addressDetails += `Kantor : ${unit.alamat}\n`;
-                } else {
-                    addressDetails += `Kantor : s.d.a.\n`;
-                }
-
-                if (unit.telepon && unit.telepon !== "-") {
-                    addressDetails += `Telp. : ${unit.telepon}\n`;
-                }
-
-                if (unit.email && unit.email !== "-") {
-                    addressDetails += `Email : ${unit.email}\n`;
-                } else {
-                    addressDetails += `Email : -\n`;
-                }
-
-                if (unit.wisma && unit.wisma !== "-") {
-                    addressDetails += `Wisma : ${unit.wisma}`;
-                } else {
-                    addressDetails += `Wisma : -`;
-                }
-
-                const rowData = [
-                    `${index + 1}.`,
-                    unit.nama_pegawai || "-",
-                    unit.jabatan || "-",
-                    addressDetails
-                ];
-                tableRows.push(rowData);
+                if (unit.alamat && unit.alamat !== "-") addressDetails += `Kantor : ${unit.alamat}\n`;
+                else addressDetails += `Kantor : s.d.a.\n`;
+                if (unit.telepon && unit.telepon !== "-") addressDetails += `Telp. : ${unit.telepon}\n`;
+                if (unit.email && unit.email !== "-") addressDetails += `Email : ${unit.email}\n`;
+                else addressDetails += `Email : -\n`;
+                if (unit.wisma && unit.wisma !== "-") addressDetails += `Wisma : ${unit.wisma}`;
+                else addressDetails += `Wisma : -`;
+                return [`${index + 1}.`, unit.nama_pegawai || "-", unit.jabatan || "-", addressDetails];
             });
-
             autoTable(doc, {
-                head: [tableColumn],
-                body: tableRows,
-                startY: 40,
-                theme: "plain",
-                styles: {
-                    font: "times",
-                    fontSize: 10,
-                    cellPadding: 4,
-                    textColor: [0, 0, 0],
-                },
-                headStyles: {
-                    fontStyle: "bold",
-                    lineWidth: { top: 0.5, bottom: 0.5 },
-                    lineColor: [0, 0, 0],
-                    halign: 'center'
-                },
-                columnStyles: {
-                    0: { cellWidth: 15, halign: 'center' },
-                    1: { cellWidth: 45 },
-                    2: { cellWidth: 55 },
-                    3: { cellWidth: 'auto' }
-                },
+                head: [tableColumn], body: tableRows, startY: 40, theme: "plain",
+                styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
+                columnStyles: { 0: { cellWidth: 15, halign: 'center' }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 'auto' } }
             });
-
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: 'File PDF berhasil diunduh.',
-                confirmButtonColor: '#0ea5e9',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
         } catch (error) {
-            console.error(error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
         }
     };
@@ -258,46 +217,23 @@ export default function DetailPegawai() {
             <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                     <h2 className="text-base font-bold text-slate-800 uppercase mb-2">
-                        <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">
-                            Detail Pegawai
-                        </button>
+                        <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">Detail Pegawai </button>
                         {unitName && <span className="text-sky-600"> - {unitName}</span>}
                     </h2>
-
-                    {/* Container utama untuk kiri */}
-                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto mt-4">
                         <div className="relative w-full md:w-auto">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder="Cari pegawai..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:border-sky-500 w-full max-w-[300px] bg-slate-50"
-                            />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            <input type="text" placeholder="Cari pegawai..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:border-sky-500 w-full max-w-[300px] bg-slate-50" />
                         </div>
-
                         <div className="flex items-center gap-3">
-                            <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
-                                <span className="text-xs font-bold uppercase">PDF</span>
-                            </button>
-                            <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
-                                <span className="text-xs font-bold uppercase">Excel</span>
-                            </button>
-                            <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
-                                <span className="text-xs font-bold uppercase">CSV</span>
-                            </button>
+                            <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">PDF</span></button>
+                            <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Excel</span></button>
+                            <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">CSV</span></button>
                         </div>
                     </div>
                 </div>
-
-                {/* Sync */}
-                <div className="flex md:ml-auto mt-5">
-                    <button onClick="/" className="btn btn-md bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
-                        <span className="text-xs font-bold uppercase">Sync</span>
-                    </button>
+                <div className="flex md:ml-auto">
+                    <button onClick={() => window.location.reload()} className="btn btn-md bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Sync</span></button>
                 </div>
             </div>
 
@@ -305,19 +241,19 @@ export default function DetailPegawai() {
                 <table className="w-full text-left border-collapse min-w-[850px]">
                     <thead className="bg-slate-50 text-[11px] uppercase text-slate-500 font-black tracking-wider">
                         <tr>
-                            <th className="px-4 py-4 w-12 text-center">No</th>
-                            <th className="px-4 py-4">NIP</th>
-                            <th className="px-4 py-4 "> Nama Lengkap</th>
-                            <th className="px-4 py-4">Jabatan</th>
-                            <th className="px-4 py-4">Email</th>
-                            <th className="px-4 py-4">Telepon</th>
-                            <th className="px-4 py-4 w-16 text-center sticky right-0 bg-slate-50">Aksi</th>
+                            <th className="px-4 py-4 w-12 text-center border-b">No</th>
+                            <th className="px-4 py-4 border-b">NIP</th>
+                            <th className="px-4 py-4 border-b">Nama Lengkap</th>
+                            <th className="px-4 py-4 border-b">Jabatan</th>
+                            <th className="px-4 py-4 border-b">Email</th>
+                            <th className="px-4 py-4 border-b">Telepon</th>
+                            <th className="px-4 py-4 w-16 text-center sticky right-0 bg-slate-50 border-b">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr><td colSpan="7" className="p-10 text-center"><span className="loading loading-spinner text-sky-500"></span></td></tr>
-                        ) : filteredUnits.length > 0 ? (
+                        ) : sortedUnits.length > 0 ? (
                             currentUnits.map((unit, index) => (
                                 <tr key={unit.id || index} className="hover:bg-sky-50/40 transition-colors group">
                                     <td className="px-4 py-3 text-sm text-center text-slate-400 font-bold">{indexOfFirst + index + 1}</td>
@@ -338,8 +274,8 @@ export default function DetailPegawai() {
                 </table>
             </div>
 
-            {filteredUnits.length > 0 && (
-                <Pagination currentPage={currentPage} totalItems={filteredUnits.length} itemsPerPage={itemsPerPage} onPageChange={handlePageChange} onItemsPerPageChange={(newSize) => { setItemsPerPage(newSize); setCurrentPage(1); }} />
+            {sortedUnits.length > 0 && (
+                <Pagination currentPage={currentPage} totalItems={sortedUnits.length} itemsPerPage={itemsPerPage} onPageChange={handlePageChange} onItemsPerPageChange={(newSize) => { setItemsPerPage(newSize); setCurrentPage(1); }} />
             )}
 
             <dialog id="modal_edit_pegawai" className="modal modal-bottom sm:modal-middle">
@@ -367,22 +303,32 @@ export default function DetailPegawai() {
                                 <input type="text" name="no_handphone" defaultValue={selectedUnit?.telepon || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12" />
                             </div>
                         </div>
+
                         <div className="form-control">
-                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Jabatan</label>
+                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest flex items-center gap-2">
+                                Jabatan Saat Ini
+                            </label>
                             <input type="text" name="jabatan" defaultValue={selectedUnit?.jabatan || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12" />
                         </div>
+
                         <div className="form-control">
-                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Bobot</label>
-                            <input type="number" name="bobot" defaultValue={selectedUnit?.bobot || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12" min="1" max="99" />
-                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-sm italic mt-2 font-semibold cursor-pointer">📖 Notes Bobot</button>
+                            <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Bobot (Prioritas Urutan)</label>
+                            <select name="bobot" defaultValue={selectedUnit?.bobot || ""} className="select select-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12">
+                                <option value="">Tanpa Bobot Khusus</option>
+                                <option value="I">Bobot I (Paling Atas)</option>
+                                <option value="II">Bobot II</option>
+                                <option value="III">Bobot III</option>
+                                <option value="IV">Bobot IV</option>
+                            </select>
+                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-[10px] italic mt-2 font-bold cursor-pointer text-left ml-2">📖 Info: Bobot akan mengalahkan urutan Kode Jabatan</button>
                         </div>
+
                         <div className="form-control">
                             <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Wisma</label>
-                            <textarea name="wisma" defaultValue={selectedUnit?.wisma || ""} className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[100px] py-3" />
+                            <textarea name="wisma" defaultValue={selectedUnit?.wisma || ""} className="textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[80px] py-3" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="form-control">
-                                {/* PERUBAHAN LABEL DAN NAME MENJADI TMT KEDATANGAN */}
                                 <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">TMT Kedatangan</label>
                                 <input type="date" name="tmt_kedatangan" defaultValue={selectedUnit?.tmt_kedatangan || ""} className="input input-bordered w-full bg-white border-slate-200 rounded-2xl text-sm font-semibold h-12" />
                             </div>
@@ -402,25 +348,17 @@ export default function DetailPegawai() {
             <dialog id="modal_notes_bobot" className="modal modal-bottom sm:modal-middle">
                 <div className="modal-box bg-white max-w-2xl rounded-3xl p-8 border border-slate-100 shadow-2xl">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">📖 Penjelasan Bobot</h3>
+                        <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">📖 Penjelasan Pengurutan</h3>
                         <form method="dialog"><button className="btn btn-sm btn-circle btn-ghost text-slate-400">✕</button></form>
                     </div>
                     <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4">
+                            <p className="text-sm font-bold text-slate-700">Urutan Default: <span className="text-blue-600 font-mono">Kode Jabatan</span> ➔ <span className="text-blue-600 font-mono">Abjad Nama</span></p>
+                            <p className="text-xs text-slate-500 mt-1">Jika kolom Bobot diisi, maka pegawai tersebut akan ditarik ke atas sesuai prioritas bobotnya, mengabaikan kode jabatan.</p>
+                        </div>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-                            <h4 className="font-bold text-blue-800 text-lg mb-2">Bobot I</h4>
-                            <p className="text-sm text-blue-700 leading-relaxed">Pejabat tingkat tertinggi dengan tanggung jawab strategis (Eselon I).</p>
-                        </div>
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-2xl">
-                            <h4 className="font-bold text-green-800 text-lg mb-2">Bobot II</h4>
-                            <p className="text-sm text-green-700 leading-relaxed">Pejabat tingkat menengah atas (Eselon II).</p>
-                        </div>
-                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-                            <h4 className="font-bold text-amber-800 text-lg mb-2">Bobot III</h4>
-                            <p className="text-sm text-amber-700 leading-relaxed">Pejabat tingkat menengah (Eselon III).</p>
-                        </div>
-                        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl">
-                            <h4 className="font-bold text-rose-800 text-lg mb-2">Bobot IV</h4>
-                            <p className="text-sm text-rose-700 leading-relaxed">Pejabat tingkat staf / fungsional (Eselon IV).</p>
+                            <h4 className="font-bold text-blue-800 text-lg mb-2">Bobot I - IV</h4>
+                            <p className="text-sm text-blue-700 leading-relaxed">Digunakan sebagai penanda prioritas manual untuk mengurutkan pejabat di paling atas.</p>
                         </div>
                     </div>
                 </div>
