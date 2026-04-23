@@ -179,16 +179,16 @@ export default function UnitKerja() {
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Dropdown Filter Jenis Unit Kerja */}
-<div className="relative w-full sm:w-40">
-    <select
-        className="select select-sm w-full py-2 px-4 bg-white text-slate-700 border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none rounded-xl"
-        style={{ height: '36px' }}
-    >
-        <option value="all">Semua</option>
-        <option value="dalam_negeri">Dalam Negeri</option>
-        <option value="luar_negeri">Luar Negeri</option>
-    </select>
-</div>
+                        <div className="relative w-full sm:w-40">
+                            <select
+                                className="select select-sm w-full py-2 px-4 bg-white text-slate-700 border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none rounded-xl"
+                                style={{ height: '36px' }}
+                            >
+                                <option value="all">Semua</option>
+                                <option value="dalam_negeri">Dalam Negeri</option>
+                                <option value="luar_negeri">Luar Negeri</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

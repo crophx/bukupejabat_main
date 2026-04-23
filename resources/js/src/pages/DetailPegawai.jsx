@@ -373,13 +373,7 @@ export default function DetailPegawai() {
                         </div>
                         <div className="form-control">
                             <label className="text-[11px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Bobot</label>
-                            <select name="bobot" defaultValue={selectedUnit?.bobot || ""} className="select select-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12">
-                                <option value="">Pilih Bobot</option>
-                                <option value="I">I</option>
-                                <option value="II">II</option>
-                                <option value="III">III</option>
-                                <option value="IV">IV</option>
-                            </select>
+                            <input type="number" name="bobot" defaultValue={selectedUnit?.bobot || ""} className="input input-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12" min="1" max="99" />
                             <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-sm italic mt-2 font-semibold cursor-pointer">📖 Notes Bobot</button>
                         </div>
                         <div className="form-control">
