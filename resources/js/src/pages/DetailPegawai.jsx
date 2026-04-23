@@ -23,13 +23,34 @@ export default function DetailPegawai() {
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // =======================================================
-    // LOGIKA PENGURUTAN (ORDERING) MURNI DARI DB
+    // LOGIK PENYUSUNAN (ORDERING) 4 LAPISAN
     // =======================================================
     const getBobotRank = (bobot) => {
         if (bobot === 'I') return 1;
         if (bobot === 'II') return 2;
         if (bobot === 'III') return 3;
         if (bobot === 'IV') return 4;
+        return 99;
+    };
+
+    // Fungsi pintar membaca kata kunci jawatan jika tiada kode_jabatan
+    const getKeywordRank = (jabatan) => {
+        const j = (jabatan || "").toLowerCase();
+
+        // 1. Hierarki Luar Negeri
+        if (j.includes("duta besar") || j.includes("kedutaan besar ri")) return 1;
+        if (j.includes("wakepri") || j.includes("wakil kepala perwakilan")) return 2;
+        if (j.includes("konsul") || j.includes("konsul jendral")) return 3;
+        if (j.includes("kepala") || j.includes("kepala")) return 4;
+
+        // 2. Hierarki Dalam Negeri (sebagai pelengkap)
+        if (j.includes("menteri") && !j.includes("wakil menteri")) return 1;
+        if (j.includes("sekretaris jenderal") || j.includes("direktur jenderal") || j.includes("inspektur jenderal") || j.includes("kepala badan")) return 2;
+        if (j.includes("staf ahli")) return 3;
+        if (j.includes("kepala biro") || j.includes("direktur") || j.includes("inspektur") || j.includes("kepala pusat")) return 4;
+        if (j.includes("kepala bagian")) return 5;
+        if (j.includes("kepala subbag") || j.includes("kepala subbagian")) return 6;
+
         return 99;
     };
 
@@ -45,32 +66,40 @@ export default function DetailPegawai() {
             const jabatanLower = (unit.jabatan || "").toLowerCase();
             matchJabatan =
                 jabatanLower.includes("menteri") ||
-                jabatanLower.includes("sekretaris") ||
+                jabatanLower.includes("sekretaris jenderal") ||
+                jabatanLower.includes("direktur jenderal") ||
+                jabatanLower.includes("inspektur jenderal") ||
+                jabatanLower.includes("kepala badan") ||
                 jabatanLower.includes("staf ahli") ||
+                jabatanLower.includes("kepala biro") ||
                 jabatanLower.includes("direktur") ||
                 jabatanLower.includes("inspektur") ||
                 jabatanLower.includes("kepala pusat") ||
-                jabatanLower.includes("kepala bidang") ||
-                jabatanLower.includes("kepala biro") ||
                 jabatanLower.includes("kepala bagian") ||
-                jabatanLower.includes("kepala subbagian");
+                jabatanLower.includes("kepala subbagian") ||
+                jabatanLower.includes("kepala subbag");
         }
         return matchSearch && matchJabatan;
     });
 
-    // EKSEKUSI SORTING: BOBOT -> KODE JABATAN DB -> NAMA
+    // PELAKSANAAN SORTING: BOBOT -> KODE JABATAN -> KATA KUNCI JAWATAN -> NAMA
     const sortedUnits = [...filteredUnits].sort((a, b) => {
-        // 1. Cek Bobot (Manual Priority Override)
+        // Lapis 1: Bobot Manual (I, II, III, IV)
         const rankA = getBobotRank(a.bobot);
         const rankB = getBobotRank(b.bobot);
         if (rankA !== rankB) return rankA - rankB;
 
-        // 2. Cek Kode Jabatan langsung dari Database
-        const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-') ? a.kode_jabatan : "ZZZZ";
-        const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-') ? b.kode_jabatan : "ZZZZ";
+        // Lapis 2: Kode Jabatan (Abaikan jika formatnya rawak seperti JAB-XXX)
+        const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-' && !a.kode_jabatan.startsWith('JAB-')) ? a.kode_jabatan : "ZZZZ";
+        const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-' && !b.kode_jabatan.startsWith('JAB-')) ? b.kode_jabatan : "ZZZZ";
         if (kodeA !== kodeB) return kodeA.localeCompare(kodeB);
 
-        // 3. Abjad Nama Pegawai
+        // Lapis 3: Kata Kunci Jawatan (Hierarki Teks jika tiada kode rasmi)
+        const keyRankA = getKeywordRank(a.jabatan);
+        const keyRankB = getKeywordRank(b.jabatan);
+        if (keyRankA !== keyRankB) return keyRankA - keyRankB;
+
+        // Lapis 4: Abjad Nama Pegawai
         return (a.nama_pegawai || "").localeCompare(b.nama_pegawai || "");
     });
 
@@ -130,7 +159,7 @@ export default function DetailPegawai() {
             await axios.put(`http://127.0.0.1:8000/api/pegawai/${selectedUnit.id}`, data);
             document.getElementById("modal_edit_pegawai").close();
             fetchPegawai();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data Pegawai berhasil diperbarui.', confirmButtonColor: '#0ea5e9' });
+            Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Data Pegawai berjaya dikemas kini.', confirmButtonColor: '#0ea5e9' });
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Oops...', text: 'Gagal menyimpan data.', confirmButtonColor: '#0ea5e9' });
         } finally {
@@ -206,9 +235,9 @@ export default function DetailPegawai() {
             });
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Fail PDF berjaya dimuat turun.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
+            Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terdapat ralat semasa membuat PDF.' });
         }
     };
 
@@ -320,7 +349,7 @@ export default function DetailPegawai() {
                                 <option value="III">Bobot III</option>
                                 <option value="IV">Bobot IV</option>
                             </select>
-                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-[10px] italic mt-2 font-bold cursor-pointer text-left ml-2">📖 Info: Bobot akan mengalahkan urutan Kode Jabatan</button>
+                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-[10px] italic mt-2 font-bold cursor-pointer text-left ml-2">📖 Info: Bobot akan mengatasi urutan Kod Jabatan</button>
                         </div>
 
                         <div className="form-control">
@@ -353,12 +382,12 @@ export default function DetailPegawai() {
                     </div>
                     <div className="space-y-4 max-h-96 overflow-y-auto">
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4">
-                            <p className="text-sm font-bold text-slate-700">Urutan Default: <span className="text-blue-600 font-mono">Kode Jabatan</span> ➔ <span className="text-blue-600 font-mono">Abjad Nama</span></p>
-                            <p className="text-xs text-slate-500 mt-1">Jika kolom Bobot diisi, maka pegawai tersebut akan ditarik ke atas sesuai prioritas bobotnya, mengabaikan kode jabatan.</p>
+                            <p className="text-sm font-bold text-slate-700">Urutan Default: <span className="text-blue-600 font-mono">Kod Jabatan</span> ➔ <span className="text-blue-600 font-mono">Abjad Nama</span></p>
+                            <p className="text-xs text-slate-500 mt-1">Jika lajur Bobot diisi, maka pegawai tersebut akan ditarik ke atas mengikut keutamaan bobotnya, mengabaikan kod jawatan.</p>
                         </div>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
                             <h4 className="font-bold text-blue-800 text-lg mb-2">Bobot I - IV</h4>
-                            <p className="text-sm text-blue-700 leading-relaxed">Digunakan sebagai penanda prioritas manual untuk mengurutkan pejabat di paling atas.</p>
+                            <p className="text-sm text-blue-700 leading-relaxed">Digunakan sebagai penanda keutamaan manual untuk menyusun senarai pejabat di kedudukan paling atas.</p>
                         </div>
                     </div>
                 </div>
