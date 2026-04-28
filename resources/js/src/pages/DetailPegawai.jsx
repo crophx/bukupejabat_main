@@ -7,6 +7,9 @@ import * as XLSX from "xlsx";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
 
+// Import gambar background kemlu
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
+
 export default function DetailPegawai() {
     const navigate = useNavigate();
     const { unitId } = useParams();
@@ -159,7 +162,7 @@ export default function DetailPegawai() {
             await axios.put(`http://127.0.0.1:8000/api/pegawai/${selectedUnit.id}`, data);
             document.getElementById("modal_edit_pegawai").close();
             fetchPegawai();
-            Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Data Pegawai berjaya dikemas kini.', confirmButtonColor: '#0ea5e9' });
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data Pegawai berhasil diperbarui.', confirmButtonColor: '#0ea5e9' });
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Oops...', text: 'Gagal menyimpan data.', confirmButtonColor: '#0ea5e9' });
         } finally {
@@ -207,14 +210,42 @@ export default function DetailPegawai() {
         try {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            // Buat ngelebarin
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            // Fungsi khusus untuk menggambar watermark di layer paling dasar
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
+
+            // 1. Gambar watermark di halaman PERTAMA sebelum teks & tabel ditulis
+            drawWatermark();
+
+            // 2. Tulis Header setelah watermark agar teks berada di atas logo
             doc.setFont("times", "bold");
             doc.setFontSize(12);
             const titleText = unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT";
             doc.text(titleText, pageWidth / 2, 20, { align: "center" });
+
             doc.setFont("times", "normal");
             doc.setFontSize(10);
             doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
             doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
+
+            // 3. Hack: Mencegat fungsi addPage bawaan jsPDF untuk menangani halaman 2 ke atas
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
+
             const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
             const tableRows = sortedUnits.map((unit, index) => {
                 let addressDetails = "";
@@ -227,42 +258,80 @@ export default function DetailPegawai() {
                 else addressDetails += `Wisma : -`;
                 return [`${index + 1}.`, unit.nama_pegawai || "-", unit.jabatan || "-", addressDetails];
             });
+
+            // 4. Generate tabel tanpa didDrawPage (karena sudah di-handle di atas)
             autoTable(doc, {
-                head: [tableColumn], body: tableRows, startY: 40, theme: "plain",
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: "plain",
                 styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                 headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                 columnStyles: { 0: { cellWidth: 15, halign: 'center' }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 'auto' } }
             });
+
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
-            Swal.fire({ icon: 'success', title: 'Berjaya!', text: 'Fail PDF berjaya dimuat turun.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terdapat ralat semasa membuat PDF.' });
+            console.error("Error creating PDF:", error);
+            Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
         }
     };
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 mb-5">
             <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                <div>
-                    <h2 className="text-base font-bold text-slate-800 uppercase mb-2">
-                        <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">Detail Pegawai </button>
-                        {unitName && <span className="text-sky-600"> - {unitName}</span>}
-                    </h2>
-                    <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto mt-4">
-                        <div className="relative w-full md:w-auto">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            <input type="text" placeholder="Cari pegawai..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:border-sky-500 w-full max-w-[300px] bg-slate-50" />
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button onClick={downloadPDF} className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">PDF</span></button>
-                            <button onClick={downloadExcel} className="btn btn-md bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Excel</span></button>
-                            <button onClick={downloadCSV} className="btn btn-md bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">CSV</span></button>
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 w-full">
+                    {/* BAGIAN KIRI: Judul, Search, dan Export Buttons */}
+                    <div className="w-full lg:w-auto">
+                        <h2 className="text-base font-bold text-slate-800 uppercase mb-4">
+                            <button type="button" onClick={() => navigate(-1)} className="cursor-pointer hover:text-sky-600">
+                                Detail Pegawai
+                            </button>
+                            {unitName && <span className="text-sky-600"> - {unitName}</span>}
+                        </h2>
+
+                        {/* Group Search & Export Buttons */}
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+                            {/* Input Search */}
+                            <div className="relative w-full md:w-72">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Cari pegawai..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 w-full bg-slate-50 h-[42px]"
+                                />
+                            </div>
+
+                            {/* Export Buttons: flex-wrap agar tidak 'penyok' di layar tanggung */}
+                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <button onClick={downloadPDF} className="btn btn-md flex-1 md:flex-none bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px]">
+                                    <span className="text-xs font-bold uppercase">PDF</span>
+                                </button>
+                                <button onClick={downloadExcel} className="btn btn-md flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px]">
+                                    <span className="text-xs font-bold uppercase">Excel</span>
+                                </button>
+                                <button onClick={downloadCSV} className="btn btn-md flex-1 md:flex-none bg-amber-500 hover:bg-amber-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px]">
+                                    <span className="text-xs font-bold uppercase">CSV</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="flex md:ml-auto">
-                    <button onClick={() => window.location.reload()} className="btn btn-md bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl flex items-center gap-2 px-5"><span className="text-xs font-bold uppercase">Sync</span></button>
+
+                    {/* BAGIAN KANAN: Button Sync */}
+                    <div className="w-full lg:w-auto flex justify-end">
+                        <button onClick={() => { }} className="btn btn-md w-full md:w-auto bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl gap-2 px-8 min-h-[42px] h-[42px] shadow-lg shadow-sky-100 transition-all active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            <span className="text-xs font-bold uppercase">Sync</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -349,7 +418,7 @@ export default function DetailPegawai() {
                                 <option value="III">Bobot III</option>
                                 <option value="IV">Bobot IV</option>
                             </select>
-                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-[10px] italic mt-2 font-bold cursor-pointer text-left ml-2">📖 Info: Bobot akan mengatasi urutan Kod Jabatan</button>
+                            <button type="button" onClick={() => document.getElementById("modal_notes_bobot").showModal()} className="text-blue-500 hover:text-blue-700 text-[10px] italic mt-2 font-bold cursor-pointer text-left ml-2">📖 Info: Bobot akan mengatasi urutan Kode Jabatan</button>
                         </div>
 
                         <div className="form-control">
@@ -382,12 +451,12 @@ export default function DetailPegawai() {
                     </div>
                     <div className="space-y-4 max-h-96 overflow-y-auto">
                         <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-4">
-                            <p className="text-sm font-bold text-slate-700">Urutan Default: <span className="text-blue-600 font-mono">Kod Jabatan</span> ➔ <span className="text-blue-600 font-mono">Abjad Nama</span></p>
-                            <p className="text-xs text-slate-500 mt-1">Jika lajur Bobot diisi, maka pegawai tersebut akan ditarik ke atas mengikut keutamaan bobotnya, mengabaikan kod jawatan.</p>
+                            <p className="text-sm font-bold text-slate-700">Urutan Default: <span className="text-blue-600 font-mono">Kode Jabatan</span> ➔ <span className="text-blue-600 font-mono">Abjad Nama</span></p>
+                            <p className="text-xs text-slate-500 mt-1">Jika kolom Bobot diisi, maka pegawai tersebut akan ditarik ke atas mengikuti prioritas bobotnya, mengabaikan kode jabatan.</p>
                         </div>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
                             <h4 className="font-bold text-blue-800 text-lg mb-2">Bobot I - IV</h4>
-                            <p className="text-sm text-blue-700 leading-relaxed">Digunakan sebagai penanda keutamaan manual untuk menyusun senarai pejabat di kedudukan paling atas.</p>
+                            <p className="text-sm text-blue-700 leading-relaxed">Digunakan sebagai penanda prioritas manual untuk menyusun daftar pejabat di posisi paling atas.</p>
                         </div>
                     </div>
                 </div>
