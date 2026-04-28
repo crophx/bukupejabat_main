@@ -7,8 +7,9 @@ export default function UnitKerja() {
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // STATE BARU UNTUK PENCARIAN
+    // STATE PENCARIAN & FILTER DROPDOWN
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterType, setFilterType] = useState("all"); // State baru untuk Dropdown
 
     // pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -32,23 +33,34 @@ export default function UnitKerja() {
         deskripsi: "",
     });
 
-    // LOGIKA FILTER PENCARIAN
+    // LOGIKA FILTER PENCARIAN & DROPDOWN GABUNGAN
     const filteredUnits = units.filter((unit) => {
+        // 1. Cek Pencarian Teks
         const searchLower = searchTerm.toLowerCase();
-        return (
+        const matchesSearch =
             (unit.nama_unit_kerja || "").toLowerCase().includes(searchLower) ||
             (unit.kode_unit_kerja || "").toLowerCase().includes(searchLower) ||
             (unit.email || "").toLowerCase().includes(searchLower) ||
-            (unit.deskripsi || "").toLowerCase().includes(searchLower)
-        );
+            (unit.deskripsi || "").toLowerCase().includes(searchLower);
+
+        // 2. Cek Dropdown Filter (Menggunakan awalan kode 07 dan 04)
+        let matchesDropdown = true;
+        if (filterType === "dalam_negeri") {
+            matchesDropdown = (unit.kode_unit_kerja || "").startsWith("07");
+        } else if (filterType === "luar_negeri") {
+            matchesDropdown = (unit.kode_unit_kerja || "").startsWith("04");
+        }
+
+        // Harus lolos pencarian teks DAN lolos dropdown
+        return matchesSearch && matchesDropdown;
     });
 
-    // Reset halaman ke 1 setiap kali user mengetik pencarian
+    // Reset halaman ke 1 setiap kali user mengetik pencarian ATAU mengganti dropdown
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, filterType]);
 
-    // PAGINATION SEKARANG MENGGUNAKAN filteredUnits
+    // PAGINATION MENGGUNAKAN filteredUnits
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
     const currentUnits = filteredUnits.slice(indexOfFirst, indexOfLast);
@@ -72,7 +84,8 @@ export default function UnitKerja() {
             const result = response.data.data || [];
             setUnits(result);
             setCurrentPage(1);
-            setSearchTerm(""); // Kosongkan pencarian saat refresh data
+            setSearchTerm("");
+            setFilterType("all"); // Reset dropdown saat refresh data
         } catch (error) {
             console.error("Gagal mengambil data unit kerja:", error);
         } finally {
@@ -116,7 +129,6 @@ export default function UnitKerja() {
             setIsEditModalOpen(false);
             fetchUnits();
 
-            // TAMBAHAN: SweetAlert Sukses
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
@@ -126,7 +138,6 @@ export default function UnitKerja() {
 
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
-            // TAMBAHAN: SweetAlert Error (Menggantikan alert bawaan)
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
@@ -168,7 +179,6 @@ export default function UnitKerja() {
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                             />
                         </svg>
-                        {/* INPUT PENCARIAN DIAKTIFKAN DI SINI */}
                         <input
                             type="text"
                             placeholder="Cari unit kerja..."
@@ -181,6 +191,8 @@ export default function UnitKerja() {
                         {/* Dropdown Filter Jenis Unit Kerja */}
                         <div className="relative w-full sm:w-40">
                             <select
+                                value={filterType} // Bind state ke select value
+                                onChange={(e) => setFilterType(e.target.value)} // Update state saat dipilih
                                 className="select select-sm w-full py-2 px-4 bg-white text-slate-700 border border-slate-200 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none rounded-xl"
                                 style={{ height: '36px' }}
                             >

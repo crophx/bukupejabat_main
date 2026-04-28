@@ -24,7 +24,9 @@ class UnitKerja extends Model
         'email',
         'website',
         'hari_kerja',
-        'beda_jam'
+        'beda_jam',
+        'musim_panas',
+        'musim_dingin'
     ];
 
     // Satu unit kerja punya banyak pegawai
