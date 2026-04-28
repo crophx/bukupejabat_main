@@ -296,7 +296,7 @@ export default function DetailPegawai() {
                 {/* Sync */}
                 <div className="flex md:ml-auto mt-5">
                     <button onClick="/" className="btn btn-md bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl flex items-center gap-2 px-5">
-                        <span className="text-xs font-bold uppercase">Sync</span>
+                        <span className="text-xs pt-1 font-bold uppercase">Sync</span>
                     </button>
                 </div>
             </div>
