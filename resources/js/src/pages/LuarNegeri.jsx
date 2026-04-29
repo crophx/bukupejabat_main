@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
-import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
+import Swal from "sweetalert2";
 
 export default function LuarNegeri() {
     const navigate = useNavigate();
