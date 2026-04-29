@@ -80,7 +80,6 @@ export default function App() {
                 <Route path="unit-kerja" element={<UnitKerja />} />
                 <Route path="unit-kerja/form" element={<UnitKerja />} />
                 <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
-                {/* <Route path="pegawai/tambah" element={<TambahPegawai />} /> */}
             </Route>
 
             <Route

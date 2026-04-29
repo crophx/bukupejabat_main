@@ -214,13 +214,13 @@ export default function TableCard() {
             <div className="flex flex-col md:flex-row items-center justify-between p-5 border-b border-slate-100 gap-4">
                 <div className="flex flex-col">
                     <h2 className="text-lg font-bold text-slate-800">
-                        Data Pegawai
+                        Data Pejabat
                     </h2>
-                    <span className="text-xs text-slate-500">
+                    {/* <span className="text-xs text-slate-500">
                         {searchTerm
                             ? `Ditemukan ${sortedData.length} hasil`
                             : `Total ${data.length} pegawai`}
-                    </span>
+                    </span> */}
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">

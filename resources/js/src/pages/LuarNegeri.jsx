@@ -238,7 +238,7 @@ export default function LuarNegeri() {
                                     </div>
                                     <div className="flex-1 min-w-[150px]">
                                         <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Musim
+                                            Perbedaan Waktu
                                         </p>
                                         <p className="text-slate-700">
                                             {unit.musim_panas || "-"}

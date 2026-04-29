@@ -129,7 +129,7 @@ export default function Sidebar({ isOpen, onClose }) {
                             )}
                         </NavLink>
 
-                        {/* --- Data Pegawai --- */}
+                        {/* --- Data pejabat --- */}
                         <NavLink
                             to="/pegawai"
                             end
@@ -159,69 +159,11 @@ export default function Sidebar({ isOpen, onClose }) {
                                         </svg>
                                     </span>
                                     <span className="text-sm font-medium text-slate-700">
-                                        Data Pegawai
+                                        Data Pejabat
                                     </span>
                                 </>
                             )}
                         </NavLink>
-
-                        {/* --- Data Per SatKerja  --- */}
-                        {/* <div className="relative">
-                            <div
-                                onClick={() => { setIsUnitOpen(true); navigate('/satkerja'); }}
-                                className={`w-full flex items-center justify-between rounded-lg hover:bg-slate-200 transition-all ${isUnitOpen ? "bg-slate-100" : ""}`}
-                            >
-                                <NavLink
-                                    to="/satkerja"
-                                    onClick={(e) => { e.stopPropagation(); setIsUnitOpen(true); }}
-                                    className={({ isActive }) =>
-                                        `relative flex-1 text-left flex items-center gap-3 px-3 py-2 rounded-lg ${isActive ? "bg-transparent" : ""}`
-                                    }
-                                >
-                                    {({ isActive }) => (
-                                        <>
-                                            <span className={`absolute left-0 top-0 bottom-0 w-1 rounded-r bg-sky-500 transition-opacity ${isActive ? "opacity-100" : "opacity-0"}`} />
-                                            <span className="h-5 w-5 bg-slate-100 rounded-sm flex items-center justify-center text-slate-600">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-                                                    <path d="M7.5 3.375c0-1.036.84-1.875 1.875-1.875h.375a3.75 3.75 0 0 1 3.75 3.75v1.875C13.5 8.161 14.34 9 15.375 9h1.875A3.75 3.75 0 0 1 21 12.75v3.375C21 17.16 20.16 18 19.125 18h-9.75A1.875 1.875 0 0 1 7.5 16.125V3.375Z" />
-                                                    <path d="M15 5.25a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 17.25 7.5h-1.875A.375.375 0 0 1 15 7.125V5.25ZM4.875 6H6v10.125A3.375 3.375 0 0 0 9.375 19.5H16.5v1.125c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V7.875C3 6.839 3.84 6 4.875 6Z" />
-                                                </svg>
-                                            </span>
-                                            <span className="text-sm font-medium text-slate-700">Data Per Unit Kerja</span>
-                                        </>
-                                    )}
-                                </NavLink>
-
-                                <button onClick={(e) => { e.stopPropagation(); setIsUnitOpen(!isUnitOpen); }} aria-expanded={isUnitOpen} className="ml-2 p-1 rounded hover:bg-slate-200 text-slate-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`size-4 transition-transform ${isUnitOpen ? "rotate-180 text-slate-600" : ""}`}>
-                                        <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {isUnitOpen && (
-                                <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1 animate-in slide-in-from-top-1">
-                                    <NavLink
-                                        to="/satkerja/dalam-negeri"
-                                        onClick={handleMobileClose}
-                                        className={({ isActive }) =>
-                                            `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
-                                        }
-                                    >
-                                        Dalam Negeri
-                                    </NavLink>
-                                    <NavLink
-                                        to="/satkerja/luar-negeri"
-                                        onClick={handleMobileClose}
-                                        className={({ isActive }) =>
-                                            `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`
-                                        }
-                                    >
-                                        Luar Negeri
-                                    </NavLink>
-                                </div>
-                            )}
-                        </div> */}
 
                         {/* --- Data Per Unit Kerja (Dropdown) --- */}
                         <div className="relative">
