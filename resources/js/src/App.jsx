@@ -12,6 +12,8 @@ import UnitKerja from "./pages/UnitKerja";
 import DataAdmin from "./components/DataAdmin";
 import PengaturanAkun from "./pages/PengaturanAkun";
 import PagePublic from "./pages/PagePublic";
+import KonsulKehormatan from "./pages/KonsulKehormatan";
+import DetailKehormatan from "./pages/DetailKonhor";
 // import TambahPegawai from "./pages/TambahPegawai";
 
 function ProtectedLayout({ onSignOut }) {
@@ -80,6 +82,8 @@ export default function App() {
                 <Route path="unit-kerja" element={<UnitKerja />} />
                 <Route path="unit-kerja/form" element={<UnitKerja />} />
                 <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
+                <Route path="/konsul-kehormatan" element={<KonsulKehormatan />} />
+                <Route path="/konsul-kehormatan/:konsulId" element={<DetailKehormatan />} />
             </Route>
 
             <Route
