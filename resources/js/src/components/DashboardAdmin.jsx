@@ -211,12 +211,18 @@ export default function DashboardAdmin() {
                 doc.text(unitName.toUpperCase(), 16, currentY);
                 currentY += 5;
 
-                const tableRows = grouped[unitName].map((p, i) => [
-                    `${i + 1}.`,
-                    p.nama_pegawai || p.nama || "-",
-                    p.jabatan || "-",
-                    `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
-                ]);
+                const tableRows = grouped[unitName].map((p, i) => {
+                    let jabatanFormat = p.jabatan || "-";
+                    if (jabatanFormat.toUpperCase().includes("STAF SK")) {
+                        jabatanFormat = "Administrasi Umum";
+                    }
+                    return [
+                        `${i + 1}.`,
+                        p.nama_pegawai || p.nama || "-",
+                        jabatanFormat,
+                        `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
+                    ];
+                });
 
                 autoTable(doc, {
                     startY: currentY,

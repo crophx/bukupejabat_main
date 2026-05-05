@@ -48,14 +48,17 @@ export default function TableCard() {
             const dbData = response.data.data || [];
             const formattedData = dbData.map((item) => ({
                 ...item, // Bawa semua data asli
-                kd_unker: item.unit_kerja?.kode_unit_kerja || "",
+                nama: item.nama_pegawai || item.nama || "-",
+                kd_unker: item.unit_kerja?.kode_unit_kerja || item.unit_kerja_id || "",
                 ket_unker:
                     item.unit_kerja?.deskripsi ||
                     item.unit_kerja?.nama_unit_kerja ||
+                    item.deskripsi ||
+                    item.nama_unit_kerja ||
                     "-",
-                Jabatan: item.jabatan?.nama_jabatan || "-",
+                Jabatan: typeof item.jabatan === 'string' ? item.jabatan : (item.jabatan?.nama_jabatan || item.jabatan || "-"),
                 LokasiKerjaName: item.alamat || "-",
-                no_hp: item.no_handphone || "-",
+                no_hp: item.no_handphone || item.telepon || "-",
             }));
 
             setData(formattedData);
@@ -140,28 +143,33 @@ export default function TableCard() {
         );
     });
 
-    // --- LOGIKA SORTING CUSTOM (HANYA VIP LALU ABJAD NAMA) ---
+    // --- LOGIKA SORTING CUSTOM ---
+    const getKeywordRank = (jabatan) => {
+        const j = (jabatan || "").toLowerCase();
+
+        if (j.includes("menteri") && !j.includes("wakil menteri")) return 1;
+        if (j.includes("wakil menteri")) return 2;
+        if (j.includes("sekretaris jenderal") || j.includes("direktur jenderal") || j.includes("inspektur jenderal") || j.includes("kepala badan")) return 3;
+        if (j.includes("staf ahli")) return 4;
+        if (j.includes("kepala biro") || j.includes("direktur") || j.includes("inspektur") || j.includes("kepala pusat")) return 5;
+        if (j.includes("duta besar") || j.includes("kedutaan besar ri")) return 6;
+        if (j.includes("wakepri") || j.includes("wakil kepala perwakilan")) return 7;
+        if (j.includes("konsul jenderal") || j.includes("konsul")) return 8;
+        if (j.includes("kepala bagian")) return 9;
+        if (j.includes("kepala subbag") || j.includes("kepala subbagian")) return 10;
+        
+        return 99;
+    };
+
     const sortedData = [...filteredData].sort((a, b) => {
-        const priorityUnits = [
-            "MENTERI LUAR NEGERI RI",
-            "WAKIL MENTERI LUAR NEGERI",
-        ];
+        const rankA = getKeywordRank(a.Jabatan);
+        const rankB = getKeywordRank(b.Jabatan);
 
-        const unitA = (a.ket_unker || "").toString().toUpperCase().trim();
-        const unitB = (b.ket_unker || "").toString().toUpperCase().trim();
-
-        let indexA = priorityUnits.indexOf(unitA);
-        let indexB = priorityUnits.indexOf(unitB);
-
-        if (indexA === -1) indexA = 999;
-        if (indexB === -1) indexB = 999;
-
-        // Jika berbeda prioritas VIP, urutkan berdasarkan VIP
-        if (indexA !== indexB) {
-            return indexA - indexB;
+        if (rankA !== rankB) {
+            return rankA - rankB;
         }
 
-        // Jika sama-sama bukan VIP (atau sama-sama VIP), urutkan berdasarkan nama
+        // Jika hierarki jabatannya sama (misal sama-sama staff/99), urutkan berdasarkan nama abjad
         return (a.nama || "").localeCompare(b.nama || "");
     });
 

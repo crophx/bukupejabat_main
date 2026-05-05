@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import Pagination from "../components/Pagination";
+import axios from "axios";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
 
 const EMPTY_PEJABAT = {
     id: "",
@@ -17,6 +21,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
     const konsulId = konsulIdProp || routeKonsulId;
 
     const [pejabats, setPejabats] = useState([]);
+    const [konsulDetail, setKonsulDetail] = useState(null);
     const [editPejabat, setEditPejabat] = useState(EMPTY_PEJABAT);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -27,34 +32,36 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
 
     useEffect(() => {
         fetchPejabats();
+        fetchKonsulDetail();
     }, [konsulId]);
+
+    const fetchKonsulDetail = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/konsul-kehormatan/${konsulId}`);
+            if (response.data.success) {
+                setKonsulDetail(response.data.data);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil detail konsul:", error);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    const fetchPejabats = () => {
+    const fetchPejabats = async () => {
         setLoading(true);
-
-        const dummyData = [
-            {
-                id: 1,
-                nama: "John Doe",
-                gelar_jabatan: "Staf Konsuler",
-                alamat: "Jl. Merdeka No.1, Jakarta",
-                telp: "08123456789",
-            },
-            {
-                id: 2,
-                nama: "Jane Smith",
-                gelar_jabatan: "Staf Administrasi",
-                alamat: "Jl. Sudirman No.2, Jakarta",
-                telp: "08198765432",
-            },
-        ];
-
-        setPejabats(dummyData);
-        setLoading(false);
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/pejabat-konsul?konsul_id=${konsulId}`);
+            if (response.data.success) {
+                setPejabats(response.data.data);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const openAddModal = () => {
@@ -78,21 +85,17 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
         setEditPejabat((prev) => ({ ...prev, [name]: value }));
     };
 
-    const savePejabat = (e) => {
+    const savePejabat = async (e) => {
         e.preventDefault();
 
         setIsSaving(true);
         try {
             if (isEditing) {
-                setPejabats((prev) =>
-                    prev.map((p) => (p.id === editPejabat.id ? editPejabat : p))
-                );
+                await axios.put(`http://127.0.0.1:8000/api/pejabat-konsul/${editPejabat.id}`, editPejabat);
             } else {
-                setPejabats((prev) => [
-                    ...prev,
-                    { ...editPejabat, id: Date.now().toString() },
-                ]);
+                await axios.post("http://127.0.0.1:8000/api/pejabat-konsul", { ...editPejabat, konsul_id: konsulId });
             }
+            fetchPejabats();
 
             closeModal();
             Swal.fire({
@@ -125,9 +128,10 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
             cancelButtonColor: "#6b7280",
             confirmButtonText: "Hapus",
             cancelButtonText: "Batal",
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                setPejabats((prev) => prev.filter((p) => p.id !== id));
+                await axios.delete(`http://127.0.0.1:8000/api/pejabat-konsul/${id}`);
+                fetchPejabats();
                 Swal.fire({
                     icon: "success",
                     title: "Berhasil!",
@@ -159,7 +163,74 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
         setCurrentPage(page);
     };
 
-    const title = konsulNama || `ID ${konsulId}`;
+    const title = konsulNama || (konsulDetail ? `${konsulDetail.kota}, ${konsulDetail.negara}` : `Memuat...`);
+
+    const downloadPDF = () => {
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
+
+            drawWatermark();
+
+            doc.setFont("times", "bold");
+            doc.setFontSize(12);
+            const titleText = konsulDetail ? `PEJABAT KONSUL KEHORMATAN DI ${konsulDetail.kota.toUpperCase()}, ${konsulDetail.negara.toUpperCase()}` : "DAFTAR PEJABAT KONSUL KEHORMATAN";
+            doc.text(titleText, pageWidth / 2, 20, { align: "center" });
+
+            doc.setFont("times", "normal");
+            doc.setFontSize(10);
+            doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
+            doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
+
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
+
+            const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
+            const tableRows = pejabats.map((p, index) => {
+                let addressDetails = "";
+                if (p.alamat && p.alamat !== "-") addressDetails += `Kantor : ${p.alamat}\n`;
+                else addressDetails += `Kantor : -\n`;
+                if (p.telp && p.telp !== "-") addressDetails += `Telp. : ${p.telp}`;
+                else addressDetails += `Telp. : -`;
+                
+                const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
+                
+                return [`${index + 1}.`, formatNama, p.gelar_jabatan || "-", addressDetails];
+            });
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 40,
+                theme: "plain",
+                styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
+                columnStyles: { 0: { cellWidth: 15, halign: 'center' }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 'auto' } }
+            });
+
+            const fileName = konsulDetail ? `${konsulDetail.kota}_${konsulDetail.negara}`.replace(/\s+/g, "_") : "Konhor";
+            doc.save(`Buku_Pejabat_${fileName}.pdf`);
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+        } catch (error) {
+            console.error("Error creating PDF:", error);
+            Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
+        }
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 mb-5">
@@ -208,7 +279,14 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                         </div>
                     </div>
 
-                    <div className="w-full lg:w-auto flex justify-end">
+                    <div className="w-full lg:w-auto flex justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={downloadPDF}
+                            className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px] shadow-lg shadow-rose-100 transition-all active:scale-95"
+                        >
+                            <span className="text-xs font-bold uppercase">PDF</span>
+                        </button>
                         <button
                             type="button"
                             onClick={openAddModal}
@@ -255,7 +333,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                                     <td className="px-4 py-3 text-sm text-center text-slate-400 font-bold">
                                         {indexOfFirst + index + 1}
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase">
+                                    <td className="px-4 py-3 text-sm font-bold text-slate-700 capitalize">
                                         {p.nama || "-"}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold text-slate-500">

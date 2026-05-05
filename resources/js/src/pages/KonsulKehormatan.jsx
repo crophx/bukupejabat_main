@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
 
 // ─── Local Data Negara (sementara, nanti diganti GET dari API) ───────────────
 const NEGARA_LIST = [
@@ -315,11 +318,10 @@ export default function KonsulKehormatan() {
     const fetchAll = async () => {
         setLoading(true);
         try {
-            // Nanti ganti dengan:
-            // const r1 = await axios.get(".../konsul-kehormatan");
-            // const r2 = await axios.get(".../pejabat-konsul");
-            setKonsuls(INITIAL_KONSULS);
-            setPejabats(INITIAL_PEJABAT);
+            const r1 = await axios.get("http://127.0.0.1:8000/api/konsul-kehormatan");
+            const r2 = await axios.get("http://127.0.0.1:8000/api/pejabat-konsul");
+            if (r1.data.success) setKonsuls(r1.data.data);
+            if (r2.data.success) setPejabats(r2.data.data);
         } catch {
             Swal.fire({ icon: "error", title: "Oops...", text: "Gagal mengambil data.", confirmButtonColor: "#0ea5e9" });
         } finally {
@@ -356,12 +358,11 @@ export default function KonsulKehormatan() {
         setSavingKonsul(true);
         try {
             if (isEditingKonsul) {
-                // await axios.put(`.../konsul-kehormatan/${konsulForm.id}`, konsulForm);
-                setKonsuls((prev) => prev.map((item) => item.id === konsulForm.id ? { ...item, ...konsulForm } : item));
+                await axios.put(`http://127.0.0.1:8000/api/konsul-kehormatan/${konsulForm.id}`, konsulForm);
+                fetchAll();
             } else {
-                const newItem = { ...konsulForm, id: nextId(konsuls) };
-                // await axios.post(".../konsul-kehormatan", konsulForm);
-                setKonsuls((prev) => [...prev, newItem]);
+                await axios.post("http://127.0.0.1:8000/api/konsul-kehormatan", konsulForm);
+                fetchAll();
             }
             setKonsulModal(false);
             setPageKonsul(1);
@@ -386,9 +387,8 @@ export default function KonsulKehormatan() {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    // await axios.delete(`.../konsul-kehormatan/${id}`);
-                    setKonsuls((prev) => prev.filter((item) => item.id !== id));
-                    setPejabats((prev) => prev.filter((item) => item.konsul_id !== id));
+                    await axios.delete(`http://127.0.0.1:8000/api/konsul-kehormatan/${id}`);
+                    fetchAll();
                     setPageKonsul(1);
                     Swal.fire({ icon: "success", title: "Berhasil!", text: "Data Konsul Kehormatan berhasil dihapus.", confirmButtonColor: "#0ea5e9" });
                 } catch {
@@ -415,6 +415,118 @@ export default function KonsulKehormatan() {
         if (page < 1 || page > totalPagesKonsul) return;
         setPageKonsul(page);
         window.scrollTo(0, 0);
+    };
+
+    const downloadPDF = async () => {
+        Swal.fire({
+            title: 'Memproses PDF...',
+            text: 'Sedang menyusun daftar pejabat Konsul Kehormatan...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
+
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
+
+            drawWatermark();
+
+            let isFirstPage = true;
+            let hasData = false;
+
+            filteredKonsuls.forEach((k) => {
+                const pejabatForKonsul = pejabats.filter(p => p.konsul_id === k.id);
+
+                if (pejabatForKonsul.length === 0) return;
+
+                hasData = true;
+
+                if (!isFirstPage) {
+                    doc.addPage();
+                }
+                isFirstPage = false;
+
+                // --- HEADER HALAMAN ---
+                doc.setFont("times", "bold");
+                doc.setFontSize(12);
+                doc.text("DAFTAR PEJABAT KONSUL KEHORMATAN", pageWidth / 2, 20, { align: "center" });
+
+                // --- NAMA KOTA DAN NEGARA ---
+                doc.setFontSize(11);
+                const konsulNameLong = `${k.kota}, ${k.negara}`.toUpperCase();
+                const splitKonsulName = doc.splitTextToSize(konsulNameLong, pageWidth - 30);
+                doc.text(splitKonsulName, pageWidth / 2, 28, { align: "center" });
+
+                // --- ALAMAT ---
+                let currentY = 28 + (splitKonsulName.length * 5);
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+                const alamatText = `Alamat: ${k.alamat || "-"}`;
+                const splitAlamat = doc.splitTextToSize(alamatText, pageWidth - 30);
+                doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
+
+                currentY += (splitAlamat.length * 5) + 8;
+
+                // --- ISI TABEL ---
+                const tableRows = pejabatForKonsul.map((p, i) => {
+                    const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
+                    return [
+                        `${i + 1}.`,
+                        formatNama,
+                        p.gelar_jabatan || "-",
+                        `Telp: ${p.telp || p.no_telp || "-"}\nAlamat: ${p.alamat || "-"}`
+                    ];
+                });
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    body: tableRows,
+                    theme: "plain",
+                    styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                    headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
+                    columnStyles: {
+                        0: { cellWidth: 13, halign: 'center' },
+                        1: { cellWidth: 50, halign: 'center' },
+                        2: { cellWidth: 60, halign: 'left' },
+                        3: { cellWidth: 'auto' }
+                    },
+                    margin: { left: 15, right: 15 },
+                });
+            });
+
+            if (!hasData) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat untuk diunduh.', 'info');
+                return;
+            }
+
+            doc.save("Daftar_Konsul_Kehormatan.pdf");
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF berhasil diunduh.', timer: 2000, showConfirmButton: false });
+
+        } catch (error) {
+            console.error("Gagal Download PDF:", error);
+            Swal.fire('Error', 'Terjadi kesalahan teknis saat menyusun data PDF.', 'error');
+        }
     };
 
     // ─── RENDER ───────────────────────────────────────────────────────────────
@@ -444,6 +556,16 @@ export default function KonsulKehormatan() {
                                 className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50"
                             />
                         </div>
+
+                        <button
+                            onClick={downloadPDF}
+                            className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
+                        </button>
 
                         <button
                             onClick={openAddKonsul}

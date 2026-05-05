@@ -46,3 +46,9 @@ Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, '
 
 // Rute untuk menjalankan Cleansing Data
 Route::get('/pegawai/cleanse', [\App\Http\Controllers\Api\PegawaiController::class, 'cleanseData']);
+
+use App\Http\Controllers\KonsulKehormatanController;
+use App\Http\Controllers\PejabatKonsulController;
+
+Route::apiResource('konsul-kehormatan', KonsulKehormatanController::class);
+Route::apiResource('pejabat-konsul', PejabatKonsulController::class);

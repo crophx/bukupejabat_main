@@ -115,6 +115,15 @@ export default function DetailPegawai() {
     const currentUnits = sortedUnits.slice(indexOfFirst, indexOfLast);
     const totalPages = Math.ceil(sortedUnits.length / itemsPerPage);
 
+    // FUNGSI KHUSUS UNTUK MEMFORMAT JABATAN "STAF SK..." DI LUAR NEGERI
+    const formatJabatan = (jabatan) => {
+        if (!jabatan) return "-";
+        if (source === "luar" && jabatan.toUpperCase().includes("STAF SK")) {
+            return "Administrasi Umum";
+        }
+        return jabatan;
+    };
+
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
@@ -175,7 +184,7 @@ export default function DetailPegawai() {
             "No": index + 1,
             "NIP": unit.nip || "-",
             "Nama Lengkap": unit.nama_pegawai || "-",
-            "Jabatan": unit.jabatan || "-",
+            "Jabatan": formatJabatan(unit.jabatan),
             "Email": unit.email || "-",
             "No. Telepon": unit.telepon || "-",
             "Alamat Kantor": unit.alamat || "-",
@@ -194,7 +203,7 @@ export default function DetailPegawai() {
     const downloadCSV = () => {
         const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"];
         const rows = sortedUnits.map((unit, index) => [
-            index + 1, `"${unit.nip || "-"}"`, `"${unit.nama_pegawai || "-"}"`, `"${unit.jabatan || "-"}"`, `"${unit.email || "-"}"`, `"${unit.telepon || "-"}"`, `"${unit.alamat || "-"}"`, `"${unit.wisma || "-"}"`, `"${unit.bobot || "-"}"`, `"${unit.tmt_kedatangan || "-"}"`, `"${unit.tmt_credential || "-"}"`
+            index + 1, `"${unit.nip || "-"}"`, `"${unit.nama_pegawai || "-"}"`, `"${formatJabatan(unit.jabatan)}"`, `"${unit.email || "-"}"`, `"${unit.telepon || "-"}"`, `"${unit.alamat || "-"}"`, `"${unit.wisma || "-"}"`, `"${unit.bobot || "-"}"`, `"${unit.tmt_kedatangan || "-"}"`, `"${unit.tmt_credential || "-"}"`
         ]);
         const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -256,7 +265,7 @@ export default function DetailPegawai() {
                 else addressDetails += `Email : -\n`;
                 if (unit.wisma && unit.wisma !== "-") addressDetails += `Wisma : ${unit.wisma}`;
                 else addressDetails += `Wisma : -`;
-                return [`${index + 1}.`, unit.nama_pegawai || "-", unit.jabatan || "-", addressDetails];
+                return [`${index + 1}.`, unit.nama_pegawai || "-", formatJabatan(unit.jabatan), addressDetails];
             });
 
             // 4. Generate tabel tanpa didDrawPage (karena sudah di-handle di atas)
@@ -357,7 +366,7 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm text-center text-slate-400 font-bold">{indexOfFirst + index + 1}</td>
                                     <td className="px-4 py-3 text-sm font-mono text-sky-600">{unit.nip || "-"}</td>
                                     <td className="px-4 py-3 text-sm font-bold text-slate-700 uppercase">{unit.nama_pegawai || "-"}</td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-slate-500">{unit.jabatan || "-"}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-slate-500">{formatJabatan(unit.jabatan)}</td>
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500 italic lowercase">{unit.email || "-"}</td>
                                     <td className="px-4 py-3 text-sm text-slate-600">{unit.telepon || "-"}</td>
                                     <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
