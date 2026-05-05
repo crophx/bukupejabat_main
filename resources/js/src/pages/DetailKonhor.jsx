@@ -6,6 +6,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import { logActivity } from "../utils/logActivity";
 
 const EMPTY_PEJABAT = {
     id: "",
@@ -226,6 +227,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
             const fileName = konsulDetail ? `${konsulDetail.kota}_${konsulDetail.negara}`.replace(/\s+/g, "_") : "Konhor";
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+            logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Konsul Kehormatan ${konsulDetail ? konsulDetail.kota : ""}`);
         } catch (error) {
             console.error("Error creating PDF:", error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });

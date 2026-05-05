@@ -97,9 +97,9 @@ export default function LogHistory() {
                 </div>
             </div>
 
-            <div className="w-full overflow-x-auto border-t border-slate-100 max-h-72">
+            <div className="w-full overflow-x-auto border-t border-slate-100 max-h-[600px]">
                 <table className="w-full text-left border-collapse min-w-[820px] table-auto">
-                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold">
+                    <thead className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold sticky top-0 z-10 shadow-sm">
                         <tr>
                             <th className="px-4 py-4 border-b border-slate-100">
                                 Date

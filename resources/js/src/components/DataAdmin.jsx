@@ -3,15 +3,7 @@ import axios from "axios"; // Pastikan axios diimport
 import Modal from "./Modal";
 import ConfirmModal from "./ConfirmModal";
 import Pagination from "./Pagination";
-
-const defaultUnitOptions = [
-    "Pusat / Semua Unit",
-    "Biro Sumber Daya Manusia",
-    "Biro Hukum dan Organisasi",
-    "KBRI Tokyo",
-    "KJRI New York",
-    "KJRI Sydney",
-];
+import { logActivity } from "../utils/logActivity";
 
 export default function DataAdmin() {
     // 1. Ganti sampleAdmins dengan array kosong dulu
@@ -24,10 +16,24 @@ export default function DataAdmin() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    const [unitsData, setUnitsData] = useState([]);
+
     // 2. FETCH DATA DARI DATABASE SAAT HALAMAN DIBUKA
     useEffect(() => {
         fetchAdmins();
+        fetchUnits();
     }, []);
+
+    const fetchUnits = async () => {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/api/unit-kerja");
+            if (response.data.success) {
+                setUnitsData(response.data.data);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data unit kerja:", error);
+        }
+    };
 
     const fetchAdmins = async () => {
         try {
@@ -39,6 +45,7 @@ export default function DataAdmin() {
                 // Kita ubah format database agar sesuai dengan format tampilan Anda
                 const formattedData = response.data.data.map((user) => ({
                     id: user.id,
+                    unit_kerja_id: user.unit_kerja_id || "",
                     // Ambil nama unit kerja dari relasi, kalau kosong tulis '-'
                     unit: user.unit_kerja
                         ? user.unit_kerja.nama_unit_kerja
@@ -78,25 +85,23 @@ export default function DataAdmin() {
         setAddOpen(true);
     };
 
-    const handleAdd = (newAdmin) => {
-        const createdAt = new Date().toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-
-        setAdmins((prev) => [
-            {
-                id: Date.now(),
-                unit: newAdmin.unit || defaultUnitOptions[0],
-                email: newAdmin.email,
+    const handleAdd = async (newAdmin) => {
+        try {
+            const response = await axios.post("http://127.0.0.1:8000/api/users", {
                 username: newAdmin.username,
+                email: newAdmin.email,
+                password: newAdmin.password,
                 role: newAdmin.role || "admin",
-                createdAt,
-            },
-            ...prev,
-        ]);
-        setAddOpen(false);
+            });
+            if (response.data.success) {
+                setAddOpen(false);
+                fetchAdmins();
+                logActivity("CREATE", `Menambah Admin: ${newAdmin.username}`);
+            }
+        } catch (error) {
+            console.error("Gagal menambah admin:", error);
+            alert("Gagal menambahkan admin. Pastikan Email/Username unik dan Password min 6 karakter.");
+        }
     };
 
     // Note: Handle Save & Delete sementara hanya update di layar (Frontend)
@@ -111,6 +116,7 @@ export default function DataAdmin() {
                     username: updated.username,
                     email: updated.email,
                     role: updated.role,
+                    unit_kerja_id: updated.unit_kerja_id,
                 },
             );
 
@@ -127,9 +133,19 @@ export default function DataAdmin() {
         }
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!selected) return;
-        setAdmins((prev) => prev.filter((a) => a.id !== selected.id));
+        try {
+            const response = await axios.delete(`http://127.0.0.1:8000/api/users/${selected.id}`);
+            if (response.data.success) {
+                setDeleteOpen(false);
+                fetchAdmins();
+                logActivity("DELETE", `Menghapus Admin: ${selected.username}`);
+            }
+        } catch (error) {
+            console.error("Gagal menghapus admin:", error);
+            alert("Gagal menghapus data admin.");
+        }
         setSelected(null);
     };
 
@@ -153,15 +169,6 @@ export default function DataAdmin() {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
     };
-
-    const unitOptions = [
-        ...new Set([
-            ...defaultUnitOptions,
-            ...admins
-                .map((item) => item.unit)
-                .filter((unit) => unit && unit !== "-"),
-        ]),
-    ];
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 relative mb-6">
@@ -328,12 +335,13 @@ export default function DataAdmin() {
             >
                 <AdminForm
                     initialData={{
-                        unit: defaultUnitOptions[0],
+                        unit_kerja_id: "",
                         email: "",
                         username: "",
+                        password: "",
                         role: "admin",
                     }}
-                    unitOptions={unitOptions}
+                    unitOptions={unitsData}
                     submitLabel="Tambah"
                     onCancel={() => setAddOpen(false)}
                     onSave={(u) => {
@@ -350,7 +358,7 @@ export default function DataAdmin() {
                 {selected && (
                     <AdminForm
                         initialData={selected}
-                        unitOptions={unitOptions}
+                        unitOptions={unitsData}
                         submitLabel="Simpan"
                         onCancel={() => setEditOpen(false)}
                         onSave={(u) => {
@@ -387,27 +395,20 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                     <label className="block text-xl font-bold text-slate-700 mb-1">
                         Unit Organisasi
                     </label>
-                    {isEdit ? (
-                        <input
-                            value={form.unit || ""}
-                            disabled
-                            className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-500 bg-slate-100 cursor-not-allowed"
-                        />
-                    ) : (
-                        <select
-                            value={form.unit || unitOptions[0] || ""}
-                            onChange={(e) =>
-                                setForm({ ...form, unit: e.target.value })
-                            }
-                            className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                        >
-                            {unitOptions.map((unit) => (
-                                <option key={unit} value={unit}>
-                                    {unit}
-                                </option>
-                            ))}
-                        </select>
-                    )}
+                    <select
+                        value={form.unit_kerja_id || ""}
+                        onChange={(e) =>
+                            setForm({ ...form, unit_kerja_id: e.target.value })
+                        }
+                        className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    >
+                        <option value="">-- Pusat / Semua Unit --</option>
+                        {unitOptions.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                                {unit.nama_unit_kerja}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
@@ -429,6 +430,20 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                         className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                     />
                 </div>
+                {!isEdit && (
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                        <input
+                            type="password"
+                            value={form.password || ""}
+                            onChange={(e) =>
+                                setForm({ ...form, password: e.target.value })
+                            }
+                            required
+                            className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                        />
+                    </div>
+                )}
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                     <select

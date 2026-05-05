@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import { logActivity } from "../utils/logActivity";
 
 export default function LuarNegeri() {
     const navigate = useNavigate();
@@ -97,7 +101,7 @@ export default function LuarNegeri() {
                 text: 'Data Luar Negeri berhasil diperbarui.',
                 confirmButtonColor: '#0ea5e9'
             });
-
+            logActivity("UPDATE", `Memperbarui profil Kedutaan Luar Negeri: ${editData.deskripsi || editData.nama_unit_kerja}`);
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
             // TAMBAHAN: SweetAlert Error
@@ -109,6 +113,161 @@ export default function LuarNegeri() {
             });
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    // =======================================================
+    // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER - PAGE BARU)    
+    // =======================================================
+    const downloadPDF = async () => {
+        Swal.fire({
+            title: 'Memproses PDF...',
+            text: 'Sedang menyusun daftar pejabat per orang...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            // Ambil data dari API Pegawai
+            const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const allPegawai = response.data.data || [];
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
+
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
+
+            drawWatermark();
+
+            let isFirstPage = true;
+            let hasData = false;
+
+            filteredUnits.forEach((unit) => {
+                const pejabatForUnit = allPegawai.filter(p => p.unit_kerja_id === unit.id);
+
+                if (pejabatForUnit.length === 0) return;
+
+                hasData = true;
+
+                if (!isFirstPage) {
+                    doc.addPage();
+                }
+                isFirstPage = false;
+
+                doc.setFont("times", "bold");
+                doc.setFontSize(12);
+                doc.text("DAFTAR PEJABAT LUAR NEGERI", pageWidth / 2, 20, { align: "center" });
+
+                doc.setFontSize(11);
+                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 30);
+                doc.text(splitUnitName, pageWidth / 2, 28, { align: "center" });
+
+                let currentY = 28 + (splitUnitName.length * 5);
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+
+                if (unit.alamat && unit.alamat !== "-") {
+                    const splitAlamat = doc.splitTextToSize(unit.alamat, pageWidth - 30);
+                    doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
+                    currentY += (splitAlamat.length * 5) + 3;
+                } else {
+                    currentY += 3;
+                }
+
+                const leftX = 15;
+                const rightX = pageWidth / 2 + 5;
+                let leftY = currentY;
+                let rightY = currentY;
+
+                if (unit.telepon && unit.telepon !== "-") {
+                    doc.text(`Telp: ${unit.telepon}`, leftX, leftY); leftY += 5;
+                }
+                if (unit.email && unit.email !== "-") {
+                    doc.text(`Email: ${unit.email}`, leftX, leftY); leftY += 5;
+                }
+                if (unit.website && unit.website !== "-") {
+                    doc.text(`Web: ${unit.website}`, leftX, leftY); leftY += 5;
+                }
+
+                if (unit.hari_kerja && unit.hari_kerja !== "-") {
+                    doc.text(`Hari Kerja: ${unit.hari_kerja}`, rightX, rightY); rightY += 5;
+                }
+                if (unit.musim_dingin && unit.musim_dingin !== "-") {
+                    doc.text(`Musim Dingin: ${unit.musim_dingin}`, rightX, rightY); rightY += 5;
+                }
+                if (unit.musim_panas && unit.musim_panas !== "-") {
+                    doc.text(`Musim Panas: ${unit.musim_panas}`, rightX, rightY); rightY += 5;
+                }
+
+                currentY = Math.max(leftY, rightY) + 5;
+
+                const tableRows = pejabatForUnit.map((p, i) => {
+                    let jabatanFormat = p.jabatan || "-";
+                    if (jabatanFormat.toUpperCase().includes("STAF SK")) {
+                        jabatanFormat = "Administrasi Umum";
+                    }
+
+                    const formatNama = p.nama_pegawai || p.nama || "-";
+
+                    const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                    const titleCaseJabatan = jabatanFormat === "-" ? "-" : jabatanFormat.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                    return [
+                        `${i + 1}.`,
+                        titleCaseNama,
+                        titleCaseJabatan,
+                        `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
+                    ];
+                });
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    body: tableRows,
+                    theme: "plain",
+                    styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                    headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
+                    columnStyles: {
+                        0: { cellWidth: 13, halign: 'center' },
+                        1: { cellWidth: 50, halign: 'center' },
+                        2: { cellWidth: 60, halign: 'left' },
+                        3: { cellWidth: 'auto' }
+                    },
+                    margin: { left: 15, right: 15 },
+                });
+            });
+
+            if (!hasData) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat di daftar unit ini.', 'info');
+                return;
+            }
+
+            doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            logActivity("DOWNLOAD PDF", "Mengunduh PDF Seluruh Pejabat Luar Negeri");
+
+        } catch (error) {
+            console.error("Gagal Download PDF:", error);
+            Swal.fire('Error', 'Terjadi kesalahan teknis saat menyusun data PDF.', 'error');
         }
     };
 
@@ -154,7 +313,7 @@ export default function LuarNegeri() {
                             <input type="text" placeholder="Cari unit kerja..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50" />
                         </div>
 
-                        <button className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
+                        <button onClick={downloadPDF} className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
@@ -270,7 +429,7 @@ export default function LuarNegeri() {
                                     className="bg-sky-50 border border-sky-100 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-sky-100"
                                 >
                                     <span className="text-[12px] font-bold text-sky-700 uppercase">
-                                        Daftar Personel ({unit.pegawai_count || 0})
+                                        Daftar Pejabat ({unit.pegawai_count || 0})
                                     </span>
                                     <span className="text-sky-400 text-[11px] font-bold uppercase">
                                         Klik Detail ➔

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
-import { jsPDF } from "jspdf"; // TAMBAHAN: Import jsPDF
-import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import { logActivity } from "../utils/logActivity";
 
 export default function DalamNegeri() {
     const navigate = useNavigate();
@@ -41,10 +43,37 @@ export default function DalamNegeri() {
     const fetchDalamNegeri = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"
-            );
-            setUnits(response.data.data || []);
+            const [unitRes, pegRes] = await Promise.all([
+                axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
+                axios.get("http://127.0.0.1:8000/api/pegawai")
+            ]);
+            
+            const allUnits = unitRes.data.data || [];
+            const allPegawai = pegRes.data.data || [];
+
+            const isPejabatDalam = (jabatan) => {
+                const j = (jabatan || "").toLowerCase();
+                return j.includes("menteri") ||
+                       j.includes("sekretaris jenderal") ||
+                       j.includes("direktur jenderal") ||
+                       j.includes("inspektur jenderal") ||
+                       j.includes("kepala badan") ||
+                       j.includes("staf ahli") ||
+                       j.includes("kepala biro") ||
+                       j.includes("direktur") ||
+                       j.includes("inspektur") ||
+                       j.includes("kepala pusat") ||
+                       j.includes("kepala bagian") ||
+                       j.includes("kepala subbagian") ||
+                       j.includes("kepala subbag");
+            };
+
+            const unitsWithCount = allUnits.map(unit => {
+                const count = allPegawai.filter(p => p.unit_kerja_id === unit.id && isPejabatDalam(p.jabatan)).length;
+                return { ...unit, pejabat_count: count };
+            });
+
+            setUnits(unitsWithCount);
         } catch (error) {
             console.error("Gagal mengambil data:", error);
         } finally {
@@ -126,6 +155,27 @@ export default function DalamNegeri() {
 
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
+
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
+
+            drawWatermark();
+
             let isFirstPage = true;
             let hasData = false;
 
@@ -168,19 +218,39 @@ export default function DalamNegeri() {
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
-                const alamatText = `Alamat: ${unit.alamat || "-"}`;
-                const splitAlamat = doc.splitTextToSize(alamatText, pageWidth - 30);
-                doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
 
-                currentY += (splitAlamat.length * 5) + 8; // Tambah margin bawah sebelum tabel
+                let addressDetails = [];
+                if (unit.alamat && unit.alamat !== "-") addressDetails.push(unit.alamat);
+                
+                let kontak = [];
+                if (unit.telepon && unit.telepon !== "-") kontak.push(`Telp: ${unit.telepon}`);
+                if (unit.email && unit.email !== "-") kontak.push(`Email: ${unit.email}`);
+                if (unit.website && unit.website !== "-") kontak.push(`Web: ${unit.website}`);
+                if (kontak.length > 0) addressDetails.push(kontak.join(" | "));
+
+                addressDetails.forEach(line => {
+                    const splitLine = doc.splitTextToSize(line, pageWidth - 30);
+                    doc.text(splitLine, pageWidth / 2, currentY, { align: "center" });
+                    currentY += (splitLine.length * 5);
+                });
+
+                currentY += 8;
 
                 // --- ISI TABEL ---
-                const tableRows = pejabatForUnit.map((p, i) => [
-                    `${i + 1}.`,
-                    p.nama_pegawai || p.nama || "-",
-                    p.jabatan || "-",
-                    `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
-                ]);
+                const tableRows = pejabatForUnit.map((p, i) => {
+                    const formatNama = p.nama_pegawai || p.nama || "-";
+                    const formatJabatan = p.jabatan || "-";
+                    
+                    const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                    const titleCaseJabatan = formatJabatan === "-" ? "-" : formatJabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                    return [
+                        `${i + 1}.`,
+                        titleCaseNama,
+                        titleCaseJabatan,
+                        `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
+                    ];
+                });
 
                 autoTable(doc, {
                     startY: currentY,
@@ -208,6 +278,7 @@ export default function DalamNegeri() {
             doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
             Swal.close();
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            logActivity("DOWNLOAD PDF", "Mengunduh PDF Seluruh Pejabat Dalam Negeri");
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -330,7 +401,7 @@ export default function DalamNegeri() {
                                     className="bg-sky-50 border border-sky-100 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-sky-100"
                                 >
                                     <span className="text-[12px] font-bold text-sky-700 uppercase">
-                                        Daftar Personel ({unit.pegawai_count || 0})
+                                        Daftar Pejabat ({unit.pejabat_count || 0})
                                     </span>
                                     <span className="text-sky-400 text-[11px] font-bold uppercase">Klik Detail ➔</span>
                                 </div>

@@ -12,7 +12,9 @@ Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
 Route::get('/pegawai', [PegawaiController::class, 'index']);
 Route::post('/pegawai', [PegawaiController::class, 'store']);
 Route::get('/users', [UserController::class, 'index']);
+Route::post('/users', [UserController::class, 'store']);
 Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+Route::post('/activity-logs', [ActivityLogController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

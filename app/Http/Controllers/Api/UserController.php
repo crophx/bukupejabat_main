@@ -21,6 +21,34 @@ class UserController extends Controller
     }
 
     // ==========================================
+    // FUNGSI TAMBAH DATA ADMIN
+    // ==========================================
+    public function store(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|unique:users',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|string|min:6',
+            'role' => 'required|string',
+            'unit_kerja_id' => 'required|exists:unit_kerja,id',
+        ]);
+
+        $user = User::create([
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'unit_kerja_id' => $request->unit_kerja_id
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data admin berhasil ditambahkan',
+            'data' => clone $user->load('unitKerja')
+        ], 201);
+    }
+
+    // ==========================================
     // FUNGSI UPDATE DATA ADMIN & PASSWORD
     // ==========================================
     public function update(Request $request, $id)
@@ -35,11 +63,14 @@ class UserController extends Controller
             ], 404);
         }
 
-        // 2. Update data dasar (Username, Email, Role)
+        // 2. Update data dasar (Username, Email, Role, Unit Kerja)
         $user->username = $request->username ?? $user->username;
         $user->email = $request->email ?? $user->email;
         if ($request->has('role')) {
             $user->role = $request->role;
+        }
+        if ($request->has('unit_kerja_id')) {
+            $user->unit_kerja_id = $request->unit_kerja_id;
         }
 
         // 3. Logika Update Password

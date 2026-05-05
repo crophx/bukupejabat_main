@@ -9,6 +9,7 @@ import Swal from "sweetalert2";
 
 // Import gambar background kemlu
 import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import { logActivity } from "../utils/logActivity";
 
 export default function DetailPegawai() {
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function DetailPegawai() {
 
     const [units, setUnits] = useState([]);
     const [unitName, setUnitName] = useState("");
+    const [unitProfile, setUnitProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -85,24 +87,28 @@ export default function DetailPegawai() {
         return matchSearch && matchJabatan;
     });
 
-    // PELAKSANAAN SORTING: BOBOT -> KODE JABATAN -> KATA KUNCI JAWATAN -> NAMA
+    // PELAKSANAAN SORTING: BOBOT -> KODE JABATAN (LUAR NEGERI) / KATA KUNCI JAWATAN (DALAM NEGERI) -> NAMA
     const sortedUnits = [...filteredUnits].sort((a, b) => {
-        // Lapis 1: Bobot Manual (I, II, III, IV)
         const rankA = getBobotRank(a.bobot);
         const rankB = getBobotRank(b.bobot);
         if (rankA !== rankB) return rankA - rankB;
 
-        // Lapis 2: Kode Jabatan (Abaikan jika formatnya rawak seperti JAB-XXX)
-        const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-' && !a.kode_jabatan.startsWith('JAB-')) ? a.kode_jabatan : "ZZZZ";
-        const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-' && !b.kode_jabatan.startsWith('JAB-')) ? b.kode_jabatan : "ZZZZ";
-        if (kodeA !== kodeB) return kodeA.localeCompare(kodeB);
+        if (source === "luar") {
+            // Luar Negeri: Prioritas Kode Jabatan dari DB
+            const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-') ? a.kode_jabatan.toString() : "ZZZZ";
+            const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-') ? b.kode_jabatan.toString() : "ZZZZ";
+            
+            if (kodeA !== kodeB) {
+                return kodeA.localeCompare(kodeB, undefined, { numeric: true, sensitivity: 'base' });
+            }
+        } else {
+            // Dalam Negeri: Prioritas Kata Kunci Jawatan (Hierarki Teks)
+            const keyRankA = getKeywordRank(a.jabatan);
+            const keyRankB = getKeywordRank(b.jabatan);
+            if (keyRankA !== keyRankB) return keyRankA - keyRankB;
+        }
 
-        // Lapis 3: Kata Kunci Jawatan (Hierarki Teks jika tiada kode rasmi)
-        const keyRankA = getKeywordRank(a.jabatan);
-        const keyRankB = getKeywordRank(b.jabatan);
-        if (keyRankA !== keyRankB) return keyRankA - keyRankB;
-
-        // Lapis 4: Abjad Nama Pegawai
+        // Terakhir: Abjad Nama Pegawai
         return (a.nama_pegawai || "").localeCompare(b.nama_pegawai || "");
     });
 
@@ -144,6 +150,7 @@ export default function DetailPegawai() {
             const response = await axios.get(`http://127.0.0.1:8000/api/pegawai/unit/${unitId}`);
             setUnits(response.data.data || []);
             setUnitName(response.data.unit_nama || "");
+            setUnitProfile(response.data.unit_profil || null);
         } catch (error) {
             console.error("Gagal mengambil data:", error);
         } finally {
@@ -172,6 +179,7 @@ export default function DetailPegawai() {
             document.getElementById("modal_edit_pegawai").close();
             fetchPegawai();
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data Pegawai berhasil diperbarui.', confirmButtonColor: '#0ea5e9' });
+            logActivity("UPDATE", `Memperbarui data pegawai: ${data.nama}`);
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Oops...', text: 'Gagal menyimpan data.', confirmButtonColor: '#0ea5e9' });
         } finally {
@@ -180,24 +188,63 @@ export default function DetailPegawai() {
     };
 
     const downloadExcel = () => {
-        const dataToExport = sortedUnits.map((unit, index) => ({
-            "No": index + 1,
-            "NIP": unit.nip || "-",
-            "Nama Lengkap": unit.nama_pegawai || "-",
-            "Jabatan": formatJabatan(unit.jabatan),
-            "Email": unit.email || "-",
-            "No. Telepon": unit.telepon || "-",
-            "Alamat Kantor": unit.alamat || "-",
-            "Wisma": unit.wisma || "-",
-            "Bobot": unit.bobot || "-",
-            "TMT Kedatangan": unit.tmt_kedatangan || "-",
-            "TMT Credential": unit.tmt_credential || "-",
-        }));
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const aoa = [
+            ["DAFTAR PEJABAT " + (source === "luar" ? "LUAR NEGERI" : "DALAM NEGERI")],
+            [unitName ? unitName.toUpperCase() : "UNIT TIDAK DIKETAHUI"],
+        ];
+
+        if (unitProfile) {
+            if (unitProfile.alamat && unitProfile.alamat !== "-") {
+                aoa.push([unitProfile.alamat]);
+            }
+            let kontak = [];
+            if (unitProfile.telepon && unitProfile.telepon !== "-") kontak.push(`Telp: ${unitProfile.telepon}`);
+            if (unitProfile.email && unitProfile.email !== "-") kontak.push(`Email: ${unitProfile.email}`);
+            if (unitProfile.website && unitProfile.website !== "-") kontak.push(`Web: ${unitProfile.website}`);
+            if (kontak.length > 0) aoa.push([kontak.join(" | ")]);
+
+            if (source === "luar") {
+                let op = [];
+                if (unitProfile.hari_kerja && unitProfile.hari_kerja !== "-") op.push(`Hari Kerja: ${unitProfile.hari_kerja}`);
+                if (unitProfile.musim_dingin && unitProfile.musim_dingin !== "-") op.push(`M. Dingin: ${unitProfile.musim_dingin}`);
+                if (unitProfile.musim_panas && unitProfile.musim_panas !== "-") op.push(`M. Panas: ${unitProfile.musim_panas}`);
+                if (op.length > 0) aoa.push([op.join(" | ")]);
+            }
+        }
+        aoa.push([]); // Baris kosong sebelum tabel
+        
+        const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"];
+        aoa.push(headers);
+
+        const dataRows = sortedUnits.map((unit, index) => {
+             const formatNama = unit.nama_pegawai || "-";
+             const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+             let jabatan = formatJabatan(unit.jabatan);
+             const titleCaseJabatan = jabatan === "-" ? "-" : jabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+             
+             return [
+                 index + 1,
+                 unit.nip || "-",
+                 titleCaseNama,
+                 titleCaseJabatan,
+                 unit.email || "-",
+                 unit.telepon || "-",
+                 unit.alamat || "-",
+                 unit.wisma || "-",
+                 unit.bobot || "-",
+                 unit.tmt_kedatangan || "-",
+                 unit.tmt_credential || "-"
+             ];
+        });
+
+        dataRows.forEach(row => aoa.push(row));
+
+        const worksheet = XLSX.utils.aoa_to_sheet(aoa);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Pegawai");
         const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Data_Pegawai";
         XLSX.writeFile(workbook, `Buku_Pejabat_${fileName}.xlsx`);
+        logActivity("DOWNLOAD EXCEL", `Mengunduh Excel Daftar Pejabat ${unitName || ""}`);
     };
 
     const downloadCSV = () => {
@@ -213,6 +260,7 @@ export default function DetailPegawai() {
         link.setAttribute("href", url);
         link.setAttribute("download", `Buku_Pejabat_${fileName}.csv`);
         link.click();
+        logActivity("DOWNLOAD CSV", `Mengunduh CSV Daftar Pejabat ${unitName || ""}`);
     };
 
     const downloadPDF = () => {
@@ -282,6 +330,7 @@ export default function DetailPegawai() {
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
             doc.save(`Buku_Pejabat_${fileName}.pdf`);
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+            logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Pejabat ${unitName || ""}`);
         } catch (error) {
             console.error("Error creating PDF:", error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });

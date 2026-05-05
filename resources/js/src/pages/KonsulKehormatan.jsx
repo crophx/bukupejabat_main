@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import { logActivity } from "../utils/logActivity";
 
 // ─── Local Data Negara (sementara, nanti diganti GET dari API) ───────────────
 const NEGARA_LIST = [
@@ -360,9 +361,11 @@ export default function KonsulKehormatan() {
             if (isEditingKonsul) {
                 await axios.put(`http://127.0.0.1:8000/api/konsul-kehormatan/${konsulForm.id}`, konsulForm);
                 fetchAll();
+                logActivity("UPDATE", `Memperbarui Konsul Kehormatan: ${konsulForm.kota}, ${konsulForm.negara}`);
             } else {
                 await axios.post("http://127.0.0.1:8000/api/konsul-kehormatan", konsulForm);
                 fetchAll();
+                logActivity("CREATE", `Menambah Konsul Kehormatan: ${konsulForm.kota}, ${konsulForm.negara}`);
             }
             setKonsulModal(false);
             setPageKonsul(1);
@@ -391,6 +394,7 @@ export default function KonsulKehormatan() {
                     fetchAll();
                     setPageKonsul(1);
                     Swal.fire({ icon: "success", title: "Berhasil!", text: "Data Konsul Kehormatan berhasil dihapus.", confirmButtonColor: "#0ea5e9" });
+                    logActivity("DELETE", "Menghapus Konsul Kehormatan");
                 } catch {
                     Swal.fire({ icon: "error", title: "Oops...", text: "Gagal menghapus data.", confirmButtonColor: "#0ea5e9" });
                 }

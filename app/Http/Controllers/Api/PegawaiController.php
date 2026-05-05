@@ -69,6 +69,7 @@ class PegawaiController extends Controller
         return response()->json([
             'success' => true,
             'unit_nama' => $unitKerja ? $unitKerja->deskripsi : 'UNIT TIDAK DIKETAHUI',
+            'unit_profil' => $unitKerja,
             'data' => $formatted
         ]);
     }

@@ -35,6 +35,7 @@ export default function Login({ onLogin }) {
 
                 // 3. SIMPAN DATA DARI DATABASE KE BROWSER
                 localStorage.setItem("token", token);
+                localStorage.setItem("user_id", user.id); // TAMBAHAN
                 // Kita ambil 'username' karena di database kolomnya username
                 localStorage.setItem("user_name", user.username);
                 // Ambil nama unit kerja (jika ada relasinya), kalau tidak ada set "Pusat"

@@ -10,15 +10,31 @@ class ActivityLogController extends Controller
 {
     public function index()
     {
-        // Ambil 5 log terbaru beserta data user-nya
+        // Ambil semua log beserta data user-nya (bisa pakai pagination)
         $logs = ActivityLog::with('user')
             ->latest()
-            ->take(5)
             ->get();
 
         return response()->json([
             'success' => true,
             'data' => $logs
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'action' => 'required|string',
+            'description' => 'required|string',
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $request->user_id,
+            'action' => $request->action,
+            'description' => $request->description,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }
