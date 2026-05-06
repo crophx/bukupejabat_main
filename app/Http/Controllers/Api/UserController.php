@@ -27,24 +27,25 @@ class UserController extends Controller
     {
         $request->validate([
             'username' => 'required|string|unique:users',
-            'email' => 'required|email|unique:users',
+            'email'    => 'required|email|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string',
-            'unit_kerja_id' => 'required|exists:unit_kerja,id',
+            'role'     => 'required|string',
+            // unit_kerja_id OPSIONAL — boleh kosong untuk admin Pusat
+            'unit_kerja_id' => 'nullable|exists:unit_kerja,id',
         ]);
 
         $user = User::create([
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'unit_kerja_id' => $request->unit_kerja_id
+            'username'     => $request->username,
+            'email'        => $request->email,
+            'password'     => Hash::make($request->password),
+            'role'         => $request->role,
+            'unit_kerja_id' => $request->unit_kerja_id ?: null,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Data admin berhasil ditambahkan',
-            'data' => clone $user->load('unitKerja')
+            'data'    => $user->load('unitKerja')
         ], 201);
     }
 

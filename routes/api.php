@@ -7,50 +7,46 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\UnitKerjaController;
 
+// --- PUBLIC ROUTES ---
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
-Route::get('/pegawai', [PegawaiController::class, 'index']);
-Route::post('/pegawai', [PegawaiController::class, 'store']);
-Route::get('/users', [UserController::class, 'index']);
-Route::post('/users', [UserController::class, 'store']);
-Route::get('/activity-logs', [ActivityLogController::class, 'index']);
-Route::post('/activity-logs', [ActivityLogController::class, 'store']);
 
+// Rute public untuk dropdown / public dashboard
+Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
+Route::get('/unit-kerja/dalam-negeri', [UnitKerjaController::class, 'getDalamNegeri']);
+Route::get('/unit-kerja/luar-negeri', [UnitKerjaController::class, 'getLuarNegeri']);
+Route::get('/pegawai', [PegawaiController::class, 'index']);
+Route::get('/pegawai/unit/{unitId}', [PegawaiController::class, 'getByUnit']);
+
+// --- PROTECTED ROUTES ---
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Admin & Users
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/admin/profile/{id}', [UserController::class, 'getProfile']);
+
+    // Activity Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    Route::post('/activity-logs', [ActivityLogController::class, 'store']);
+
+    // Pegawai Management
+    Route::post('/pegawai', [PegawaiController::class, 'store']);
+    Route::put('/pegawai/{id}', [PegawaiController::class, 'update']);
+    Route::post('/pegawai/sync', [PegawaiController::class, 'syncFromJsonStrict']);
+    Route::get('/sync-pegawai', [PegawaiController::class, 'syncFromJsonStrict']); // Jika masih dipakai
+    Route::get('/pegawai/cleanse', [PegawaiController::class, 'cleanseData']);
+    
+    // Dashboard Stats
+    Route::get('/dashboard/stats', [PegawaiController::class, 'getDashboardStats']);
+
+    // Unit Kerja Management
+    Route::put('/unit-kerja/{id}', [UnitKerjaController::class, 'update']);
+    Route::post('/import-master', [UnitKerjaController::class, 'importMasterData']);
+
+    // Konsul Kehormatan
+    Route::apiResource('konsul-kehormatan', App\Http\Controllers\KonsulKehormatanController::class);
+    Route::apiResource('pejabat-konsul', App\Http\Controllers\PejabatKonsulController::class);
 });
-
-Route::post('/import-master', [\App\Http\Controllers\Api\UnitKerjaController::class, 'importMasterData']);
-
-Route::post('/pegawai/sync', [\App\Http\Controllers\Api\PegawaiController::class, 'syncFromJsonStrict']);
-
-Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
-
-Route::put('/unit-kerja/{id}', [UnitKerjaController::class, 'update']);
-
-Route::put('/users/{id}', [UserController::class, 'update']);
-
-Route::get('/unit-kerja/dalam-negeri', [\App\Http\Controllers\Api\UnitKerjaController::class, 'getDalamNegeri']);
-Route::get('/pegawai/unit/{unitId}', [\App\Http\Controllers\Api\PegawaiController::class, 'getByUnit']);
-
-Route::get('/unit-kerja/luar-negeri', [\App\Http\Controllers\Api\UnitKerjaController::class, 'getLuarNegeri']);
-
-Route::get('/sync-pegawai', [\App\Http\Controllers\Api\PegawaiController::class, 'syncFromJsonStrict']);
-
-Route::put('/pegawai/{id}', [\App\Http\Controllers\Api\PegawaiController::class, 'update']);
-
-Route::get('/dashboard/stats', [\App\Http\Controllers\Api\PegawaiController::class, 'getDashboardStats']);
-
-// Pastikan bagian class-nya mengarah ke UserController
-Route::get('/admin/profile/{id}', [\App\Http\Controllers\Api\UserController::class, 'getProfile']);
-
-Route::delete('/users/{id}', [\App\Http\Controllers\Api\UserController::class, 'destroy']);
-
-// Rute untuk menjalankan Cleansing Data
-Route::get('/pegawai/cleanse', [\App\Http\Controllers\Api\PegawaiController::class, 'cleanseData']);
-
-use App\Http\Controllers\KonsulKehormatanController;
-use App\Http\Controllers\PejabatKonsulController;
-
-Route::apiResource('konsul-kehormatan', KonsulKehormatanController::class);
-Route::apiResource('pejabat-konsul', PejabatKonsulController::class);

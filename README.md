@@ -1,63 +1,88 @@
-<<<<<<< HEAD
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Buku Pejabat V2 - Technical Documentation
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 1. Overview
+Buku Pejabat V2 is a modernized web application designed for comprehensive personnel and organizational unit management. Tailored for government or diplomatic use (indicated by modules like *Dalam Negeri*, *Luar Negeri*, and *Konsul Kehormatan*), it acts as a centralized directory and management system for employees (`Pegawai`) and their respective work units (`Unit Kerja`).
 
-## About Laravel
+## 2. Technology Stack
+The project uses a modern monolithic architecture with a decoupled React frontend and Laravel backend, connected via REST API.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Backend (API)
+- **Framework:** Laravel 12.0 (PHP 8.2+)
+- **Authentication:** Laravel Sanctum (Token-based API auth)
+- **Database ORM:** Eloquent ORM
+- **Database Engine:** MySQL / PostgreSQL / SQLite (Configurable via `.env`)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Frontend (SPA)
+- **Library:** React 19.2 (using JSX)
+- **Routing:** React Router DOM v6
+- **Styling:** Tailwind CSS v4, DaisyUI v5, Headless UI
+- **Build Tool:** Vite v7
+- **Utilities:** Axios (API Requests), SweetAlert2 (Notifications), jsPDF & XLSX (Export features)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 3. System Architecture & Directory Structure
+The application follows an API-driven SPA (Single Page Application) approach. `routes/web.php` acts as a catch-all to serve the React application, while `routes/api.php` handles all data transactions.
 
-## Learning Laravel
+### Key Directories
+- `app/Http/Controllers/Api/` - Contains REST API controllers (e.g., `PegawaiController`, `UnitKerjaController`).
+- `app/Models/` - Eloquent ORM models defining database table structures and relationships.
+- `database/migrations/` - Database schema versions and table creation scripts.
+- `routes/api.php` - API endpoint definitions.
+- `resources/js/src/` - The root of the React frontend application.
+  - `components/` - Reusable UI components.
+  - `pages/` - Main page views (e.g., `Dashboard`, `DataPegawai`, `LuarNegeri`).
+  - `layouts/` - Page wrapper layouts (e.g., Sidebar, Navbar).
+  - `utils/` - Helper functions and configuration.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 4. Key Entities (Database Models)
+1. **User:** Manages system access, authentication, and role-based permissions. Can be linked to a specific `UnitKerja` to restrict admin scope.
+2. **Pegawai:** Represents an employee or official. Contains personal data and is linked to a `UnitKerja` and a `Jabatan`.
+3. **UnitKerja:** Represents an organizational unit (e.g., Embassies, Consulates, internal directorates). Contains contact details, work hours, and timezone differences.
+4. **Jabatan:** Represents the job titles or positions available.
+5. **KonsulKehormatan & PejabatKonsul:** Specialized models for managing Honorary Consuls and their respective officials.
+6. **ActivityLog:** An audit trail model that automatically tracks sensitive system actions (CRUD operations) performed by users.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 5. Core Features
+- **Authentication & Authorization:** Secure token-based login. Supports varying roles (e.g., Superadmin, Unit Admin).
+- **Employee Directory (Pegawai):** Full CRUD operations for employee data, including advanced filtering and search capabilities.
+- **Work Unit Management (Unit Kerja):** Categorized management of Domestic (*Dalam Negeri*) and Foreign (*Luar Negeri*) units, detailing location, work hours, and seasonal variations.
+- **Data Synchronization & Cleansing:** API endpoints to sync master data from JSON sources and perform data cleansing.
+- **Exporting & Reporting:** Frontend capabilities to export data to Excel (`xlsx`) and PDF (`jsPDF`) formats.
+- **Audit Logging:** System-wide tracking of changes to ensure accountability.
 
-## Laravel Sponsors
+## 6. Installation & Local Development Setup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Prerequisites
+- PHP ^8.2
+- Composer
+- Node.js & npm
+- A local database server (e.g., MySQL via Laragon/XAMPP)
 
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-=======
-# bukupejabat_main
->>>>>>> 8d7b02681ba5b6723673068164d43d8a624915d2
+### Steps
+1. **Clone the repository** (if applicable) or navigate to the project root.
+2. **Install Backend Dependencies:**
+   ```bash
+   composer install
+   ```
+3. **Install Frontend Dependencies:**
+   ```bash
+   npm install
+   ```
+4. **Environment Setup:**
+   - Copy `.env.example` to `.env`
+   - Generate application key: `php artisan key:generate`
+   - Configure your database credentials in the `.env` file (`DB_DATABASE`, `DB_USERNAME`, etc.)
+5. **Database Migration:**
+   ```bash
+   php artisan migrate
+   ```
+6. **Start the Development Servers:**
+   You need to run both the frontend build process and the backend server simultaneously.
+   - **Terminal 1 (Backend):**
+     ```bash
+     php artisan serve
+     ```
+   - **Terminal 2 (Frontend):**
+     ```bash
+     npm run dev
+     ```
+7. Open your browser and navigate to the address provided by `php artisan serve` (usually `http://localhost:8000`).

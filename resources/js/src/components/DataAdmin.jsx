@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Pastikan axios diimport
+import axios from "axios";
+import Swal from "sweetalert2";
 import Modal from "./Modal";
 import ConfirmModal from "./ConfirmModal";
 import Pagination from "./Pagination";
@@ -88,19 +89,36 @@ export default function DataAdmin() {
     const handleAdd = async (newAdmin) => {
         try {
             const response = await axios.post("http://127.0.0.1:8000/api/users", {
-                username: newAdmin.username,
-                email: newAdmin.email,
-                password: newAdmin.password,
-                role: newAdmin.role || "admin",
+                username:      newAdmin.username,
+                email:         newAdmin.email,
+                password:      newAdmin.password,
+                role:          newAdmin.role || "admin",
+                unit_kerja_id: newAdmin.unit_kerja_id || null,
             });
             if (response.data.success) {
                 setAddOpen(false);
                 fetchAdmins();
                 logActivity("CREATE", `Menambah Admin: ${newAdmin.username}`);
+                Swal.fire({
+                    icon: "success",
+                    title: "Berhasil!",
+                    text: `Akun admin ${newAdmin.username} berhasil ditambahkan.`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
             }
         } catch (error) {
             console.error("Gagal menambah admin:", error);
-            alert("Gagal menambahkan admin. Pastikan Email/Username unik dan Password min 6 karakter.");
+            const errMsg = error.response?.data?.message
+                || (error.response?.data?.errors
+                    ? Object.values(error.response.data.errors).flat().join(" | ")
+                    : "Gagal menambahkan admin. Pastikan Email/Username belum digunakan dan Password minimal 6 karakter.");
+            Swal.fire({
+                icon: "error",
+                title: "Gagal Menambah Admin",
+                text: errMsg,
+                confirmButtonColor: "#0ea5e9",
+            });
         }
     };
 
@@ -109,27 +127,35 @@ export default function DataAdmin() {
     // Fungsi Edit yang sudah disambungkan ke Backend
     const handleSave = async (updated) => {
         try {
-            // Mengirim data ke API Laravel
             const response = await axios.put(
                 `http://127.0.0.1:8000/api/users/${updated.id}`,
                 {
-                    username: updated.username,
-                    email: updated.email,
-                    role: updated.role,
+                    username:      updated.username,
+                    email:         updated.email,
+                    role:          updated.role,
                     unit_kerja_id: updated.unit_kerja_id,
                 },
             );
-
             if (response.data.success) {
-                // Jika sukses, tutup modal dan refresh tabel
                 setEditOpen(false);
                 fetchAdmins();
+                logActivity("UPDATE", `Memperbarui Admin: ${updated.username}`);
+                Swal.fire({
+                    icon: "success",
+                    title: "Berhasil!",
+                    text: "Data admin berhasil diperbarui.",
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
             }
         } catch (error) {
             console.error("Gagal mengupdate admin:", error);
-            alert(
-                "Gagal menyimpan data. Silakan periksa koneksi atau console.",
-            );
+            Swal.fire({
+                icon: "error",
+                title: "Gagal Menyimpan",
+                text: error.response?.data?.message || "Terjadi kesalahan. Periksa koneksi atau console.",
+                confirmButtonColor: "#0ea5e9",
+            });
         }
     };
 
@@ -141,10 +167,22 @@ export default function DataAdmin() {
                 setDeleteOpen(false);
                 fetchAdmins();
                 logActivity("DELETE", `Menghapus Admin: ${selected.username}`);
+                Swal.fire({
+                    icon: "success",
+                    title: "Dihapus!",
+                    text: `Akun admin ${selected.username} berhasil dihapus.`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                });
             }
         } catch (error) {
             console.error("Gagal menghapus admin:", error);
-            alert("Gagal menghapus data admin.");
+            Swal.fire({
+                icon: "error",
+                title: "Gagal Menghapus",
+                text: "Terjadi kesalahan saat menghapus data admin.",
+                confirmButtonColor: "#0ea5e9",
+            });
         }
         setSelected(null);
     };
@@ -439,7 +477,7 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                             onChange={(e) =>
                                 setForm({ ...form, password: e.target.value })
                             }
-                            required
+                            placeholder="Minimal 6 karakter"
                             className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                         />
                     </div>

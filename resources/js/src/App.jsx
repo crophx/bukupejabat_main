@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import MainLayout from "./layouts/MainLayout";
 import DashboardAdmin from "./components/DashboardAdmin";
@@ -31,6 +32,38 @@ export default function App() {
         return savedStatus === "true";
     });
 
+    const navigate = useNavigate();
+
+    // 2. Setup Axios Interceptor agar token otomatis terkirim
+    useEffect(() => {
+        const requestInterceptor = axios.interceptors.request.use(
+            (config) => {
+                const token = localStorage.getItem("token");
+                if (token) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                }
+                return config;
+            },
+            (error) => Promise.reject(error)
+        );
+
+        const responseInterceptor = axios.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response && error.response.status === 401) {
+                    handleSignOut();
+                    navigate("/login");
+                }
+                return Promise.reject(error);
+            }
+        );
+
+        return () => {
+            axios.interceptors.request.eject(requestInterceptor);
+            axios.interceptors.response.eject(responseInterceptor);
+        };
+    }, []);
+
     // 2. Fungsi Login: Simpan status ke localStorage
     const handleLogin = () => {
         setAuthed(true);
@@ -41,6 +74,10 @@ export default function App() {
     const handleSignOut = () => {
         setAuthed(false);
         localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("user_name");
+        localStorage.removeItem("user_divisi");
     };
 
     return (

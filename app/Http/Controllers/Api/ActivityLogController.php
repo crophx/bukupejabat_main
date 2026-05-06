@@ -24,13 +24,12 @@ class ActivityLogController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
             'action' => 'required|string',
             'description' => 'required|string',
         ]);
 
         ActivityLog::create([
-            'user_id' => $request->user_id,
+            'user_id' => auth()->id(), // AMAN: Mengambil langsung dari token server
             'action' => $request->action,
             'description' => $request->description,
         ]);
