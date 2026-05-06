@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import ConfirmModal from "./ConfirmModal";
 import Pagination from "./Pagination";
 import { logActivity } from "../utils/logActivity";
+import SearchableSelect from "./SearchableSelect";
 
 export default function DataAdmin() {
     // 1. Ganti sampleAdmins dengan array kosong dulu
@@ -433,20 +434,16 @@ function AdminForm({ initialData = {}, onSave, onCancel, submitLabel = "Simpan",
                     <label className="block text-xl font-bold text-slate-700 mb-1">
                         Unit Organisasi
                     </label>
-                    <select
+                    <SearchableSelect
+                        options={[
+                            { value: "", label: "-- Pusat / Semua Unit --" },
+                            ...unitOptions.map((unit) => ({ value: unit.id, label: unit.nama_unit_kerja }))
+                        ]}
                         value={form.unit_kerja_id || ""}
-                        onChange={(e) =>
-                            setForm({ ...form, unit_kerja_id: e.target.value })
-                        }
+                        onChange={(val) => setForm({ ...form, unit_kerja_id: val })}
+                        placeholder="-- Pusat / Semua Unit --"
                         className="w-full border border-slate-300 px-3 py-2 rounded-xl text-sm text-slate-700 bg-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                    >
-                        <option value="">-- Pusat / Semua Unit --</option>
-                        {unitOptions.map((unit) => (
-                            <option key={unit.id} value={unit.id}>
-                                {unit.nama_unit_kerja}
-                            </option>
-                        ))}
-                    </select>
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>

@@ -7,6 +7,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import kemluBg from "../assets/images/logo_kemlu_fix.png";
 import { logActivity } from "../utils/logActivity";
+import SearchableSelect from "../components/SearchableSelect";
 
 // ─── Local Data Negara (sementara, nanti diganti GET dari API) ───────────────
 const NEGARA_LIST = [
@@ -163,18 +164,16 @@ function KonsulModal({ isOpen, isEditing, data, onChange, onSubmit, onClose, isS
                 <form className="space-y-5" onSubmit={handleSubmit}>
                     {/* Negara */}
                     <Field label="Negara" required>
-                        <select
-                            name="negara"
+                        <SearchableSelect
+                            options={[
+                                { value: "", label: "-- Pilih Negara --" },
+                                ...NEGARA_LIST.map(n => ({ value: n, label: n }))
+                            ]}
                             value={data.negara}
-                            onChange={onChange}
-                            required
-                            className="select select-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12"
-                        >
-                            <option value="">-- Pilih Negara --</option>
-                            {NEGARA_LIST.map((n) => (
-                                <option key={n} value={n}>{n}</option>
-                            ))}
-                        </select>
+                            onChange={(val) => onChange({ target: { name: 'negara', value: val } })}
+                            placeholder="-- Pilih Negara --"
+                            className="select select-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold h-12 px-4"
+                        />
                     </Field>
 
                     {/* Kota */}
