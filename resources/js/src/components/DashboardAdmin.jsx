@@ -50,7 +50,7 @@ export default function DashboardAdmin() {
     // =======================================================
     // FUNGSI DOWNLOAD PDF: SEMUA PEGAWAI DALAM NEGERI PER SATKER
     // =======================================================
-    const downloadPDFDalamNegeri = async () => {
+    const downloadPDFDalamNegeri = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar seluruh pegawai Dalam Negeri...',
@@ -137,9 +137,18 @@ export default function DashboardAdmin() {
                 currentY = doc.lastAutoTable.finalY + 15;
             });
 
-            doc.save("Daftar_Semua_Pegawai_Dalam_Negeri.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Dalam Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            doc.setProperties({ title: 'Daftar_Semua_Pegawai_Dalam_Negeri.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Semua_Pegawai_Dalam_Negeri.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Dalam Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Dalam Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -150,7 +159,7 @@ export default function DashboardAdmin() {
     // =======================================================
     // FUNGSI DOWNLOAD PDF: SEMUA PEGAWAI LUAR NEGERI PER SATKER
     // =======================================================
-    const downloadPDFLuarNegeri = async () => {
+    const downloadPDFLuarNegeri = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar seluruh pegawai Luar Negeri...',
@@ -243,9 +252,18 @@ export default function DashboardAdmin() {
                 currentY = doc.lastAutoTable.finalY + 15;
             });
 
-            doc.save("Daftar_Semua_Pegawai_Luar_Negeri.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            doc.setProperties({ title: 'Daftar_Semua_Pegawai_Luar_Negeri.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Semua_Pegawai_Luar_Negeri.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Luar Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -274,7 +292,7 @@ export default function DashboardAdmin() {
                 {/* Main Actions (DIUBAH MENJADI CENTER DAN 2 KOLOM) */}
                 <div className="flex flex-col md:flex-row justify-center max-w-3xl mx-auto gap-6">
                     {/* BUTTON DALAM NEGERI (DOWNLOAD PDF) */}
-                    <button onClick={downloadPDFDalamNegeri} className="group p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-4 cursor-pointer w-full md:w-1/2">
+                    <div className="group p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-6 w-full md:w-1/2">
                         <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -284,17 +302,22 @@ export default function DashboardAdmin() {
                             <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">
                                 Dalam Negeri
                             </span>
-                            <span className="text-[10px] text-emerald-600 font-bold uppercase mt-1 block tracking-tighter">
-                                Unduh Laporan PDF
+                            <span className="text-[10px] text-slate-400 font-medium uppercase mt-1 block tracking-tighter">
+                                Laporan Pegawai
                             </span>
                         </div>
-                    </button>
+                        <div className="flex gap-2 w-full mt-2">
+                            <button onClick={() => downloadPDFDalamNegeri('preview')} className="flex-1 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                Preview
+                            </button>
+                            <button onClick={() => downloadPDFDalamNegeri('download')} className="flex-1 py-2.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                Unduh
+                            </button>
+                        </div>
+                    </div>
 
                     {/* BUTTON LUAR NEGERI (DOWNLOAD PDF) */}
-                    <button
-                        onClick={downloadPDFLuarNegeri}
-                        className="group p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-4 cursor-pointer w-full md:w-1/2"
-                    >
+                    <div className="group p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-6 w-full md:w-1/2">
                         <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -304,11 +327,19 @@ export default function DashboardAdmin() {
                             <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">
                                 Luar Negeri
                             </span>
-                            <span className="text-[10px] text-rose-600 font-bold uppercase mt-1 block tracking-tighter">
-                                Unduh Laporan PDF
+                            <span className="text-[10px] text-slate-400 font-medium uppercase mt-1 block tracking-tighter">
+                                Laporan Pegawai
                             </span>
                         </div>
-                    </button>
+                        <div className="flex gap-2 w-full mt-2">
+                            <button onClick={() => downloadPDFLuarNegeri('preview')} className="flex-1 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                Preview
+                            </button>
+                            <button onClick={() => downloadPDFLuarNegeri('download')} className="flex-1 py-2.5 bg-rose-500 text-white hover:bg-rose-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                Unduh
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Footer Note */}

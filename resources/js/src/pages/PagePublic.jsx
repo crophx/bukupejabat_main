@@ -8,7 +8,7 @@ import Logo from "../assets/images/logo-kemlu.png";
 
 export default function PublicPage() {
 
-    const downloadDalamNegeri = async () => {
+    const downloadDalamNegeri = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar pejabat per orang...',
@@ -133,9 +133,18 @@ export default function PublicPage() {
                 return;
             }
 
-            doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Dalam Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            doc.setProperties({ title: 'Daftar_Pejabat_Dalam_Negeri.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Dalam Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Pejabat Dalam Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -143,7 +152,7 @@ export default function PublicPage() {
         }
     };
 
-    const downloadLuarNegeri = async () => {
+    const downloadLuarNegeri = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar pejabat per orang...',
@@ -268,9 +277,18 @@ export default function PublicPage() {
                 return;
             }
 
-            doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            doc.setProperties({ title: 'Daftar_Pejabat_Luar_Negeri.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Pejabat Luar Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -306,7 +324,7 @@ export default function PublicPage() {
                     </div>
 
                     <div className="flex justify-center items-center gap-6">
-                        <button onClick={downloadDalamNegeri} className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-4 cursor-pointer">
+                        <div className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-6">
                             <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -314,11 +332,18 @@ export default function PublicPage() {
                             </div>
                             <div className="text-center">
                                 <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">Dalam Negeri</span>
-                                <span className="text-[10px] text-emerald-600 font-bold uppercase mt-1 block tracking-tighter">Unduh PDF</span>
                             </div>
-                        </button>
+                            <div className="flex gap-2 w-full mt-2">
+                                <button onClick={() => downloadDalamNegeri('preview')} className="flex-1 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                    Preview
+                                </button>
+                                <button onClick={() => downloadDalamNegeri('download')} className="flex-1 py-2.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                    Unduh
+                                </button>
+                            </div>
+                        </div>
 
-                        <button onClick={downloadLuarNegeri} className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-4 cursor-pointer">
+                        <div className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-6">
                             <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -326,9 +351,16 @@ export default function PublicPage() {
                             </div>
                             <div className="text-center">
                                 <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">Luar Negeri</span>
-                                <span className="text-[10px] text-rose-600 font-bold uppercase mt-1 block tracking-tighter">Unduh PDF</span>
                             </div>
-                        </button>
+                            <div className="flex gap-2 w-full mt-2">
+                                <button onClick={() => downloadLuarNegeri('preview')} className="flex-1 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                    Preview
+                                </button>
+                                <button onClick={() => downloadLuarNegeri('download')} className="flex-1 py-2.5 bg-rose-500 text-white hover:bg-rose-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
+                                    Unduh
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <p className="mt-12 text-slate-400 text-[10px] font-bold uppercase tracking-[4px]">

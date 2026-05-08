@@ -420,7 +420,7 @@ export default function KonsulKehormatan() {
         window.scrollTo(0, 0);
     };
 
-    const downloadPDF = async () => {
+    const downloadPDF = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar pejabat Konsul Kehormatan...',
@@ -469,49 +469,101 @@ export default function KonsulKehormatan() {
 
                 // --- HEADER HALAMAN ---
                 doc.setFont("times", "bold");
-                doc.setFontSize(12);
-                doc.text("DAFTAR PEJABAT KONSUL KEHORMATAN", pageWidth / 2, 20, { align: "center" });
+                doc.setFontSize(11);
+                doc.text("DAFTAR PEJABAT KONSUL KEHORMATAN", pageWidth / 2, 18, { align: "center" });
 
                 // --- NAMA KOTA DAN NEGARA ---
-                doc.setFontSize(11);
+                doc.setFontSize(12);
                 const konsulNameLong = `${k.kota}, ${k.negara}`.toUpperCase();
-                const splitKonsulName = doc.splitTextToSize(konsulNameLong, pageWidth - 30);
-                doc.text(splitKonsulName, pageWidth / 2, 28, { align: "center" });
+                const splitKonsulName = doc.splitTextToSize(konsulNameLong, pageWidth - 40);
+                doc.text(splitKonsulName, pageWidth / 2, 26, { align: "center" });
 
-                // --- ALAMAT ---
-                let currentY = 28 + (splitKonsulName.length * 5);
+                let currentY = 26 + splitKonsulName.length * 6 + 4;
+
+                // ── GARIS PEMISAH ────────────────────────────────────────────
+                doc.setLineWidth(0.4);
+                doc.line(15, currentY, pageWidth - 15, currentY);
+                currentY += 6;
+
+                // ── HELPER: cetak baris label : nilai (format surat resmi) ──
+                const labelX   = 15;   // mulai label
+                const colonX   = 47;   // posisi titik dua
+                const valueX   = 52;   // mulai nilai
+                const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
+                const lineH    = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
-                const alamatText = `Alamat: ${k.alamat || "-"}`;
-                const splitAlamat = doc.splitTextToSize(alamatText, pageWidth - 30);
-                doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
 
-                currentY += (splitAlamat.length * 5) + 8;
+                const drawRow = (label, value) => {
+                    if (!value || value === "-") return;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(String(value), maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
+
+                drawRow("Alamat", k.alamat);
+                drawRow("No. Telepon", k.no_telp);
+                drawRow("Fax", k.fax);
+                drawRow("Email", k.email);
+                drawRow("Website", k.website);
+                drawRow("Hari Kerja", k.hari_kerja);
 
                 // --- ISI TABEL ---
-                const tableRows = pejabatForKonsul.map((p, i) => {
+                const tableRows = [];
+                pejabatForKonsul.forEach((p, i) => {
                     const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
-                    return [
-                        `${i + 1}.`,
-                        formatNama,
-                        p.gelar_jabatan || "-",
-                        `Telp: ${p.telp || p.no_telp || "-"}\nAlamat: ${p.alamat || "-"}`
-                    ];
+                    
+                    let contacts = [];
+                    const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                    contacts.push({ lbl: "Kantor", val: kantor });
+                    if (p.telp || p.no_telp || p.telepon) contacts.push({ lbl: "Telp.", val: (p.telp || p.no_telp || p.telepon) });
+                    if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                    if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                    if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                    if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+
+                    if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                    const span = contacts.length;
+                    contacts.forEach((c, cIdx) => {
+                        if (cIdx === 0) {
+                            tableRows.push([
+                                { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                { content: formatNama, rowSpan: span, styles: { valign: 'top' } },
+                                { content: p.gelar_jabatan || "-", rowSpan: span, styles: { valign: 'top' } },
+                                { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                            ]);
+                        } else {
+                            tableRows.push([
+                                { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                            ]);
+                        }
+                    });
                 });
 
                 autoTable(doc, {
                     startY: currentY,
-                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    head: [["No.", "Nama Lengkap", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }]],
                     body: tableRows,
                     theme: "plain",
                     styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                     headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                     columnStyles: {
                         0: { cellWidth: 13, halign: 'center' },
-                        1: { cellWidth: 50, halign: 'center' },
-                        2: { cellWidth: 60, halign: 'left' },
-                        3: { cellWidth: 'auto' }
+                        1: { cellWidth: 45, halign: 'left' },
+                        2: { cellWidth: 50, halign: 'left' },
+                        3: { cellWidth: 16 },
+                        4: { cellWidth: 4, halign: 'center' },
+                        5: { cellWidth: 'auto' }
                     },
                     margin: { left: 15, right: 15 },
                 });
@@ -522,9 +574,20 @@ export default function KonsulKehormatan() {
                 return;
             }
 
-            doc.save("Daftar_Konsul_Kehormatan.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            doc.setProperties({ title: 'Daftar_Konsul_Kehormatan.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Konsul_Kehormatan.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF berhasil diunduh.', timer: 2000, showConfirmButton: false });
+                logActivity("DOWNLOAD PDF", "Mengunduh PDF Daftar Konsul Kehormatan");
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+                logActivity("PREVIEW PDF", "Preview PDF Daftar Konsul Kehormatan");
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -560,15 +623,23 @@ export default function KonsulKehormatan() {
                             />
                         </div>
 
-                        <button
-                            onClick={downloadPDF}
-                            className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                            </svg>
-                            <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
-                        </button>
+                        <div className="join border-none shadow-sm rounded-xl overflow-hidden">
+                            <button
+                                onClick={() => downloadPDF('preview')}
+                                className="join-item p-2 px-4 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                                <span className="text-xs font-bold uppercase tracking-tight">Preview</span>
+                            </button>
+                            <button
+                                onClick={() => downloadPDF('download')}
+                                className="join-item p-2 px-4 bg-rose-500 hover:bg-rose-600 text-white transition-colors border-none flex items-center justify-center gap-2 group whitespace-nowrap"
+                            >
+                                <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
+                            </button>
+                        </div>
 
                         <button
                             onClick={openAddKonsul}

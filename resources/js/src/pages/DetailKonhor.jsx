@@ -166,7 +166,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
 
     const title = konsulNama || (konsulDetail ? `${konsulDetail.kota}, ${konsulDetail.negara}` : `Memuat...`);
 
-    const downloadPDF = () => {
+    const downloadPDF = (action = 'preview') => {
         try {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
@@ -187,12 +187,42 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
             doc.setFont("times", "bold");
             doc.setFontSize(12);
             const titleText = konsulDetail ? `PEJABAT KONSUL KEHORMATAN DI ${konsulDetail.kota.toUpperCase()}, ${konsulDetail.negara.toUpperCase()}` : "DAFTAR PEJABAT KONSUL KEHORMATAN";
-            doc.text(titleText, pageWidth / 2, 20, { align: "center" });
+            const splitTitle = doc.splitTextToSize(titleText, pageWidth - 40);
+            doc.text(splitTitle, pageWidth / 2, 20, { align: "center" });
 
+            let currentY = 20 + (splitTitle.length * 6) + 4;
             doc.setFont("times", "normal");
             doc.setFontSize(10);
-            doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
-            doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
+
+            if (konsulDetail) {
+                const labelX = 20;
+                const colonX = 50;
+                const valueX = 52;
+                const lineH = 5;
+                const maxValueW = pageWidth - valueX - 15;
+
+                const drawRow = (label, value) => {
+                    if (!value || value === "-") return;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(value, maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
+
+                drawRow("Alamat", konsulDetail.alamat);
+                drawRow("No. Telepon", konsulDetail.no_telp);
+                drawRow("Fax", konsulDetail.fax);
+                drawRow("Email", konsulDetail.email);
+                drawRow("Website", konsulDetail.website);
+                drawRow("Hari Kerja", konsulDetail.hari_kerja);
+                
+                currentY += 5;
+            } else {
+                currentY += 5;
+            }
 
             const originalAddPage = doc.addPage.bind(doc);
             doc.addPage = function () {
@@ -201,33 +231,74 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                 return this;
             };
 
-            const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
-            const tableRows = pejabats.map((p, index) => {
-                let addressDetails = "";
-                if (p.alamat && p.alamat !== "-") addressDetails += `Kantor : ${p.alamat}\n`;
-                else addressDetails += `Kantor : -\n`;
-                if (p.telp && p.telp !== "-") addressDetails += `Telp. : ${p.telp}`;
-                else addressDetails += `Telp. : -`;
-                
+            const tableColumn = ["No.", "Nama", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }];
+            const tableRows = [];
+
+            pejabats.forEach((p, index) => {
+                let contacts = [];
+                const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                contacts.push({ lbl: "Kantor", val: kantor });
+                if (p.telp || p.no_telp || p.telepon) contacts.push({ lbl: "Telp.", val: (p.telp || p.no_telp || p.telepon) });
+                if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+
+                if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                const span = contacts.length;
                 const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
                 
-                return [`${index + 1}.`, formatNama, p.gelar_jabatan || "-", addressDetails];
+                contacts.forEach((c, cIdx) => {
+                    if (cIdx === 0) {
+                        tableRows.push([
+                            { content: `${index + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                            { content: formatNama, rowSpan: span, styles: { valign: 'top' } },
+                            { content: p.gelar_jabatan || "-", rowSpan: span, styles: { valign: 'top' } },
+                            { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                            { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                            { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                        ]);
+                    } else {
+                        tableRows.push([
+                            { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                            { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                            { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                        ]);
+                    }
+                });
             });
 
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 40,
+                startY: currentY,
                 theme: "plain",
                 styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                 headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
-                columnStyles: { 0: { cellWidth: 15, halign: 'center' }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 'auto' } }
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 45 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 15 },
+                    4: { cellWidth: 4, halign: 'center' },
+                    5: { cellWidth: 'auto' }
+                }
             });
 
             const fileName = konsulDetail ? `${konsulDetail.kota}_${konsulDetail.negara}`.replace(/\s+/g, "_") : "Konhor";
-            doc.save(`Buku_Pejabat_${fileName}.pdf`);
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
-            logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Konsul Kehormatan ${konsulDetail ? konsulDetail.kota : ""}`);
+            doc.setProperties({ title: `Buku_Pejabat_${fileName}.pdf` });
+            
+            if (action === 'download') {
+                doc.save(`Buku_Pejabat_${fileName}.pdf`);
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+                logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Konsul Kehormatan ${konsulDetail ? konsulDetail.kota : ""}`);
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF berhasil dibuka di tab baru.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+                logActivity("PREVIEW PDF", `Preview PDF Daftar Konsul Kehormatan ${konsulDetail ? konsulDetail.kota : ""}`);
+            }
         } catch (error) {
             console.error("Error creating PDF:", error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
@@ -282,13 +353,22 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                     </div>
 
                     <div className="w-full lg:w-auto flex justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={downloadPDF}
-                            className="btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px] shadow-lg shadow-rose-100 transition-all active:scale-95"
-                        >
-                            <span className="text-xs font-bold uppercase">PDF</span>
-                        </button>
+                        <div className="join border-none shadow-lg shadow-rose-100 rounded-2xl overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => downloadPDF('preview')}
+                                className="join-item btn btn-md bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-4 min-h-[42px] h-[42px] transition-all active:scale-95"
+                            >
+                                <span className="text-xs font-bold uppercase">Preview</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => downloadPDF('download')}
+                                className="join-item btn btn-md bg-rose-500 hover:bg-rose-600 border-none text-white px-4 min-h-[42px] h-[42px] transition-all active:scale-95"
+                            >
+                                <span className="text-xs font-bold uppercase">Unduh PDF</span>
+                            </button>
+                        </div>
                         <button
                             type="button"
                             onClick={openAddModal}
@@ -401,7 +481,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                 <div className="modal-box bg-white max-w-2xl rounded-3xl p-8 border border-slate-100 shadow-2xl">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
-                            {isEditing ? "Edit Data Pejabat" : "Tambah Data Pejabat"}
+                            {isEditing ? "Edit Data Konsul Kehormatan" : "Tambah Data Konsul Kehormatan"}
                         </h3>
                         <form method="dialog">
                             <button className="btn btn-sm btn-circle btn-ghost text-slate-400">x</button>

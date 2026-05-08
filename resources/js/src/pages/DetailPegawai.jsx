@@ -263,7 +263,7 @@ export default function DetailPegawai() {
         logActivity("DOWNLOAD CSV", `Mengunduh CSV Daftar Pejabat ${unitName || ""}`);
     };
 
-    const downloadPDF = () => {
+    const downloadPDF = (action = 'preview') => {
         try {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
@@ -288,12 +288,47 @@ export default function DetailPegawai() {
             doc.setFont("times", "bold");
             doc.setFontSize(12);
             const titleText = unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT";
-            doc.text(titleText, pageWidth / 2, 20, { align: "center" });
+            const splitTitle = doc.splitTextToSize(titleText, pageWidth - 40);
+            doc.text(splitTitle, pageWidth / 2, 20, { align: "center" });
 
+            let currentY = 20 + (splitTitle.length * 6) + 4;
             doc.setFont("times", "normal");
             doc.setFontSize(10);
-            doc.text("Kementerian Luar Negeri", pageWidth / 2, 25, { align: "center" });
-            doc.text("Jl. Taman Pejambon No.6 Jakarta Pusat", pageWidth / 2, 30, { align: "center" });
+
+            if (unitProfile) {
+                const labelX = 20;
+                const colonX = 50;
+                const valueX = 52;
+                const lineH = 5;
+                const maxValueW = pageWidth - valueX - 15;
+
+                const drawRow = (label, value) => {
+                    if (!value || value === "-") return;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(value, maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
+
+                drawRow("Alamat", unitProfile.alamat);
+                drawRow("No. Telepon", unitProfile.telepon);
+                drawRow("Fax", unitProfile.fax);
+                drawRow("Email", unitProfile.email);
+                drawRow("Website", unitProfile.website);
+
+                if (source === "luar") {
+                    drawRow("Hari Kerja", unitProfile.hari_kerja);
+                    drawRow("Beda Jam", unitProfile.beda_jam);
+                    drawRow("Musim Panas", unitProfile.musim_panas);
+                    drawRow("Musim Dingin", unitProfile.musim_dingin);
+                }
+                currentY += 5;
+            } else {
+                currentY += 5;
+            }
 
             // 3. Hack: Mencegat fungsi addPage bawaan jsPDF untuk menangani halaman 2 ke atas
             const originalAddPage = doc.addPage.bind(doc);
@@ -303,34 +338,73 @@ export default function DetailPegawai() {
                 return this;
             };
 
-            const tableColumn = ["No.", "Nama", "Jabatan", "Alamat & Kantor"];
-            const tableRows = sortedUnits.map((unit, index) => {
-                let addressDetails = "";
-                if (unit.alamat && unit.alamat !== "-") addressDetails += `Kantor : ${unit.alamat}\n`;
-                else addressDetails += `Kantor : s.d.a.\n`;
-                if (unit.telepon && unit.telepon !== "-") addressDetails += `Telp. : ${unit.telepon}\n`;
-                if (unit.email && unit.email !== "-") addressDetails += `Email : ${unit.email}\n`;
-                else addressDetails += `Email : -\n`;
-                if (unit.wisma && unit.wisma !== "-") addressDetails += `Wisma : ${unit.wisma}`;
-                else addressDetails += `Wisma : -`;
-                return [`${index + 1}.`, unit.nama_pegawai || "-", formatJabatan(unit.jabatan), addressDetails];
+            const tableColumn = ["No.", "Nama", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }];
+            const tableRows = [];
+            
+            sortedUnits.forEach((unit, index) => {
+                let contacts = [];
+                const kantor = unit.alamat && unit.alamat !== "-" ? unit.alamat : "s.d.a.";
+                contacts.push({ lbl: "Kantor", val: kantor });
+                if (unit.telepon && unit.telepon !== "-") contacts.push({ lbl: "Telp.", val: unit.telepon });
+                if (unit.fax && unit.fax !== "-") contacts.push({ lbl: "Fax", val: unit.fax });
+                if (unit.no_handphone && unit.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: unit.no_handphone });
+                if (unit.email && unit.email !== "-") contacts.push({ lbl: "Email", val: unit.email });
+                else contacts.push({ lbl: "Email", val: "-" });
+                if (unit.wisma && unit.wisma !== "-") contacts.push({ lbl: "Wisma", val: unit.wisma });
+                else contacts.push({ lbl: "Wisma", val: "-" });
+
+                const span = contacts.length;
+                contacts.forEach((c, cIdx) => {
+                    if (cIdx === 0) {
+                        tableRows.push([
+                            { content: `${index + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                            { content: unit.nama_pegawai || "-", rowSpan: span, styles: { valign: 'top' } },
+                            { content: formatJabatan(unit.jabatan), rowSpan: span, styles: { valign: 'top' } },
+                            { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                            { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                            { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                        ]);
+                    } else {
+                        tableRows.push([
+                            { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                            { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                            { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                        ]);
+                    }
+                });
             });
 
             // 4. Generate tabel tanpa didDrawPage (karena sudah di-handle di atas)
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 40,
+                startY: currentY,
                 theme: "plain",
                 styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                 headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
-                columnStyles: { 0: { cellWidth: 15, halign: 'center' }, 1: { cellWidth: 45 }, 2: { cellWidth: 55 }, 3: { cellWidth: 'auto' } }
+                columnStyles: { 
+                    0: { cellWidth: 15 }, 
+                    1: { cellWidth: 45 }, 
+                    2: { cellWidth: 50 }, 
+                    3: { cellWidth: 15 }, 
+                    4: { cellWidth: 4, halign: 'center' }, 
+                    5: { cellWidth: 'auto' } 
+                }
             });
 
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
-            doc.save(`Buku_Pejabat_${fileName}.pdf`);
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
-            logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Pejabat ${unitName || ""}`);
+            doc.setProperties({ title: `Buku_Pejabat_${fileName}.pdf` });
+            
+            if (action === 'download') {
+                doc.save(`Buku_Pejabat_${fileName}.pdf`);
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+                logActivity("DOWNLOAD PDF", `Mengunduh PDF Daftar Pejabat ${unitName || ""}`);
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF berhasil dibuka di tab baru.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
+                logActivity("PREVIEW PDF", `Preview PDF Daftar Pejabat ${unitName || ""}`);
+            }
         } catch (error) {
             console.error("Error creating PDF:", error);
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
@@ -368,9 +442,14 @@ export default function DetailPegawai() {
 
                             {/* Export Buttons: flex-wrap agar tidak 'penyok' di layar tanggung */}
                             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                                <button onClick={downloadPDF} className="btn btn-md flex-1 md:flex-none bg-rose-500 hover:bg-rose-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px]">
-                                    <span className="text-xs font-bold uppercase">PDF</span>
-                                </button>
+                                <div className="join border-none shadow-sm rounded-2xl overflow-hidden">
+                                    <button onClick={() => downloadPDF('preview')} className="btn btn-md join-item bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-4 min-h-[42px] h-[42px]">
+                                        <span className="text-xs font-bold uppercase">Preview</span>
+                                    </button>
+                                    <button onClick={() => downloadPDF('download')} className="btn btn-md join-item bg-rose-500 hover:bg-rose-600 border-none text-white px-4 min-h-[42px] h-[42px]">
+                                        <span className="text-xs font-bold uppercase">Unduh PDF</span>
+                                    </button>
+                                </div>
                                 <button onClick={downloadExcel} className="btn btn-md flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-600 border-none text-white rounded-2xl gap-2 px-5 min-h-[42px] h-[42px]">
                                     <span className="text-xs font-bold uppercase">Excel</span>
                                 </button>

@@ -119,7 +119,7 @@ export default function LuarNegeri() {
     // =======================================================
     // FUNGSI DOWNLOAD PDF PEJABAT (GRUP PER SATKER - PAGE BARU)    
     // =======================================================
-    const downloadPDF = async () => {
+    const downloadPDF = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar pejabat per orang...',
@@ -170,56 +170,65 @@ export default function LuarNegeri() {
                 }
                 isFirstPage = false;
 
+                // ── JUDUL HALAMAN ──────────────────────────────────────────
                 doc.setFont("times", "bold");
-                doc.setFontSize(12);
-                doc.text("DAFTAR PEJABAT LUAR NEGERI", pageWidth / 2, 20, { align: "center" });
-
                 doc.setFontSize(11);
-                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
-                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 30);
-                doc.text(splitUnitName, pageWidth / 2, 28, { align: "center" });
+                doc.text("DAFTAR PEJABAT LUAR NEGERI", pageWidth / 2, 18, { align: "center" });
 
-                let currentY = 28 + (splitUnitName.length * 5);
+                // ── NAMA SATUAN KERJA (bold, centered, bisa multi-baris) ────
+                doc.setFontSize(12);
+                const unitNameLong = unit.deskripsi
+                    ? unit.deskripsi.toUpperCase()
+                    : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 40);
+                doc.text(splitUnitName, pageWidth / 2, 26, { align: "center" });
+
+                let currentY = 26 + splitUnitName.length * 6 + 4;
+
+                // ── GARIS PEMISAH ────────────────────────────────────────────
+                doc.setLineWidth(0.4);
+                doc.line(15, currentY, pageWidth - 15, currentY);
+                currentY += 6;
+
+                // ── HELPER: cetak baris label : nilai (format surat resmi) ──
+                const labelX   = 15;   // mulai label
+                const colonX   = 47;   // posisi titik dua
+                const valueX   = 52;   // mulai nilai
+                const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
+                const lineH    = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
 
-                if (unit.alamat && unit.alamat !== "-") {
-                    const splitAlamat = doc.splitTextToSize(unit.alamat, pageWidth - 30);
-                    doc.text(splitAlamat, pageWidth / 2, currentY, { align: "center" });
-                    currentY += (splitAlamat.length * 5) + 3;
-                } else {
-                    currentY += 3;
-                }
+                const drawRow = (label, value) => {
+                    if (!value || value === "-") return;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(String(value), maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
 
-                const leftX = 15;
-                const rightX = pageWidth / 2 + 5;
-                let leftY = currentY;
-                let rightY = currentY;
+                drawRow("Alamat", unit.alamat);
+                drawRow("No. Telepon", unit.telepon);
+                drawRow("Fax", unit.fax);
+                drawRow("Email", unit.email);
+                drawRow("Website", unit.website);
+                drawRow("Hari Kerja", unit.hari_kerja);
+                drawRow("Beda Jam", unit.beda_jam);
+                drawRow("Musim Panas", unit.musim_panas);
+                drawRow("Musim Dingin", unit.musim_dingin);
 
-                if (unit.telepon && unit.telepon !== "-") {
-                    doc.text(`Telp: ${unit.telepon}`, leftX, leftY); leftY += 5;
-                }
-                if (unit.email && unit.email !== "-") {
-                    doc.text(`Email: ${unit.email}`, leftX, leftY); leftY += 5;
-                }
-                if (unit.website && unit.website !== "-") {
-                    doc.text(`Web: ${unit.website}`, leftX, leftY); leftY += 5;
-                }
+                // ── GARIS PEMISAH BAWAH HEADER ───────────────────────────────
+                // currentY += 2;
+                // doc.setLineWidth(0.4);
+                // doc.line(15, currentY, pageWidth - 15, currentY);
+                // currentY += 6;
 
-                if (unit.hari_kerja && unit.hari_kerja !== "-") {
-                    doc.text(`Hari Kerja: ${unit.hari_kerja}`, rightX, rightY); rightY += 5;
-                }
-                if (unit.musim_dingin && unit.musim_dingin !== "-") {
-                    doc.text(`Musim Dingin: ${unit.musim_dingin}`, rightX, rightY); rightY += 5;
-                }
-                if (unit.musim_panas && unit.musim_panas !== "-") {
-                    doc.text(`Musim Panas: ${unit.musim_panas}`, rightX, rightY); rightY += 5;
-                }
-
-                currentY = Math.max(leftY, rightY) + 5;
-
-                const tableRows = pejabatForUnit.map((p, i) => {
+                const tableRows = [];
+                pejabatForUnit.forEach((p, i) => {
                     let jabatanFormat = p.jabatan || "-";
                     if (jabatanFormat.toUpperCase().includes("STAF SK")) {
                         jabatanFormat = "Administrasi Umum";
@@ -230,26 +239,52 @@ export default function LuarNegeri() {
                     const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
                     const titleCaseJabatan = jabatanFormat === "-" ? "-" : jabatanFormat.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 
-                    return [
-                        `${i + 1}.`,
-                        titleCaseNama,
-                        titleCaseJabatan,
-                        `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
-                    ];
+                    let contacts = [];
+                    const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                    contacts.push({ lbl: "Kantor", val: kantor });
+                    if (p.telepon && p.telepon !== "-") contacts.push({ lbl: "Telp.", val: p.telepon });
+                    if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                    if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                    if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                    if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+
+                    if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                    const span = contacts.length;
+                    contacts.forEach((c, cIdx) => {
+                        if (cIdx === 0) {
+                            tableRows.push([
+                                { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
+                                { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
+                                { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                            ]);
+                        } else {
+                            tableRows.push([
+                                { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                            ]);
+                        }
+                    });
                 });
 
                 autoTable(doc, {
                     startY: currentY,
-                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    head: [["No.", "Nama Lengkap", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }]],
                     body: tableRows,
                     theme: "plain",
                     styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                     headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                     columnStyles: {
                         0: { cellWidth: 13, halign: 'center' },
-                        1: { cellWidth: 50, halign: 'center' },
-                        2: { cellWidth: 60, halign: 'left' },
-                        3: { cellWidth: 'auto' }
+                        1: { cellWidth: 45, halign: 'left' },
+                        2: { cellWidth: 50, halign: 'left' },
+                        3: { cellWidth: 16 },
+                        4: { cellWidth: 4, halign: 'center' },
+                        5: { cellWidth: 'auto' }
                     },
                     margin: { left: 15, right: 15 },
                 });
@@ -260,10 +295,20 @@ export default function LuarNegeri() {
                 return;
             }
 
-            doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
-            Swal.close();
-            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
-            logActivity("DOWNLOAD PDF", "Mengunduh PDF Seluruh Pejabat Luar Negeri");
+            doc.setProperties({ title: 'Daftar_Pejabat_Luar_Negeri.pdf' });
+            
+            if (action === 'download') {
+                doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
+                logActivity("DOWNLOAD PDF", "Mengunduh PDF Seluruh Pejabat Luar Negeri");
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+                logActivity("PREVIEW PDF", "Preview PDF Seluruh Pejabat Luar Negeri");
+            }
 
         } catch (error) {
             console.error("Gagal Download PDF:", error);
@@ -313,14 +358,17 @@ export default function LuarNegeri() {
                             <input type="text" placeholder="Cari unit kerja..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50" />
                         </div>
 
-                        <button onClick={downloadPDF} className="p-2 px-4 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                            </svg>
-                            <span className="text-xs font-bold uppercase tracking-tight">
-                                Unduh PDF
-                            </span>
-                        </button>
+                        <div className="join border-none shadow-sm rounded-xl overflow-hidden">
+                            <button onClick={() => downloadPDF('preview')} className="join-item p-2 px-4 text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-2 group whitespace-nowrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                                <span className="text-xs font-bold uppercase tracking-tight">Preview</span>
+                            </button>
+                            <button onClick={() => downloadPDF('download')} className="join-item p-2 px-4 bg-rose-500 hover:bg-rose-600 text-white transition-colors border-none flex items-center justify-center gap-2 group whitespace-nowrap">
+                                <span className="text-xs font-bold uppercase tracking-tight">Unduh PDF</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -524,7 +572,7 @@ export default function LuarNegeri() {
                                     <input type="text" name="hari_kerja" value={editData.hari_kerja} onChange={handleInputChange} placeholder="Hari Kerja (Cth: Senin - Jumat)" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
                                     <input type="text" name="beda_jam" value={editData.beda_jam} onChange={handleInputChange} placeholder="Beda Jam" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
                                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Musim
+                                        Perbedaan Waktu
                                     </label>
                                     <input type="text" name="musim_panas" value={editData.musim_panas} onChange={handleInputChange} placeholder="Musim Panas" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
                                     <input type="text" name="musim_dingin" value={editData.musim_dingin} onChange={handleInputChange} placeholder="Musim Dingin" className="input input-sm w-full bg-white text-slate-800 border border-slate-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none" />
