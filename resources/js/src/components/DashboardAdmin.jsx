@@ -11,35 +11,56 @@ export default function DashboardAdmin() {
 
     const [stats, setStats] = useState({
         totalPegawai: 0,
-        totalAdmin: 0,
+        totalKonhor: 0,
         totalUnitDalamNegeri: 0,
         totalUnitLuarNegeri: 0,
-        sparkline: [3, 5, 4, 6, 8, 6, 7, 9, 8, 10, 9],
-        bars: [5, 6, 9, 8, 7],
+        sparkline: [],
+        bars: [],
     });
 
     useEffect(() => {
         fetchStats();
     }, []);
 
+    // Fungsi untuk membuat data tren palsu (untuk chart) yang berakhir di angka total
+    const generateTrend = (total, numPoints) => {
+        if (!total || total <= 0) return Array(numPoints).fill(0);
+        if (total < numPoints) {
+            return Array.from({ length: numPoints }, (_, i) => Math.round((i + 1) / numPoints * total));
+        }
+        const trend = [];
+        let current = Math.max(1, Math.floor(total * 0.4)); // Mulai dari 40%
+        for (let i = 0; i < numPoints - 1; i++) {
+            trend.push(current);
+            const step = (total - current) / (numPoints - i);
+            current += Math.floor(step * (0.8 + Math.random() * 0.4)); // Naiknya fluktuatif
+        }
+        trend.push(total); // Titik terakhir selalu angka total aktual
+        return trend;
+    };
+
     const fetchStats = async () => {
         try {
-            const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse] =
+            const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse, konhorResponse] =
                 await Promise.all([
                     axios.get("http://127.0.0.1:8000/api/dashboard/stats"),
                     axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
                     axios.get("http://127.0.0.1:8000/api/unit-kerja/luar-negeri"),
+                    axios.get("http://127.0.0.1:8000/api/konsul-kehormatan"),
                 ]);
 
             if (dashboardResponse.data.success) {
+                const totPegawai = dashboardResponse.data.data.total_pegawai || 0;
+                const totKonhor = konhorResponse.data.data?.length || 0;
+
                 setStats((prev) => ({
                     ...prev,
-                    totalPegawai: dashboardResponse.data.data.total_pegawai,
-                    totalAdmin: dashboardResponse.data.data.total_admin,
-                    totalUnitDalamNegeri:
-                        dalamNegeriResponse.data.data?.length || 0,
-                    totalUnitLuarNegeri:
-                        luarNegeriResponse.data.data?.length || 0,
+                    totalPegawai: totPegawai,
+                    totalKonhor: totKonhor,
+                    totalUnitDalamNegeri: dalamNegeriResponse.data.data?.length || 0,
+                    totalUnitLuarNegeri: luarNegeriResponse.data.data?.length || 0,
+                    bars: generateTrend(totPegawai, 7), // 7 batang grafik
+                    sparkline: generateTrend(totKonhor, 12), // 12 titik area chart
                 }));
             }
         } catch (error) {
@@ -348,21 +369,21 @@ export default function DashboardAdmin() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                <StatCard title="Total Pegawai" value={stats.totalPegawai}>
-                    <BarChart values={stats.bars} />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                <StatCard title="TOTAL PEGAWAI" value={stats.totalPegawai} tone="slate">
+                    <BarChart values={stats.bars} stroke="#a3e635" />
                 </StatCard>
 
                 <StatCard
-                    title="Total Admin"
-                    value={stats.totalAdmin}
+                    title="TOTAL KONHOR"
+                    value={stats.totalKonhor}
                     tone="emerald"
                 >
-                    <Sparkline values={stats.sparkline} />
+                    <Sparkline values={stats.sparkline} stroke="#059669" fill="#d1fae5" />
                 </StatCard>
 
                 <StatCard
-                    title="Unit Kerja Dalam Negeri"
+                    title="UNIT KERJA DALAM NEGERI"
                     value={stats.totalUnitDalamNegeri}
                     tone="amber"
                 >
@@ -370,7 +391,7 @@ export default function DashboardAdmin() {
                 </StatCard>
 
                 <StatCard
-                    title="Unit Kerja Luar Negeri"
+                    title="UNIT KERJA LUAR NEGERI"
                     value={stats.totalUnitLuarNegeri}
                     tone="indigo"
                 >
@@ -410,26 +431,25 @@ function UnitOfficeIcon({ tone = "amber" }) {
 
 function StatCard({ title, value, children, tone = "slate" }) {
     const toneMap = {
-        slate: "bg-slate-50 text-slate-700",
-        emerald: "bg-emerald-50 text-emerald-700",
-        amber: "bg-amber-50 text-amber-700",
-        indigo: "bg-indigo-50 text-indigo-700",
+        slate: "bg-slate-50/70",
+        emerald: "bg-emerald-50",
+        amber: "bg-amber-50",
+        indigo: "bg-indigo-50",
     };
 
     return (
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col justify-center">
+        <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100 flex flex-col justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1">
             <div className="flex items-center justify-between">
                 <div>
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] leading-tight mb-2 max-w-[120px]">
                         {title}
                     </div>
-                    <div className="text-3xl font-black text-slate-800">
+                    <div className="text-3xl font-black text-slate-800 tracking-tight">
                         {value === 0 ? "..." : value}
                     </div>
                 </div>
                 <div
-                    className={`h-12 w-24 flex items-center justify-center rounded ${toneMap[tone] || toneMap.slate
-                        }`}
+                    className={`h-16 w-[110px] flex items-center justify-center rounded-[16px] overflow-hidden ${toneMap[tone] || toneMap.slate}`}
                 >
                     {children}
                 </div>
@@ -438,49 +458,72 @@ function StatCard({ title, value, children, tone = "slate" }) {
     );
 }
 
-function Sparkline({ values = [], stroke = "#065f46" }) {
+function Sparkline({ values = [], stroke = "#059669", fill = "#d1fae5" }) {
     if (!values.length) return null;
-    const w = 80;
-    const h = 36;
-    const max = Math.max(...values);
-    const points = values
-        .map((v, i) => `${(i / (values.length - 1)) * w},${h - (v / max) * h}`)
-        .join(" ");
+    const w = 110;
+    const h = 64;
+    const max = Math.max(...values, 1);
+    
+    const points = values.map((v, i) => {
+        const x = (i / (values.length - 1)) * w;
+        const y = h - (v / max) * (h * 0.7) - 4;
+        return { x, y };
+    });
+
+    const createPath = (points) => {
+        const d = points.reduce((acc, point, i) => i === 0
+            ? `M ${point.x},${point.y}`
+            : `${acc} L ${point.x},${point.y}`, "");
+        return d;
+    };
+
+    const d = createPath(points);
+    const areaD = `${d} L ${w},${h} L 0,${h} Z`;
 
     return (
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg">
-            <polyline fill="none" stroke={stroke} strokeWidth="2" points={points} strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d={areaD} fill={fill} opacity="0.6" />
+            <path d={d} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }
 
-function BarChart({ values = [], small = false }) {
-    const w = small ? 60 : 80;
-    const h = small ? 36 : 48;
+function BarChart({ values = [], stroke = "#a3e635" }) {
+    if (!values.length) return null;
+    const w = 110;
+    const h = 64;
+    const paddingX = 14;
+    const paddingY = 10;
+    const chartW = w - paddingX * 2;
+    const chartH = h - paddingY * 2;
+    
     const max = Math.max(...values, 1);
-    const bw = w / values.length;
+    const bw = chartW / values.length;
 
     return (
         <svg
-            width={w}
-            height={h}
+            width="100%"
+            height="100%"
             viewBox={`0 0 ${w} ${h}`}
             xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="none"
         >
-            {values.map((v, i) => {
-                const barH = (v / max) * h;
-                return (
-                    <rect
-                        key={i}
-                        x={i * bw + bw * 0.15}
-                        y={h - barH}
-                        width={bw * 0.7}
-                        height={barH}
-                        rx={2}
-                        fill="#a3e635"
-                    />
-                );
-            })}
+            <g transform={`translate(${paddingX}, -${paddingY/2})`}>
+                {values.map((v, i) => {
+                    const barH = (v / max) * chartH;
+                    return (
+                        <rect
+                            key={i}
+                            x={i * bw + bw * 0.15}
+                            y={h - barH}
+                            width={bw * 0.7}
+                            height={barH}
+                            rx={2}
+                            fill={stroke}
+                        />
+                    );
+                })}
+            </g>
         </svg>
     );
 }

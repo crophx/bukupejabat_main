@@ -98,7 +98,7 @@ const INITIAL_PEJABAT = [
 
 // ─── Empty form templates ─────────────────────────────────────────────────────
 const EMPTY_KONSUL = {
-    id: "", negara: "", kota: "", alamat: "",
+    id: "", negara: "", kota: "", nama_resmi: "", rangkapan: "", alamat: "",
     no_telp: "", fax: "", email: "", website: "", hari_kerja: "",
 };
 const EMPTY_PEJABAT = {
@@ -188,6 +188,30 @@ function KonsulModal({ isOpen, isEditing, data, onChange, onSubmit, onClose, isS
                             className={inputCls}
                         />
                     </Field>
+
+                    {/* Nama Resmi & Rangkapan */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <Field label="Nama Resmi">
+                            <input
+                                type="text"
+                                name="nama_resmi"
+                                value={data.nama_resmi || ""}
+                                onChange={onChange}
+                                placeholder="Contoh: Konsulat Kehormatan RI..."
+                                className={inputCls}
+                            />
+                        </Field>
+                        <Field label="Rangkapan">
+                            <input
+                                type="text"
+                                name="rangkapan"
+                                value={data.rangkapan || ""}
+                                onChange={onChange}
+                                placeholder="Wilayah rangkapan"
+                                className={inputCls}
+                            />
+                        </Field>
+                    </div>
 
                     {/* Alamat */}
                     <Field label="Alamat" required>
@@ -671,8 +695,16 @@ export default function KonsulKehormatan() {
                                     </summary>
 
                                     <div className="p-6 bg-white border-t border-slate-200 space-y-6">
-                                        {/* Detail Row */}
-                                        <div className="flex flex-wrap md:flex-nowrap justify-between gap-6 text-[14px] items-start">
+                                        {/* Detail Row (Scrollable Horizontal) */}
+                                        <div className="overflow-x-auto pb-4 -mb-4 custom-scrollbar">
+                                            <div className="flex flex-nowrap gap-8 text-[14px] items-stretch min-w-max">
+                                            {/* Info Tambahan */}
+                                            <div className="flex-1 min-w-[150px]">
+                                                <p className="font-bold text-slate-400 uppercase mb-1 text-xs">Nama Resmi</p>
+                                                <p className="text-slate-700 font-semibold mb-3">{k.nama_resmi || "-"}</p>
+                                                <p className="font-bold text-slate-400 uppercase mb-1 text-xs">Rangkapan</p>
+                                                <p className="text-slate-700 text-sm">{k.rangkapan || "-"}</p>
+                                            </div>
                                             {/* Alamat */}
                                             <div className="flex-1 min-w-[130px]">
                                                 <p className="font-bold text-slate-400 uppercase mb-1 text-xs">Alamat</p>
@@ -698,7 +730,8 @@ export default function KonsulKehormatan() {
                                                 {k.website && k.website !== "-" && (
                                                     <>
                                                         <p className="font-bold text-slate-400 uppercase mt-2 mb-1 text-xs">Website</p>
-                                                        <p className="text-slate-400 break-all whitespace-normal text-sm">{k.website}</p>
+                                                        {/* <p className="text-slate-400 break-all whitespace-normal text-sm">{k.website}</p> */}
+                                                        <a href={k.website?.startsWith('http') ? k.website : `https://${k.website}`} target="_blank" rel="noopener noreferrer" className="text-sky-600 font-bold underline break-all hover:text-sky-700 transition-colors">{k.website || "-"}</a>
                                                     </>
                                                 )}
                                             </div>
@@ -708,8 +741,8 @@ export default function KonsulKehormatan() {
                                                 <p className="text-slate-700 text-sm">{k.hari_kerja || "-"}</p>
                                             </div>
                                             {/* Aksi */}
-                                            <div className="w-full md:w-auto">
-                                                <p className="font-bold text-slate-400 uppercase mb-1 text-xs text-center">Aksi</p>
+                                            <div className="sticky right-0 z-10 bg-white/95 backdrop-blur-sm pl-6 pr-2 py-1 border-l border-slate-100 shadow-[-12px_0_15px_-5px_rgba(0,0,0,0.05)] flex flex-col items-center" style={{ minWidth: "100px" }}>
+                                                <p className="font-bold text-slate-400 uppercase mb-2 text-xs text-center">Aksi</p>
                                                 <div className="flex gap-1.5">
                                                     <button
                                                         onClick={(e) => { e.preventDefault(); openEditKonsul(k); }}
@@ -731,6 +764,7 @@ export default function KonsulKehormatan() {
                                                     </button>
                                                 </div>
                                             </div>
+                                        </div>
                                         </div>
 
                                         {/* Klik Detail Bar */}

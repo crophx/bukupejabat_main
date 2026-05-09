@@ -436,7 +436,8 @@ export default function DalamNegeri() {
                                         <p className="font-bold text-slate-400 uppercase mt-1">Email</p>
                                         <p className="text-sky-600 font-bold underline break-all whitespace-normal">{unit.email || "-"}</p>
                                         <p className="font-bold text-slate-400 uppercase mt-1">Website</p>
-                                        <p className="text-slate-400 break-all whitespace-normal">{unit.website || "-"}</p>
+                                        {/* <p className="text-slate-400 break-all whitespace-normal">{unit.website || "-"}</p> */}
+                                        <a href={unit.website?.startsWith('http') ? unit.website : `https://${unit.website}`} target="_blank" rel="noopener noreferrer" className="text-sky-600 font-bold underline break-all hover:text-sky-700 transition-colors">{unit.website || "-"}</a>
                                     </div>
                                     <div className="w-full md:w-auto">
                                         <p className="font-bold text-slate-400 uppercase mb-1">Aksi</p>
