@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
 import kemluBg from "../assets/images/logo_kemlu_fix.png";
 import Logo from "../assets/images/logo-kemlu.png";
+import FlipbookViewer from "../components/FlipbookViewer";
 
 export default function PublicPage() {
+    const [isFlipbookOpen, setIsFlipbookOpen] = useState(false);
+    const [flipbookTitle, setFlipbookTitle] = useState("");
+    const [flipbookData, setFlipbookData] = useState([]);
 
     const downloadDalamNegeri = async (action = 'preview') => {
         Swal.fire({
@@ -296,6 +300,91 @@ export default function PublicPage() {
         }
     };
 
+    const prepareFlipbook = async (type) => {
+        Swal.fire({
+            title: 'Menyiapkan Flipbook...',
+            text: 'Sedang menyusun halaman digital...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            const urlUnits = type === 'dalam' ? "http://127.0.0.1:8000/api/unit-kerja/dalam-negeri" : "http://127.0.0.1:8000/api/unit-kerja/luar-negeri";
+            const [unitsRes, pegawaiRes] = await Promise.all([
+                axios.get(urlUnits),
+                axios.get("http://127.0.0.1:8000/api/pegawai")
+            ]);
+            
+            const filteredUnits = unitsRes.data.data || [];
+            const allPegawai = pegawaiRes.data.data || [];
+            const allowedKeywords = [
+                "menteri", "wakil menteri", "staf ahli",
+                "kepala biro", "kepala bagian", "kepala subbagian"
+            ];
+
+            let pages = [];
+
+            filteredUnits.forEach((unit) => {
+                let pejabatForUnit = [];
+                if (type === 'dalam') {
+                    pejabatForUnit = allPegawai.filter(p => {
+                        const jabatanStr = (p.jabatan || "").toLowerCase();
+                        const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
+                        return isPejabat && p.unit_kerja_id === unit.id;
+                    });
+                } else {
+                    pejabatForUnit = allPegawai.filter(p => p.unit_kerja_id === unit.id);
+                }
+
+                if (pejabatForUnit.length === 0) return;
+
+                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+                
+                let kontak = [];
+                if (unit.telepon && unit.telepon !== "-") kontak.push(`Telp: ${unit.telepon}`);
+                if (unit.email && unit.email !== "-") kontak.push(`Email: ${unit.email}`);
+                if (unit.website && unit.website !== "-") kontak.push(`Web: ${unit.website}`);
+                
+                // Format pejabat
+                const formattedPejabat = pejabatForUnit.map(p => {
+                    let jabatanFormat = p.jabatan || "-";
+                    if (type === 'luar' && jabatanFormat.toUpperCase().includes("STAF SK")) {
+                        jabatanFormat = "Administrasi Umum";
+                    }
+                    const formatNama = p.nama_pegawai || p.nama || "-";
+                    const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                    const titleCaseJabatan = jabatanFormat === "-" ? "-" : jabatanFormat.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                    
+                    return { nama: titleCaseNama, jabatan: titleCaseJabatan };
+                });
+
+                const ROWS_PER_PAGE = 9; // Max 9 baris agar rapi di flipbook
+                for (let i = 0; i < formattedPejabat.length; i += ROWS_PER_PAGE) {
+                    pages.push({
+                        unitName: i === 0 ? unitNameLong : `${unitNameLong} (Lanjutan)`,
+                        kontak: i === 0 ? kontak.join(" | ") : "",
+                        pejabat: formattedPejabat.slice(i, i + ROWS_PER_PAGE),
+                        startIndex: i
+                    });
+                }
+            });
+
+            if (pages.length === 0) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat.', 'info');
+                return;
+            }
+
+            setFlipbookTitle(type === 'dalam' ? 'Daftar Pejabat Dalam Negeri' : 'Daftar Pejabat Luar Negeri');
+            setFlipbookData(pages);
+            Swal.close();
+            setIsFlipbookOpen(true);
+
+        } catch (error) {
+            console.error("Gagal Flipbook:", error);
+            Swal.fire('Error', 'Terjadi kesalahan teknis saat menyusun data Flipbook.', 'error');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
             <header className="w-full pt-6 px-6">
@@ -323,8 +412,8 @@ export default function PublicPage() {
                         <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase mb-2">Portal Unduhan Dokumen Pejabat</h1>
                     </div>
 
-                    <div className="flex justify-center items-center gap-6">
-                        <div className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-6">
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-6 w-full px-4 sm:px-0">
+                        <div className="group w-full sm:w-64 max-w-sm p-8 bg-white border-2 border-slate-100 hover:border-emerald-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-emerald-100 flex flex-col items-center gap-6">
                             <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -333,17 +422,25 @@ export default function PublicPage() {
                             <div className="text-center">
                                 <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">Dalam Negeri</span>
                             </div>
-                            <div className="flex gap-2 w-full mt-2">
-                                <button onClick={() => downloadDalamNegeri('preview')} className="flex-1 py-2.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
-                                    Preview
+                            <div className="flex flex-col gap-2 w-full mt-2">
+                                <button onClick={() => prepareFlipbook('dalam')} className="w-full py-3 bg-sky-400 text-white hover:bg-sky-500 rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-lg shadow-sky-200 flex items-center justify-center gap-2 group/btn border border-sky-400 hover:border-sky-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover/btn:rotate-12 transition-transform">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                    Buka Flipbook
                                 </button>
-                                <button onClick={() => downloadDalamNegeri('download')} className="flex-1 py-2.5 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
-                                    Unduh
-                                </button>
+                                <div className="flex gap-2 w-full">
+                                    <button onClick={() => downloadDalamNegeri('preview')} className="flex-1 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-colors border border-emerald-100">
+                                        Preview PDF
+                                    </button>
+                                    <button onClick={() => downloadDalamNegeri('download')} className="flex-1 py-2 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-colors shadow-sm shadow-emerald-200">
+                                        Unduh PDF
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="group w-64 p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-6">
+                        <div className="group w-full sm:w-64 max-w-sm p-8 bg-white border-2 border-slate-100 hover:border-rose-500 rounded-[28px] transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-rose-100 flex flex-col items-center gap-6">
                             <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-8">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -352,13 +449,21 @@ export default function PublicPage() {
                             <div className="text-center">
                                 <span className="font-black text-slate-800 uppercase tracking-widest text-sm block">Luar Negeri</span>
                             </div>
-                            <div className="flex gap-2 w-full mt-2">
-                                <button onClick={() => downloadLuarNegeri('preview')} className="flex-1 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
-                                    Preview
+                            <div className="flex flex-col gap-2 w-full mt-2">
+                                <button onClick={() => prepareFlipbook('luar')} className="w-full py-3 bg-sky-400 text-white hover:bg-sky-500 rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-lg shadow-sky-200 flex items-center justify-center gap-2 group/btn border border-sky-400 hover:border-sky-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover/btn:rotate-12 transition-transform">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                    Buka Flipbook
                                 </button>
-                                <button onClick={() => downloadLuarNegeri('download')} className="flex-1 py-2.5 bg-rose-500 text-white hover:bg-rose-600 rounded-xl text-xs font-bold uppercase tracking-wide transition-colors">
-                                    Unduh
-                                </button>
+                                <div className="flex gap-2 w-full">
+                                    <button onClick={() => downloadLuarNegeri('preview')} className="flex-1 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-colors border border-rose-100">
+                                        Preview PDF
+                                    </button>
+                                    <button onClick={() => downloadLuarNegeri('download')} className="flex-1 py-2 bg-rose-500 text-white hover:bg-rose-600 rounded-xl text-[10px] font-bold uppercase tracking-wide transition-colors shadow-sm shadow-rose-200">
+                                        Unduh PDF
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -368,6 +473,16 @@ export default function PublicPage() {
                     </p>
                 </div>
             </main>
+
+            {/* FLIPBOOK MODAL */}
+            {isFlipbookOpen && (
+                <FlipbookViewer 
+                    title={flipbookTitle} 
+                    pages={flipbookData} 
+                    bgImage={kemluBg} 
+                    onClose={() => setIsFlipbookOpen(false)} 
+                />
+            )}
         </div>
     );
 }

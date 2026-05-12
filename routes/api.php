@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats', [PegawaiController::class, 'getDashboardStats']);
 
     // Unit Kerja Management
+    Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);
     Route::put('/unit-kerja/{id}', [UnitKerjaController::class, 'update']);
     Route::post('/import-master', [UnitKerjaController::class, 'importMasterData']);
 
