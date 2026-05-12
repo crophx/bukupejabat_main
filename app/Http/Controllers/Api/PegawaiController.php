@@ -42,7 +42,19 @@ class PegawaiController extends Controller
 
     public function getByUnit($unitId)
     {
+        $user = auth()->user();
+        
+        // PROTEKSI: Jika bukan Super Admin, dilarang intip Unit lain via URL
+        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
+            if ($user->unit_kerja_id != $unitId) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+            }
+        }
+
         $unitKerja = UnitKerja::find($unitId);
+        if (!$unitKerja) {
+            return response()->json(['success' => false, 'message' => 'Unit tidak ditemukan.'], 404);
+        }
 
         $pegawais = Pegawai::with(['jabatan', 'unitKerja'])
             ->where('unit_kerja_id', $unitId)
@@ -58,7 +70,7 @@ class PegawaiController extends Controller
                 'kode_jabatan' => $p->jabatan ? $p->jabatan->kode_jabatan : '-',
                 'telepon' => $p->no_handphone,
                 'alamat' => $p->alamat,
-                'nama_unit' => $p->unitKerja ? $p->unitKerja->deskripsi : '-',
+                'nama_unit' => $p->unitKerja ? $p->unitKerja->nama_unit_kerja : '-',
                 'bobot' => $p->bobot,
                 'wisma' => $p->wisma,
                 'tmt_kedatangan' => $p->tmt_kedatangan,
@@ -68,7 +80,7 @@ class PegawaiController extends Controller
 
         return response()->json([
             'success' => true,
-            'unit_nama' => $unitKerja ? $unitKerja->deskripsi : 'UNIT TIDAK DIKETAHUI',
+            'unit_nama' => $unitKerja->nama_unit_kerja,
             'unit_profil' => $unitKerja,
             'data' => $formatted
         ]);

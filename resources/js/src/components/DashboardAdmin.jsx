@@ -41,12 +41,15 @@ export default function DashboardAdmin() {
 
     const fetchStats = async () => {
         try {
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
             const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse, konhorResponse] =
                 await Promise.all([
-                    axios.get("http://127.0.0.1:8000/api/dashboard/stats"),
-                    axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
-                    axios.get("http://127.0.0.1:8000/api/unit-kerja/luar-negeri"),
-                    axios.get("http://127.0.0.1:8000/api/konsul-kehormatan"),
+                    axios.get("/api/dashboard/stats", { headers }),
+                    axios.get("/api/unit-kerja/dalam-negeri", { headers }),
+                    axios.get("/api/unit-kerja/luar-negeri", { headers }),
+                    axios.get("/api/konsul-kehormatan", { headers }),
                 ]);
 
             if (dashboardResponse.data.success) {
@@ -80,10 +83,13 @@ export default function DashboardAdmin() {
         });
 
         try {
-            const unitRes = await axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri");
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const unitRes = await axios.get("/api/unit-kerja/dalam-negeri", { headers });
             const unitsDalamNegeri = unitRes.data.data || [];
 
-            const pegRes = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const pegRes = await axios.get("/api/pegawai", { headers });
             const allPegawai = pegRes.data.data || [];
 
             // Ambil semua pegawai yang unitnya terdaftar di Dalam Negeri
@@ -189,10 +195,13 @@ export default function DashboardAdmin() {
         });
 
         try {
-            const unitRes = await axios.get("http://127.0.0.1:8000/api/unit-kerja/luar-negeri");
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const unitRes = await axios.get("/api/unit-kerja/luar-negeri", { headers });
             const unitsLuarNegeri = unitRes.data.data || [];
 
-            const pegRes = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const pegRes = await axios.get("/api/pegawai", { headers });
             const allPegawai = pegRes.data.data || [];
 
             // Ambil semua pegawai yang unitnya terdaftar di Luar Negeri
@@ -399,7 +408,7 @@ export default function DashboardAdmin() {
                 </StatCard>
             </div>
 
-            <LogHistory />
+            {localStorage.getItem("user_role") === "superadmin" && <LogHistory />}
         </div>
     );
 }

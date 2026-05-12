@@ -121,8 +121,12 @@ const textareaCls =
     "textarea textarea-bordered w-full bg-white text-slate-800 border-slate-200 focus:ring-4 focus:ring-sky-100 transition-all rounded-2xl text-sm font-semibold min-h-[90px] py-3";
 
 // ─── MODAL: Tambah / Edit Konsul Kehormatan ───────────────────────────────────
-function KonsulModal({ isOpen, isEditing, data, onChange, onSubmit, onClose, isSaving }) {
+function KonsulModal({ isOpen, isEditing, data, onChange, onSubmit, onClose, isSaving, user }) {
     const modalRef = useRef(null);
+
+    // Deteksi apakah inputan harus dikunci
+    const unitName = user?.unit_kerja?.nama_unit_kerja || "";
+    const isLocked = !isEditing && user?.role !== 'superadmin' && unitName.toUpperCase().startsWith('KBRI');
 
     useEffect(() => {
         const modal = modalRef.current;
@@ -320,6 +324,7 @@ export default function KonsulKehormatan() {
     const [konsuls, setKonsuls] = useState([]);
     const [pejabats, setPejabats] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [user, setUser] = useState(null);
 
     // ── Search & Pagination ──
     const [searchKonsul, setSearchKonsul] = useState("");
@@ -333,7 +338,13 @@ export default function KonsulKehormatan() {
     const [savingKonsul, setSavingKonsul] = useState(false);
 
     // ── Fetch (dummy) ──
-    useEffect(() => { fetchAll(); }, []);
+    useEffect(() => { 
+        fetchAll(); 
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     useEffect(() => {
         setPageKonsul(1);
@@ -342,12 +353,19 @@ export default function KonsulKehormatan() {
     const fetchAll = async () => {
         setLoading(true);
         try {
-            const r1 = await axios.get("http://127.0.0.1:8000/api/konsul-kehormatan");
-            const r2 = await axios.get("http://127.0.0.1:8000/api/pejabat-konsul");
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const [r1, r2] = await Promise.all([
+                axios.get("/api/konsul-kehormatan", { headers }),
+                axios.get("/api/pejabat-konsul", { headers })
+            ]);
+
             if (r1.data.success) setKonsuls(r1.data.data);
             if (r2.data.success) setPejabats(r2.data.data);
-        } catch {
-            Swal.fire({ icon: "error", title: "Oops...", text: "Gagal mengambil data.", confirmButtonColor: "#0ea5e9" });
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            Swal.fire({ icon: "error", title: "Oops...", text: "Gagal mengambil data. Pastikan Anda sudah login.", confirmButtonColor: "#0ea5e9" });
         } finally {
             setLoading(false);
         }
@@ -358,7 +376,19 @@ export default function KonsulKehormatan() {
 
     // ════════════════════════ KONSUL CRUD ════════════════════════
     const openAddKonsul = () => {
-        setKonsulForm(EMPTY_KONSUL);
+        let initialForm = { ...EMPTY_KONSUL };
+        
+        // Auto-fill jika login sebagai KBRI
+        const unitName = user?.unit_kerja?.nama_unit_kerja || "";
+        if (user && user.role !== 'superadmin' && unitName.toUpperCase().startsWith('KBRI')) {
+            const cityName = unitName.replace(/KBRI/i, '').trim();
+            // Ubah menjadi Title Case (misal: TOKYO -> Tokyo)
+            const formattedCity = cityName.charAt(0).toUpperCase() + cityName.slice(1).toLowerCase();
+            initialForm.negara = formattedCity;
+            initialForm.kota = formattedCity;
+        }
+
+        setKonsulForm(initialForm);
         setIsEditingKonsul(false);
         setKonsulModal(true);
     };
@@ -381,12 +411,15 @@ export default function KonsulKehormatan() {
         }
         setSavingKonsul(true);
         try {
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
             if (isEditingKonsul) {
-                await axios.put(`http://127.0.0.1:8000/api/konsul-kehormatan/${konsulForm.id}`, konsulForm);
+                await axios.put(`/api/konsul-kehormatan/${konsulForm.id}`, konsulForm, { headers });
                 fetchAll();
                 logActivity("UPDATE", `Memperbarui Konsul Kehormatan: ${konsulForm.kota}, ${konsulForm.negara}`);
             } else {
-                await axios.post("http://127.0.0.1:8000/api/konsul-kehormatan", konsulForm);
+                await axios.post("/api/konsul-kehormatan", konsulForm, { headers });
                 fetchAll();
                 logActivity("CREATE", `Menambah Konsul Kehormatan: ${konsulForm.kota}, ${konsulForm.negara}`);
             }
@@ -413,7 +446,10 @@ export default function KonsulKehormatan() {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`http://127.0.0.1:8000/api/konsul-kehormatan/${id}`);
+                    const token = localStorage.getItem("token");
+                    await axios.delete(`/api/konsul-kehormatan/${id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
                     fetchAll();
                     setPageKonsul(1);
                     Swal.fire({ icon: "success", title: "Berhasil!", text: "Data Konsul Kehormatan berhasil dihapus.", confirmButtonColor: "#0ea5e9" });
@@ -812,6 +848,7 @@ export default function KonsulKehormatan() {
                 isOpen={konsulModal}
                 isEditing={isEditingKonsul}
                 data={konsulForm}
+                user={user}
                 onChange={handleKonsulChange}
                 onSubmit={handleKonsulSubmit}
                 onClose={() => setKonsulModal(false)}

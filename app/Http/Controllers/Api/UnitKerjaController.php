@@ -148,21 +148,33 @@ class UnitKerjaController extends Controller
     // Fungsi untuk mengambil Unit Kerja Dalam Negeri (Kode 07A)
     public function getDalamNegeri()
     {
-        $units = \App\Models\UnitKerja::withCount('pegawai')
-            ->where('kode_unit_kerja', 'like', '07A%')
-            ->get();
+        $user = auth()->user();
+        $query = \App\Models\UnitKerja::where('kode_unit_kerja', 'like', '07%');
 
-        return response()->json(['success' => true, 'data' => $units]);
+        // Jika bukan Super Admin, filter hanya untuk unitnya sendiri
+        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
+            $query->where('id', $user->unit_kerja_id);
+        }
+
+        $units = $query->orderBy('nama_unit_kerja', 'asc')->get();
+
+        return response()->json([
+            'success' => true, 
+            'data' => $units
+        ]);
     }
 
-    // FUNGSI BARU: MENGAMBIL DATA LUAR NEGERI
-    // ==========================================
     public function getLuarNegeri()
     {
-        // Ambil unit kerja yang kodenya berawalan 04A1
-        $units = UnitKerja::withCount('pegawai')
-            ->where('kode_unit_kerja', 'like', '04A1%')
-            ->get();
+        $user = auth()->user();
+        $query = \App\Models\UnitKerja::where('kode_unit_kerja', 'like', '04A1%');
+
+        // Jika bukan Super Admin, filter hanya untuk unitnya sendiri
+        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
+            $query->where('id', $user->unit_kerja_id);
+        }
+
+        $units = $query->orderBy('nama_unit_kerja', 'asc')->get();
 
         return response()->json([
             'success' => true,

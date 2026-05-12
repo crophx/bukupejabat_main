@@ -43,9 +43,14 @@ export default function DalamNegeri() {
     const fetchDalamNegeri = async () => {
         setLoading(true);
         try {
+            const token = localStorage.getItem("token");
             const [unitRes, pegRes] = await Promise.all([
-                axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
-                axios.get("http://127.0.0.1:8000/api/pegawai")
+                axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri", {
+                    headers: { Authorization: `Bearer ${token}` }
+                }),
+                axios.get("http://127.0.0.1:8000/api/pegawai", {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
             ]);
             
             const allUnits = unitRes.data.data || [];

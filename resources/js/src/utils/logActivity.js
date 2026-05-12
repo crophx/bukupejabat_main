@@ -3,12 +3,14 @@ import axios from "axios";
 export const logActivity = async (action, description) => {
     try {
         const userId = localStorage.getItem("user_id");
-        if (!userId) return;
+        const token = localStorage.getItem("token");
+        if (!userId || !token) return;
 
-        await axios.post("http://127.0.0.1:8000/api/activity-logs", {
-            user_id: userId,
+        await axios.post("/api/activity-logs", {
             action: action,
             description: description
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
         });
     } catch (error) {
         console.error("Gagal mencatat log aktivitas:", error);

@@ -42,8 +42,9 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Login Berhasil',
             'data' => [
-                'user' => $user,
                 'token' => $token,
+                'user' => $user,
+                'permissions' => $user->getPermissions()
             ]
         ], 200);
     }

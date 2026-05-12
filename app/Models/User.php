@@ -27,6 +27,38 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    /**
+     * Cek apakah user adalah Super Admin
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role === 'superadmin';
+    }
+
+    /**
+     * Ambil daftar izin akses menu berdasarkan kode unit kerja
+     */
+    public function getPermissions()
+    {
+        // Jika Super Admin, kasih semua akses
+        if ($this->isSuperAdmin()) {
+            return ['all'];
+        }
+
+        $permissions = ['dashboard', 'data_unit_kerja', 'unit_kerja', 'pengaturan'];
+        
+        // Ambil kode unit kerja dari relasi
+        $unit = $this->unitKerja;
+        $kode = $unit ? $unit->kode_unit_kerja : '';
+
+        // Jika diawali 04 (Luar Negeri), tambahkan akses Konsul Kehormatan
+        if (str_starts_with($kode, '04')) {
+            $permissions[] = 'konsul_kehormatan';
+        }
+
+        return $permissions;
+    }
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',

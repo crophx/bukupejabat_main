@@ -9,7 +9,16 @@ class PejabatKonsulController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = PejabatKonsul::query();
+
+        // Filter berdasarkan unit kerja user jika bukan superadmin
+        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
+            $query->whereHas('konsul', function($q) use ($user) {
+                $q->where('unit_kerja_id', $user->unit_kerja_id);
+            });
+        }
+
         if ($request->has('konsul_id')) {
             $query->where('konsul_id', $request->konsul_id);
         }

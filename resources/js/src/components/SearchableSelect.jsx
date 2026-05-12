@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function SearchableSelect({ options, value, onChange, placeholder = "Pilih...", className = "" }) {
+export default function SearchableSelect({ options, value, onChange, placeholder = "Pilih...", className = "", disabled = false }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
     const wrapperRef = useRef(null);
@@ -21,10 +21,15 @@ export default function SearchableSelect({ options, value, onChange, placeholder
     const filteredOptions = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
 
     return (
-        <div ref={wrapperRef} className="relative w-full">
+        <div ref={wrapperRef} className={`relative w-full ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
             <div 
-                className={`${className} cursor-pointer flex justify-between items-center`}
-                onClick={() => { setIsOpen(!isOpen); setSearch(""); }}
+                className={`${className} flex justify-between items-center ${disabled ? "bg-slate-50 cursor-not-allowed" : "cursor-pointer"}`}
+                onClick={() => { 
+                    if (!disabled) {
+                        setIsOpen(!isOpen); 
+                        setSearch(""); 
+                    }
+                }}
             >
                 <span className={`truncate ${displayValue ? "" : "opacity-60"}`}>
                     {displayValue || placeholder}

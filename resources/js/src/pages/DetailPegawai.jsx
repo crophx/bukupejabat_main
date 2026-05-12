@@ -147,7 +147,10 @@ export default function DetailPegawai() {
     const fetchPegawai = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/pegawai/unit/${unitId}`);
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`/api/pegawai/unit/${unitId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setUnits(response.data.data || []);
             setUnitName(response.data.unit_nama || "");
             setUnitProfile(response.data.unit_profil || null);

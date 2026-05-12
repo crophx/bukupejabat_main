@@ -18,7 +18,7 @@ export default function Navbar({ onSignOut, onToggleSidebar, sidebarOpen }) {
             // Lapor ke Laravel (Agar tercatat di Activity Log)
             if (token) {
                 await axios.post(
-                    "http://127.0.0.1:8000/api/logout",
+                    "/api/logout",
                     {},
                     {
                         headers: {

@@ -22,7 +22,7 @@ export default function Login({ onLogin }) {
         try {
             // 1. TEMBAK API LARAVEL
             const response = await axios.post(
-                "http://127.0.0.1:8000/api/login",
+                "/api/login",
                 {
                     email: email,
                     password: password,
@@ -31,14 +31,15 @@ export default function Login({ onLogin }) {
 
             // 2. JIKA SUKSES
             if (response.data.success) {
-                const { token, user } = response.data.data;
+                const { token, user, permissions } = response.data.data;
 
                 // 3. SIMPAN DATA DARI DATABASE KE BROWSER
                 localStorage.setItem("token", token);
-                localStorage.setItem("user_id", user.id); // TAMBAHAN
-                // Kita ambil 'username' karena di database kolomnya username
+                localStorage.setItem("user", JSON.stringify(user)); // SIMPAN UTUH
+                localStorage.setItem("permissions", JSON.stringify(permissions));
+                localStorage.setItem("user_role", user.role);
+                localStorage.setItem("user_id", user.id);
                 localStorage.setItem("user_name", user.username);
-                // Ambil nama unit kerja (jika ada relasinya), kalau tidak ada set "Pusat"
                 localStorage.setItem(
                     "user_divisi",
                     user.unit_kerja?.nama_unit_kerja || "Pusat",

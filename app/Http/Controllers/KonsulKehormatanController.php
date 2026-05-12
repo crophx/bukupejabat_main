@@ -9,24 +9,38 @@ class KonsulKehormatanController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        $query = KonsulKehormatan::orderBy('id', 'desc');
+
+        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
+            $query->where('unit_kerja_id', $user->unit_kerja_id);
+        }
+
         return response()->json([
             'success' => true,
-            'data' => KonsulKehormatan::orderBy('id', 'desc')->get()
+            'data' => $query->get()
         ]);
     }
 
     public function store(Request $request)
     {
+        $user = auth()->user();
         $validated = $request->validate([
             'negara' => 'required|string',
             'kota' => 'required|string',
             'alamat' => 'required|string',
             'no_telp' => 'nullable|string',
             'fax' => 'nullable|string',
-            'email' => 'nullable|string', // allowed some emails can be invalid format on real world
+            'email' => 'nullable|string',
             'website' => 'nullable|string',
             'hari_kerja' => 'nullable|string',
+            'unit_kerja_id' => 'nullable|exists:unit_kerja,id'
         ]);
+
+        // Jika bukan superadmin, paksa unit_kerja_id sesuai user
+        if ($user && $user->role !== 'superadmin') {
+            $validated['unit_kerja_id'] = $user->unit_kerja_id;
+        }
 
         $konsul = KonsulKehormatan::create($validated);
 

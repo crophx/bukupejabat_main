@@ -47,9 +47,10 @@ export default function LuarNegeri() {
     const fetchLuarNegeri = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja/luar-negeri",
-            );
+            const token = localStorage.getItem("token");
+            const response = await axios.get("/api/unit-kerja/luar-negeri", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setUnits(response.data.data || []);
         } catch (error) {
             console.error("Gagal mengambil data:", error);

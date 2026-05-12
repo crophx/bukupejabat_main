@@ -38,7 +38,10 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
 
     const fetchKonsulDetail = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/konsul-kehormatan/${konsulId}`);
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`/api/konsul-kehormatan/${konsulId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             if (response.data.success) {
                 setKonsulDetail(response.data.data);
             }
@@ -54,7 +57,10 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
     const fetchPejabats = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/pejabat-konsul?konsul_id=${konsulId}`);
+            const token = localStorage.getItem("token");
+            const response = await axios.get(`/api/pejabat-konsul?konsul_id=${konsulId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             if (response.data.success) {
                 setPejabats(response.data.data);
             }
@@ -91,10 +97,13 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
 
         setIsSaving(true);
         try {
+            const token = localStorage.getItem("token");
+            const headers = { Authorization: `Bearer ${token}` };
+
             if (isEditing) {
-                await axios.put(`http://127.0.0.1:8000/api/pejabat-konsul/${editPejabat.id}`, editPejabat);
+                await axios.put(`/api/pejabat-konsul/${editPejabat.id}`, editPejabat, { headers });
             } else {
-                await axios.post("http://127.0.0.1:8000/api/pejabat-konsul", { ...editPejabat, konsul_id: konsulId });
+                await axios.post("/api/pejabat-konsul", { ...editPejabat, konsul_id: konsulId }, { headers });
             }
             fetchPejabats();
 
@@ -131,7 +140,10 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
             cancelButtonText: "Batal",
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await axios.delete(`http://127.0.0.1:8000/api/pejabat-konsul/${id}`);
+                const token = localStorage.getItem("token");
+                await axios.delete(`/api/pejabat-konsul/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 fetchPejabats();
                 Swal.fire({
                     icon: "success",
