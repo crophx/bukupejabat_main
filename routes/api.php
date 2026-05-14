@@ -6,9 +6,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\UnitKerjaController;
+use App\Http\Controllers\Api\PublicTrackingController;
 
 // --- PUBLIC ROUTES ---
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/track-activity', [PublicTrackingController::class, 'track']);
 
 // --- PROTECTED ROUTES ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard Stats
     Route::get('/dashboard/stats', [PegawaiController::class, 'getDashboardStats']);
+    Route::get('/dashboard/public-stats', [PublicTrackingController::class, 'getStats']);
 
     // Unit Kerja Management
     Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);

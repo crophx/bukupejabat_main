@@ -86,3 +86,98 @@ The application follows an API-driven SPA (Single Page Application) approach. `r
      npm run dev
      ```
 7. Open your browser and navigate to the address provided by `php artisan serve` (usually `http://localhost:8000`).
+
+classDiagram
+    class UnitKerja {
+        +int id
+        +string kode_unit_kerja
+        +string nama_unit_kerja
+        +string deskripsi
+        +string alamat
+        +string telepon
+        +string email
+        +pegawai() HasMany
+        +users() HasMany
+    }
+
+    class User {
+        +int id
+        +string username
+        +string email
+        +string role
+        +int unit_kerja_id
+        +unitKerja() BelongsTo
+        +isSuperAdmin() bool
+        +getPermissions() array
+    }
+
+    class Pegawai {
+        +int id
+        +int unit_kerja_id
+        +int jabatan_id
+        +string nama
+        +string nip
+        +unitKerja() BelongsTo
+        +jabatan() BelongsTo
+    }
+
+    class Jabatan {
+        +int id
+        +string nama_jabatan
+        +pegawai() HasMany
+    }
+
+    class KonsulKehormatan {
+        +int id
+        +int unit_kerja_id
+        +string negara
+        +string kota
+        +string email
+        +pejabats() HasMany
+    }
+
+    class PejabatKonsul {
+        +int id
+        +int konsul_id
+        +string nama
+        +string gelar_jabatan
+        +konsul() BelongsTo
+    }
+
+    class ActivityLog {
+        +int id
+        +int user_id
+        +string activity
+        +string description
+        +user() BelongsTo
+    }
+
+    UnitKerja "1" -- "*" User : manages
+    UnitKerja "1" -- "*" Pegawai : employs
+    UnitKerja "1" -- "*" KonsulKehormatan : supervises
+    Jabatan "1" -- "*" Pegawai : categorizes
+    KonsulKehormatan "1" -- "*" PejabatKonsul : has
+    User "1" -- "*" ActivityLog : performs
+
+
+<!-- perubahan revisi 14/05/2026 → 15:00 -->
+Edited DashboardAdmin.jsx
+
+Saya sudah menyelesaikan semua instruksi yang Anda berikan. Berikut adalah ringkasan perubahan yang telah dilakukan:
+
+1. **Modul Log Activity & Log Sync**:
+   - Menambahkan input **Filter Tanggal (Start Date & End Date)** pada komponen `LogHistory.jsx` (Activity Log) dan `SyncData.jsx` (Log Sync).
+   - Menambahkan tombol **Export (PDF)** yang menggunakan `jspdf` dan `jspdf-autotable` untuk mengunduh laporan aktivitas dan sinkronisasi berdasarkan filter rentang tanggal (serta pencarian) yang sedang aktif.
+
+2. **Statistik Preview & Download (Public Tracking)**:
+   - Membuat *Database Migration* dan model `PublicTracking` pada backend untuk menyimpan riwayat akses dari halaman publik.
+   - Membuat `PublicTrackingController` dan menambahkan endpoint API baru untuk mencatat aktivitas secara publik (Preview dan Download). Endpoint statistik harian (7 hari terakhir) juga sudah dibuat.
+   - Memperbarui `PagePublic.jsx` agar otomatis menembakkan *request tracking* ke backend setiap kali user membuka Flipbook, melakukan Preview PDF, atau Download PDF. Flipbook dan Preview PDF digabung ke tipe "Preview".
+   - Mengubah `DashboardAdmin.jsx` di halaman Admin untuk menampilkan dua **Cards** baru (Public Previews & Public Downloads) serta grafik *AreaChart* yang dinamis menggunakan **Recharts** untuk melacak tren pengunjung harian.
+
+3. **Kustomisasi Flipbook**:
+   - Menyesuaikan *property* dimensi pada komponen `HTMLFlipBook` di dalam file `FlipbookViewer.jsx`. Ukuran kanvas kini jauh lebih besar (lebar `600px`, tinggi `850px` hingga maksimal `800x1100`) agar dokumen lebih mudah dan nyaman dibaca, serta tetap *responsive* dengan setelan `stretch`.
+
+Semua fungsi di atas sudah terintegrasi dan bisa langsung Anda uji di aplikasi Anda! Beritahu saya apabila Anda perlu penyesuaian atau tambahan lainnya.
+<!-- end -->
+

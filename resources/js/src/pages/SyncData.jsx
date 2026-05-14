@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function SyncData() {
     const [isSyncing, setIsSyncing] = useState(false);
@@ -9,6 +11,10 @@ export default function SyncData() {
     const [syncDay, setSyncDay] = useState('Senin');
     const [syncDate, setSyncDate] = useState('1');
     const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
+
+    // State untuk filter tanggal
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     // Dummy data untuk Log Sinkronisasi
     const [logs, setLogs] = useState([
@@ -23,9 +29,16 @@ export default function SyncData() {
         // Simulasi proses sinkronisasi (karena backend belum siap)
         setTimeout(() => {
             setIsSyncing(false);
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
             const newLog = {
                 id: Date.now(),
-                date: new Date().toLocaleString('id-ID').replace(/\./g, ':'),
+                date: `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`,
                 method: 'Manual',
                 status: 'Success',
                 detail: 'Berhasil mensinkronkan data secara manual terbaru.'
@@ -49,6 +62,57 @@ export default function SyncData() {
             showConfirmButton: false,
             timer: 1500
         });
+    };
+
+    const filteredLogs = logs.filter((log) => {
+        let matchesDate = true;
+        if (startDate || endDate) {
+            const logDate = new Date(log.date.split(' ')[0]);
+            logDate.setHours(0, 0, 0, 0);
+            
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                if (logDate < start) matchesDate = false;
+            }
+            if (endDate && matchesDate) {
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+                if (logDate > end) matchesDate = false;
+            }
+        }
+        return matchesDate;
+    });
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        doc.setFont("times", "bold");
+        doc.setFontSize(16);
+        doc.text("Laporan Log Sinkronisasi Data", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setFont("times", "normal");
+        let subtitle = "Periode: Semua Waktu";
+        if (startDate && endDate) subtitle = `Periode: ${startDate} s/d ${endDate}`;
+        else if (startDate) subtitle = `Periode: Mulai ${startDate}`;
+        else if (endDate) subtitle = `Periode: Sampai ${endDate}`;
+        doc.text(subtitle, 105, 28, { align: "center" });
+
+        const tableData = filteredLogs.map((log, index) => {
+            return [index + 1, log.date, log.method, log.status, log.detail];
+        });
+
+        autoTable(doc, {
+            startY: 35,
+            head: [["No", "Waktu", "Metode", "Status", "Detail Keterangan"]],
+            body: tableData,
+            theme: "grid",
+            styles: { font: "times", fontSize: 9 },
+            headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+            columnStyles: { 0: { halign: "center", cellWidth: 10 } }
+        });
+
+        doc.save("Log_Sinkronisasi.pdf");
     };
 
     return (
@@ -146,7 +210,32 @@ export default function SyncData() {
 
             {/* --- LOG SINKRONISASI --- */}
             <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Riwayat Sinkronisasi (Log)</h3>
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 border-b border-slate-100 pb-2 gap-4">
+                    <h3 className="text-lg font-bold text-slate-800">Riwayat Sinkronisasi (Log)</h3>
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <input
+                                type="date"
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 w-full sm:w-auto text-slate-600"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                title="Start Date"
+                            />
+                            <span className="text-slate-400">-</span>
+                            <input
+                                type="date"
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 w-full sm:w-auto text-slate-600"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                title="End Date"
+                            />
+                        </div>
+                        <button onClick={handleExportPDF} className="w-full sm:w-auto px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-200 transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-sm">
                         <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
@@ -159,7 +248,7 @@ export default function SyncData() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {logs.map((log, index) => (
+                            {filteredLogs.length > 0 ? filteredLogs.map((log, index) => (
                                 <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-4 py-4 text-center text-slate-400 font-medium">{index + 1}</td>
                                     <td className="px-4 py-4 text-slate-700 font-medium">{log.date}</td>
@@ -183,7 +272,11 @@ export default function SyncData() {
                                     </td>
                                     <td className="px-4 py-4 text-slate-500 italic text-xs leading-relaxed max-w-xs">{log.detail}</td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan="5" className="px-4 py-6 text-center text-slate-400">Tidak ada log pada rentang tanggal ini.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

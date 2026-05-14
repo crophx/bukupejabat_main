@@ -62,13 +62,13 @@ export default function FlipbookViewer({ title, pages, onClose, bgImage }) {
 
                 <div className="shadow-2xl">
                     <HTMLFlipBook 
-                        width={450} 
-                        height={650} 
+                        width={600} 
+                        height={850} 
                         size="stretch"
-                        minWidth={315}
-                        maxWidth={550}
-                        minHeight={420}
-                        maxHeight={750}
+                        minWidth={400}
+                        maxWidth={800}
+                        minHeight={550}
+                        maxHeight={1100}
                         maxShadowOpacity={0.6}
                         showCover={true}
                         mobileScrollSupport={true}

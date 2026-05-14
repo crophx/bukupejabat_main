@@ -12,6 +12,17 @@ export default function PublicPage() {
     const [flipbookTitle, setFlipbookTitle] = useState("");
     const [flipbookData, setFlipbookData] = useState([]);
 
+    const trackActivity = async (type, documentType) => {
+        try {
+            await axios.post("http://127.0.0.1:8000/api/track-activity", {
+                type,
+                document_type: documentType
+            });
+        } catch (error) {
+            console.error("Gagal mencatat aktivitas:", error);
+        }
+    };
+
     const downloadDalamNegeri = async (action = 'preview') => {
         Swal.fire({
             title: 'Memproses PDF...',
@@ -141,11 +152,13 @@ export default function PublicPage() {
             
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
+                trackActivity('download', 'dalam_negeri');
                 Swal.close();
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Dalam Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
             } else {
                 const pdfBlob = doc.output('bloburl');
                 window.open(pdfBlob, '_blank');
+                trackActivity('preview', 'dalam_negeri');
                 Swal.close();
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Pejabat Dalam Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
             }
@@ -285,11 +298,13 @@ export default function PublicPage() {
             
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
+                trackActivity('download', 'luar_negeri');
                 Swal.close();
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF Pejabat Luar Negeri berhasil diunduh.', timer: 2000, showConfirmButton: false });
             } else {
                 const pdfBlob = doc.output('bloburl');
                 window.open(pdfBlob, '_blank');
+                trackActivity('preview', 'luar_negeri');
                 Swal.close();
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF Pejabat Luar Negeri berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
             }
@@ -376,6 +391,9 @@ export default function PublicPage() {
 
             setFlipbookTitle(type === 'dalam' ? 'Daftar Pejabat Dalam Negeri' : 'Daftar Pejabat Luar Negeri');
             setFlipbookData(pages);
+            
+            trackActivity('preview', type === 'dalam' ? 'flipbook_dalam' : 'flipbook_luar');
+            
             Swal.close();
             setIsFlipbookOpen(true);
 

@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf"; // TAMBAHAN: Import jsPDF
 import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
 import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
 import LogHistory from "./LogHistory";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DashboardAdmin() {
     const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function DashboardAdmin() {
         totalUnitLuarNegeri: 0,
         sparkline: [],
         bars: [],
+        publicPreviews: 0,
+        publicDownloads: 0,
+        publicTrends: []
     });
 
     useEffect(() => {
@@ -44,17 +48,30 @@ export default function DashboardAdmin() {
             const token = localStorage.getItem("token");
             const headers = { Authorization: `Bearer ${token}` };
 
-            const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse, konhorResponse] =
+            const [dashboardResponse, dalamNegeriResponse, luarNegeriResponse, konhorResponse, publicStatsRes] =
                 await Promise.all([
                     axios.get("/api/dashboard/stats", { headers }),
                     axios.get("/api/unit-kerja/dalam-negeri", { headers }),
                     axios.get("/api/unit-kerja/luar-negeri", { headers }),
                     axios.get("/api/konsul-kehormatan", { headers }),
+                    axios.get("/api/dashboard/public-stats", { headers }),
                 ]);
 
             if (dashboardResponse.data.success) {
                 const totPegawai = dashboardResponse.data.data.total_pegawai || 0;
                 const totKonhor = konhorResponse.data.data?.length || 0;
+
+                const publicData = publicStatsRes.data.success ? publicStatsRes.data.data : null;
+                const formattedTrends = [];
+                if (publicData && publicData.trends) {
+                    for (let i = 0; i < publicData.trends.labels.length; i++) {
+                        formattedTrends.push({
+                            name: publicData.trends.labels[i],
+                            Preview: publicData.trends.previews[i],
+                            Download: publicData.trends.downloads[i],
+                        });
+                    }
+                }
 
                 setStats((prev) => ({
                     ...prev,
@@ -64,6 +81,9 @@ export default function DashboardAdmin() {
                     totalUnitLuarNegeri: luarNegeriResponse.data.data?.length || 0,
                     bars: generateTrend(totPegawai, 7), // 7 batang grafik
                     sparkline: generateTrend(totKonhor, 12), // 12 titik area chart
+                    publicPreviews: publicData ? publicData.preview_count : 0,
+                    publicDownloads: publicData ? publicData.download_count : 0,
+                    publicTrends: formattedTrends
                 }));
             }
         } catch (error) {
@@ -392,20 +412,53 @@ export default function DashboardAdmin() {
                 </StatCard>
 
                 <StatCard
-                    title="UNIT KERJA DALAM NEGERI"
-                    value={stats.totalUnitDalamNegeri}
+                    title="PUBLIC PREVIEWS"
+                    value={stats.publicPreviews}
                     tone="amber"
                 >
                     <UnitOfficeIcon tone="amber" />
                 </StatCard>
 
                 <StatCard
-                    title="UNIT KERJA LUAR NEGERI"
-                    value={stats.totalUnitLuarNegeri}
+                    title="PUBLIC DOWNLOADS"
+                    value={stats.publicDownloads}
                     tone="indigo"
                 >
                     <UnitOfficeIcon tone="indigo" />
                 </StatCard>
+            </div>
+
+            {/* Public Access Trends Chart */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mt-6">
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">Aktivitas Akses Publik (7 Hari Terakhir)</h3>
+                    <p className="text-sm text-slate-500">Tren pengunjung yang melihat Preview (PDF & Flipbook) dan melakukan Download PDF.</p>
+                </div>
+                <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={stats.publicTrends} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorPreview" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorDownload" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="name" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
+                            <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <Tooltip 
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                                itemStyle={{ fontWeight: 'bold' }}
+                            />
+                            <Area type="monotone" dataKey="Preview" stroke="#0ea5e9" strokeWidth={3} fillOpacity={1} fill="url(#colorPreview)" />
+                            <Area type="monotone" dataKey="Download" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorDownload)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
 
             {localStorage.getItem("user_role") === "superadmin" && <LogHistory />}

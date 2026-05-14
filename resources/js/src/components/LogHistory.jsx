@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function LogHistory() {
     // 1. State untuk menyimpan data log dari database
@@ -7,6 +9,8 @@ export default function LogHistory() {
     const [isLoading, setIsLoading] = useState(true);
     // State untuk fitur pencarian sederhana (Client side)
     const [searchTerm, setSearchTerm] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
 
     // 2. Fetch Data dari API saat komponen dimuat
     useEffect(() => {
@@ -29,15 +33,67 @@ export default function LogHistory() {
         fetchLogs();
     }, []);
 
-    // 3. Filter data berdasarkan pencarian user/action/details
-    const filteredLogs = logs.filter(
-        (log) =>
-            (log.user?.username || "")
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase()) ||
+    // 3. Filter data berdasarkan pencarian user/action/details dan tanggal
+    const filteredLogs = logs.filter((log) => {
+        const matchesSearch =
+            (log.user?.username || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.description.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+            log.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+        let matchesDate = true;
+        if (startDate || endDate) {
+            const logDate = new Date(log.created_at);
+            logDate.setHours(0, 0, 0, 0); // Normalize time
+            
+            if (startDate) {
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                if (logDate < start) matchesDate = false;
+            }
+            if (endDate && matchesDate) {
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+                if (logDate > end) matchesDate = false;
+            }
+        }
+        
+        return matchesSearch && matchesDate;
+    });
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        
+        doc.setFont("times", "bold");
+        doc.setFontSize(16);
+        doc.text("Laporan Log Activity", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setFont("times", "normal");
+        let subtitle = "Periode: Semua Waktu";
+        if (startDate && endDate) subtitle = `Periode: ${startDate} s/d ${endDate}`;
+        else if (startDate) subtitle = `Periode: Mulai ${startDate}`;
+        else if (endDate) subtitle = `Periode: Sampai ${endDate}`;
+        doc.text(subtitle, 105, 28, { align: "center" });
+
+        const tableData = filteredLogs.map((log, index) => {
+            const dateStr = new Date(log.created_at).toLocaleDateString("id-ID");
+            const timeStr = new Date(log.created_at).toLocaleTimeString("id-ID");
+            const userStr = log.user?.username || "User Terhapus";
+            return [index + 1, `${dateStr} ${timeStr}`, userStr, log.action, log.description];
+        });
+
+        autoTable(doc, {
+            startY: 35,
+            head: [["No", "Waktu", "User", "Aksi", "Deskripsi"]],
+            body: tableData,
+            theme: "grid",
+            styles: { font: "times", fontSize: 9 },
+            headStyles: { fillColor: [14, 165, 233], textColor: [255, 255, 255], fontStyle: "bold", halign: "center" },
+            columnStyles: { 0: { halign: "center", cellWidth: 10 } }
+        });
+
+        doc.save("Log_Activity.pdf");
+    };
 
     // Helper untuk warna badge action
     const getActionColor = (action) => {
@@ -65,36 +121,61 @@ export default function LogHistory() {
                         Activity Log
                     </h3>
                     <p className="text-xs text-slate-500 font-medium">
-                        {searchTerm
+                        {searchTerm || startDate || endDate
                             ? `Ditemukan ${filteredLogs.length} aktivitas`
                             : `Total ${logs.length} aktivitas sistem`}
                     </p>
                 </div>
 
-                <div className="relative w-full md:w-64">
-                    <svg
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                    >
-                        <g
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                            strokeWidth="2.5"
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                            type="date"
+                            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 w-full sm:w-auto text-slate-600"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            title="Start Date"
+                        />
+                        <span className="text-slate-400">-</span>
+                        <input
+                            type="date"
+                            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 w-full sm:w-auto text-slate-600"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            title="End Date"
+                        />
+                    </div>
+
+                    <div className="relative w-full sm:w-56">
+                        <svg
+                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
                         >
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.3-4.3"></path>
-                        </g>
-                    </svg>
-                    <input
-                        type="search"
-                        placeholder="Cari aktivitas..."
-                        className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50 text-slate-700"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                            <g
+                                strokeLinejoin="round"
+                                strokeLinecap="round"
+                                strokeWidth="2.5"
+                            >
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </g>
+                        </svg>
+                        <input
+                            type="search"
+                            placeholder="Cari aktivitas..."
+                            className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 w-full bg-slate-50 text-slate-700"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <button onClick={handleExportPDF} className="w-full sm:w-auto px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-200 transition-colors flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                        Export
+                    </button>
                 </div>
             </div>
 
@@ -195,7 +276,7 @@ export default function LogHistory() {
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => setSearchTerm("")}
+                        onClick={() => { setSearchTerm(""); setStartDate(""); setEndDate(""); }}
                         className="text-sm text-slate-500 hover:text-sky-600 transition-colors"
                     >
                         Reset
