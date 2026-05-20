@@ -4,6 +4,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf"; // TAMBAHAN: Import jsPDF
 import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
 import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import LogHistory from "./LogHistory";
 
 export default function DashboardAdmin() {
@@ -18,9 +19,75 @@ export default function DashboardAdmin() {
         bars: [],
     });
 
+    // Fungsi untuk mendapatkan format YYYY-MM-DD
+    const formatDate = (date) => {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month, day].join('-');
+    };
+
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+
+    const [publicStats, setPublicStats] = useState([]);
+    const [publicStatsStartDate, setPublicStatsStartDate] = useState(formatDate(lastWeek));
+    const [publicStatsEndDate, setPublicStatsEndDate] = useState(formatDate(today));
+
     useEffect(() => {
         fetchStats();
     }, []);
+
+    useEffect(() => {
+        fetchPublicStats();
+    }, [publicStatsStartDate, publicStatsEndDate]);
+
+    const fetchPublicStats = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const params = {};
+            if (publicStatsStartDate) params.start_date = publicStatsStartDate;
+            if (publicStatsEndDate) params.end_date = publicStatsEndDate;
+            
+            const response = await axios.get("/api/public-activities/stats", {
+                headers: { Authorization: `Bearer ${token}` },
+                params
+            });
+            if (response.data.success) {
+                const rawData = response.data.data;
+                const dateMap = {};
+                
+                // Generate all dates between start and end
+                if (publicStatsStartDate && publicStatsEndDate) {
+                    let current = new Date(publicStatsStartDate);
+                    const end = new Date(publicStatsEndDate);
+                    while (current <= end) {
+                        dateMap[formatDate(current)] = { date: formatDate(current), preview: 0, download: 0 };
+                        current.setDate(current.getDate() + 1);
+                    }
+                }
+                
+                rawData.forEach(item => {
+                    if (!dateMap[item.date]) {
+                        dateMap[item.date] = { date: item.date, preview: 0, download: 0 };
+                    }
+                    dateMap[item.date][item.type] = item.count;
+                });
+                
+                // Sort array by date string
+                const formattedData = Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
+                setPublicStats(formattedData);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data statistik publik:", error);
+        }
+    };
 
     // Fungsi untuk membuat data tren palsu (untuk chart) yang berakhir di angka total
     const generateTrend = (total, numPoints) => {
@@ -407,6 +474,54 @@ export default function DashboardAdmin() {
                     <UnitOfficeIcon tone="indigo" />
                 </StatCard>
             </div>
+
+            {/* PUBLIC ACTIVITY CHART */}
+            {localStorage.getItem("user_role") === "superadmin" && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 relative mb-6 mt-6 p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Statistik Aktivitas Publik</h3>
+                            <p className="text-xs text-slate-500 font-medium">Grafik preview dan unduhan dokumen</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="date" 
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
+                                value={publicStatsStartDate}
+                                onChange={(e) => setPublicStatsStartDate(e.target.value)}
+                            />
+                            <span className="text-slate-400">-</span>
+                            <input 
+                                type="date" 
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
+                                value={publicStatsEndDate}
+                                onChange={(e) => setPublicStatsEndDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="h-80 w-full">
+                        {publicStats.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={publicStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="date" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
+                                    <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
+                                    <RechartsTooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
+                                    <Line type="monotone" name="Preview" dataKey="preview" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
+                                    <Line type="monotone" name="Download" dataKey="download" stroke="#10b981" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-slate-400">
+                                Tidak ada data untuk rentang tanggal ini.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {localStorage.getItem("user_role") === "superadmin" && <LogHistory />}
         </div>

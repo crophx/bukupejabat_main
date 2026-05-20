@@ -12,7 +12,16 @@ export default function PublicPage() {
     const [flipbookTitle, setFlipbookTitle] = useState("");
     const [flipbookData, setFlipbookData] = useState([]);
 
+    const trackHit = async (type) => {
+        try {
+            await axios.post("/api/public-activities/hit", { type });
+        } catch (error) {
+            console.error("Gagal mencatat log aktivitas:", error);
+        }
+    };
+
     const downloadDalamNegeri = async (action = 'preview') => {
+        trackHit(action);
         Swal.fire({
             title: 'Memproses PDF...',
             text: 'Sedang menyusun daftar pejabat per orang...',
@@ -157,8 +166,9 @@ export default function PublicPage() {
     };
 
     const downloadLuarNegeri = async (action = 'preview') => {
+        trackHit(action);
         Swal.fire({
-            title: 'Memproses PDF...',
+            title: 'Memproses PDF Luar Negeri...',
             text: 'Sedang menyusun daftar pejabat per orang...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
@@ -301,6 +311,7 @@ export default function PublicPage() {
     };
 
     const prepareFlipbook = async (type) => {
+        trackHit('preview');
         Swal.fire({
             title: 'Menyiapkan Flipbook...',
             text: 'Sedang menyusun halaman digital...',

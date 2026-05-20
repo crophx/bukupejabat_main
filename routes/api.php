@@ -6,9 +6,12 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\UnitKerjaController;
+use App\Http\Controllers\Api\SyncLogController;
+use App\Http\Controllers\Api\PublicActivityController;
 
 // --- PUBLIC ROUTES ---
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/public-activities/hit', [PublicActivityController::class, 'hit']);
 
 // --- PROTECTED ROUTES ---
 Route::middleware('auth:sanctum')->group(function () {
@@ -27,8 +30,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/profile/{id}', [UserController::class, 'getProfile']);
 
     // Activity Logs
+    Route::get('/activity-logs/export', [ActivityLogController::class, 'export']);
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::post('/activity-logs', [ActivityLogController::class, 'store']);
+
+    // Sync Logs
+    Route::get('/sync-logs/export', [SyncLogController::class, 'export']);
+    Route::get('/sync-logs', [SyncLogController::class, 'index']);
+    Route::post('/sync-logs', [SyncLogController::class, 'store']);
 
     // Pegawai Management
     Route::post('/pegawai', [PegawaiController::class, 'store']);
@@ -39,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard Stats
     Route::get('/dashboard/stats', [PegawaiController::class, 'getDashboardStats']);
+    Route::get('/public-activities/stats', [PublicActivityController::class, 'stats']);
 
     // Unit Kerja Management
     Route::get('/unit-kerja', [UnitKerjaController::class, 'index']);

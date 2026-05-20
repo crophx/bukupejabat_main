@@ -20,6 +20,7 @@
         "react-dom": "^19.2.0",
         "react-pageflip": "^2.0.3",
         "react-router-dom": "^6.30.2",
+        "recharts": "^3.8.1",
         "sweetalert2": "^11.26.24",
         "xlsx": "^0.18.5"
     },

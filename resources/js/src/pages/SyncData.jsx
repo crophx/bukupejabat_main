@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 export default function SyncData() {
     const [isSyncing, setIsSyncing] = useState(false);
@@ -14,13 +15,56 @@ export default function SyncData() {
     const [failCount, setFailCount] = useState(0);
     const [isBlocked, setIsBlocked] = useState(false);
 
-    // Dummy data untuk Log Sinkronisasi
-    const [logs, setLogs] = useState([
-        { id: 1, date: '2026-05-12 09:00:00', method: 'Auto (Mingguan)', status: 'Success', detail: 'Berhasil mensinkronkan 120 data pegawai.' },
-        { id: 2, date: '2026-05-05 09:00:00', method: 'Auto (Mingguan)', status: 'Success', detail: 'Berhasil mensinkronkan 120 data pegawai.' },
-        { id: 3, date: '2026-05-01 14:30:22', method: 'Manual', status: 'Failed', detail: 'Koneksi ke API Utama terputus (Timeout).' },
-        { id: 4, date: '2026-04-28 09:00:00', method: 'Auto (Mingguan)', status: 'Success', detail: 'Berhasil mensinkronkan 118 data pegawai.' },
-    ]);
+    // State untuk Log Sinkronisasi
+    const [logs, setLogs] = useState([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
+    const fetchSyncLogs = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const params = {};
+            if (startDate) params.start_date = startDate;
+            if (endDate) params.end_date = endDate;
+            
+            const response = await axios.get("/api/sync-logs", {
+                headers: { Authorization: `Bearer ${token}` },
+                params
+            });
+            if (response.data.success) {
+                setLogs(response.data.data);
+            }
+        } catch (error) {
+            console.error("Gagal mengambil log sinkronisasi:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchSyncLogs();
+    }, [startDate, endDate]);
+
+    const handleExport = () => {
+        const token = localStorage.getItem("token");
+        let url = `/api/sync-logs/export?token=${token}`;
+        if (startDate) url += `&start_date=${startDate}`;
+        if (endDate) url += `&end_date=${endDate}`;
+        
+        axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
+        }).then((response) => {
+            const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = urlBlob;
+            link.setAttribute('download', `log_sinkronisasi_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }).catch(err => {
+            console.error("Gagal export:", err);
+            alert("Gagal mengunduh CSV");
+        });
+    };
 
     // Efek Retry: Jika gagal 1 atau 2 kali, jadwalkan ulang dalam 10 menit (600000 ms)
     useEffect(() => {
@@ -254,7 +298,32 @@ export default function SyncData() {
 
             {/* --- LOG SINKRONISASI --- */}
             <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Riwayat Sinkronisasi (Log)</h3>
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 border-b border-slate-100 pb-4 gap-4">
+                    <h3 className="text-lg font-bold text-slate-800">Riwayat Sinkronisasi (Log)</h3>
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <input 
+                                type="date" 
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                            <span className="text-slate-400">-</span>
+                            <input 
+                                type="date" 
+                                className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
+                        <button onClick={handleExport} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-sm">
                         <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
