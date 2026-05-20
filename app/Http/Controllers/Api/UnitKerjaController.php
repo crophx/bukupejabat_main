@@ -149,12 +149,8 @@ class UnitKerjaController extends Controller
     public function getDalamNegeri()
     {
         $user = auth()->user();
-        $query = \App\Models\UnitKerja::where('kode_unit_kerja', 'like', '07%');
+        $query = \App\Models\UnitKerja::withCount('pegawai')->where('kode_unit_kerja', 'like', '07%');
 
-        // Jika bukan Super Admin, filter hanya untuk unitnya sendiri
-        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
-            $query->where('id', $user->unit_kerja_id);
-        }
 
         $units = $query->orderBy('nama_unit_kerja', 'asc')->get();
 
@@ -167,12 +163,8 @@ class UnitKerjaController extends Controller
     public function getLuarNegeri()
     {
         $user = auth()->user();
-        $query = \App\Models\UnitKerja::where('kode_unit_kerja', 'like', '04A1%');
+        $query = \App\Models\UnitKerja::withCount('pegawai')->where('kode_unit_kerja', 'like', '04A1%');
 
-        // Jika bukan Super Admin, filter hanya untuk unitnya sendiri
-        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
-            $query->where('id', $user->unit_kerja_id);
-        }
 
         $units = $query->orderBy('nama_unit_kerja', 'asc')->get();
 

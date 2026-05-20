@@ -454,20 +454,31 @@ export default function LuarNegeri() {
                                         </p>
                                     </div>
                                     {/* Aksi */}
-                                    <div className="w-full md:w-auto">
-                                        <p className="font-bold text-slate-400 uppercase mb-1">
-                                            Aksi
-                                        </p>
-                                        <button
-                                            onClick={() => openEditModal(unit)}
-                                            className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
-                                            title="Edit Unit Kerja"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                    {(() => {
+                                        const isSuperAdmin = localStorage.getItem("user_role") === "superadmin";
+                                        const userSession = JSON.parse(localStorage.getItem("user") || "{}");
+                                        const userUnitId = userSession.unit_kerja_id;
+                                        
+                                        if (isSuperAdmin || unit.id === userUnitId) {
+                                            return (
+                                                <div className="w-full md:w-auto">
+                                                    <p className="font-bold text-slate-400 uppercase mb-1">
+                                                        Aksi
+                                                    </p>
+                                                    <button
+                                                        onClick={() => openEditModal(unit)}
+                                                        className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"
+                                                        title="Edit Unit Kerja"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
                                 </div>
 
                                 {/* LOGIKA NAVIGASI LUAR NEGERI DITAMBAHKAN DI SINI */}

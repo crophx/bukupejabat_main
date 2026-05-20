@@ -213,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }) {
                             )}
 
                             {/* --- Unit Kerja --- */}
-                            {hasPermission('unit_kerja') && (
+                            {isSuperAdmin && (
                                 <NavLink
                                     to="/unit-kerja"
                                     onClick={handleMobileClose}
@@ -288,13 +288,15 @@ export default function Sidebar({ isOpen, onClose }) {
                                             >
                                                 Pengaturan Akun
                                             </NavLink>
-                                            <NavLink
-                                                to="/pengaturan/sync-data"
-                                                onClick={handleMobileClose}
-                                                className={({ isActive }) => `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}
-                                            >
-                                                Sinkronisasi Data
-                                            </NavLink>
+                                            {isSuperAdmin && (
+                                                <NavLink
+                                                    to="/pengaturan/sync-data"
+                                                    onClick={handleMobileClose}
+                                                    className={({ isActive }) => `block px-3 py-2 text-xs font-medium rounded-lg transition-colors ${isActive ? "text-sky-600 bg-sky-50" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}
+                                                >
+                                                    Sinkronisasi Data
+                                                </NavLink>
+                                            )}
                                         </div>
                                     )}
                                 </div>

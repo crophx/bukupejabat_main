@@ -50,11 +50,16 @@ export default function DetailPegawai() {
 
         // 2. Hierarki Dalam Negeri (sebagai pelengkap)
         if (j.includes("menteri") && !j.includes("wakil menteri")) return 1;
-        if (j.includes("sekretaris jenderal") || j.includes("direktur jenderal") || j.includes("inspektur jenderal") || j.includes("kepala badan")) return 2;
-        if (j.includes("staf ahli")) return 3;
-        if (j.includes("kepala biro") || j.includes("direktur") || j.includes("inspektur") || j.includes("kepala pusat")) return 4;
-        if (j.includes("kepala bagian")) return 5;
-        if (j.includes("kepala subbag") || j.includes("kepala subbagian")) return 6;
+        if (j.includes("wakil menteri") || (j.includes("direktur jenderal") && !j.includes("sekretaris")) || (j.includes("inspektur jenderal") && !j.includes("sekretaris")) || j.includes("kepala badan") || j.includes("sekretaris badan") || j.includes("sekretaris jenderal")) return 1;
+        
+        if (j.includes("sekretaris direktorat jenderal") || j.includes("sekretaris inspektorat jenderal") || j.includes("kepala pusat") || j.includes("kepala biro") || j.includes("staf ahli")) return 2;
+        
+        if (j.includes("kepala bagian") || j.includes("kepala bidang") || j.includes("kepala subdirektorat") || j.includes("kepala subdiktorat")) return 3;
+        
+        if (j.includes("kepala subbag") || j.includes("kepala subbagian")) return 4;
+        
+        // Default untuk direktur/inspektur yang bukan jenderal
+        if (j.includes("direktur") || j.includes("inspektur")) return 2;
 
         return 99;
     };
@@ -75,12 +80,18 @@ export default function DetailPegawai() {
                 jabatanLower.includes("direktur jenderal") ||
                 jabatanLower.includes("inspektur jenderal") ||
                 jabatanLower.includes("kepala badan") ||
+                jabatanLower.includes("sekretaris badan") ||
                 jabatanLower.includes("staf ahli") ||
                 jabatanLower.includes("kepala biro") ||
                 jabatanLower.includes("direktur") ||
                 jabatanLower.includes("inspektur") ||
+                jabatanLower.includes("sekretaris direktorat jenderal") ||
+                jabatanLower.includes("sekretaris inspektorat jenderal") ||
                 jabatanLower.includes("kepala pusat") ||
                 jabatanLower.includes("kepala bagian") ||
+                jabatanLower.includes("kepala bidang") ||
+                jabatanLower.includes("kepala subdirektorat") ||
+                jabatanLower.includes("kepala subdiktorat") ||
                 jabatanLower.includes("kepala subbagian") ||
                 jabatanLower.includes("kepala subbag");
         }
@@ -97,7 +108,7 @@ export default function DetailPegawai() {
             // Luar Negeri: Prioritas Kode Jabatan dari DB
             const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-') ? a.kode_jabatan.toString() : "ZZZZ";
             const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-') ? b.kode_jabatan.toString() : "ZZZZ";
-            
+
             if (kodeA !== kodeB) {
                 return kodeA.localeCompare(kodeB, undefined, { numeric: true, sensitivity: 'base' });
             }
@@ -215,29 +226,29 @@ export default function DetailPegawai() {
             }
         }
         aoa.push([]); // Baris kosong sebelum tabel
-        
+
         const headers = ["No", "NIP", "Nama Lengkap", "Jabatan", "Email", "No. Telepon", "Alamat Kantor", "Wisma", "Bobot", "TMT Kedatangan", "TMT Credential"];
         aoa.push(headers);
 
         const dataRows = sortedUnits.map((unit, index) => {
-             const formatNama = unit.nama_pegawai || "-";
-             const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-             let jabatan = formatJabatan(unit.jabatan);
-             const titleCaseJabatan = jabatan === "-" ? "-" : jabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-             
-             return [
-                 index + 1,
-                 unit.nip || "-",
-                 titleCaseNama,
-                 titleCaseJabatan,
-                 unit.email || "-",
-                 unit.telepon || "-",
-                 unit.alamat || "-",
-                 unit.wisma || "-",
-                 unit.bobot || "-",
-                 unit.tmt_kedatangan || "-",
-                 unit.tmt_credential || "-"
-             ];
+            const formatNama = unit.nama_pegawai || "-";
+            const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+            let jabatan = formatJabatan(unit.jabatan);
+            const titleCaseJabatan = jabatan === "-" ? "-" : jabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+            return [
+                index + 1,
+                unit.nip || "-",
+                titleCaseNama,
+                titleCaseJabatan,
+                unit.email || "-",
+                unit.telepon || "-",
+                unit.alamat || "-",
+                unit.wisma || "-",
+                unit.bobot || "-",
+                unit.tmt_kedatangan || "-",
+                unit.tmt_credential || "-"
+            ];
         });
 
         dataRows.forEach(row => aoa.push(row));
@@ -343,7 +354,7 @@ export default function DetailPegawai() {
 
             const tableColumn = ["No.", "Nama", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }];
             const tableRows = [];
-            
+
             sortedUnits.forEach((unit, index) => {
                 let contacts = [];
                 const kantor = unit.alamat && unit.alamat !== "-" ? unit.alamat : "s.d.a.";
@@ -385,19 +396,19 @@ export default function DetailPegawai() {
                 theme: "plain",
                 styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                 headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
-                columnStyles: { 
-                    0: { cellWidth: 15 }, 
-                    1: { cellWidth: 45 }, 
-                    2: { cellWidth: 50 }, 
-                    3: { cellWidth: 15 }, 
-                    4: { cellWidth: 4, halign: 'center' }, 
-                    5: { cellWidth: 'auto' } 
+                columnStyles: {
+                    0: { cellWidth: 15 },
+                    1: { cellWidth: 45 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 15 },
+                    4: { cellWidth: 4, halign: 'center' },
+                    5: { cellWidth: 'auto' }
                 }
             });
 
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";
             doc.setProperties({ title: `Buku_Pejabat_${fileName}.pdf` });
-            
+
             if (action === 'download') {
                 doc.save(`Buku_Pejabat_${fileName}.pdf`);
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'File PDF berhasil diunduh.', confirmButtonColor: '#0ea5e9', timer: 2000, showConfirmButton: false });
@@ -413,6 +424,11 @@ export default function DetailPegawai() {
             Swal.fire({ icon: 'error', title: 'Gagal PDF', text: 'Terjadi kesalahan saat membuat PDF.' });
         }
     };
+
+    const isSuperAdmin = localStorage.getItem("user_role") === "superadmin";
+    const userSession = JSON.parse(localStorage.getItem("user") || "{}");
+    const userUnitId = userSession.unit_kerja_id;
+    const canEdit = isSuperAdmin || Number(unitId) === Number(userUnitId);
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 mb-5">
@@ -485,7 +501,7 @@ export default function DetailPegawai() {
                             <th className="px-4 py-4">Jabatan</th>
                             <th className="px-4 py-4">Email</th>
                             <th className="px-4 py-4">Telepon</th>
-                            <th className="px-4 py-4 w-16 text-center sticky right-0 bg-slate-50">Aksi</th>
+                            {canEdit && <th className="px-4 py-4 w-16 text-center sticky right-0 bg-slate-50">Aksi</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -500,9 +516,11 @@ export default function DetailPegawai() {
                                     <td className="px-4 py-3 text-sm font-semibold text-slate-500">{formatJabatan(unit.jabatan)}</td>
                                     <td className="px-4 py-3 text-sm font-medium text-slate-500 italic lowercase">{unit.email || "-"}</td>
                                     <td className="px-4 py-3 text-sm text-slate-600">{unit.telepon || "-"}</td>
-                                    <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
-                                        <button onClick={() => openEditModal(unit)} className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg></button>
-                                    </td>
+                                    {canEdit && (
+                                        <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
+                                            <button onClick={() => openEditModal(unit)} className="btn btn-sm btn-square btn-ghost text-amber-500 hover:bg-amber-100"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg></button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))
                         ) : (

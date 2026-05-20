@@ -117,10 +117,14 @@ export default function App() {
                     element={<DetailPegawai />}
                 />
                 <Route path="admin" element={<DataAdmin />} />
-                <Route path="unit-kerja" element={<UnitKerja />} />
-                <Route path="unit-kerja/form" element={<UnitKerja />} />
+                {localStorage.getItem("user_role") === "superadmin" && (
+                    <>
+                        <Route path="unit-kerja" element={<UnitKerja />} />
+                        <Route path="unit-kerja/form" element={<UnitKerja />} />
+                        <Route path="/pengaturan/sync-data" element={<SyncData />} />
+                    </>
+                )}
                 <Route path="/pengaturan/akun" element={<PengaturanAkun />} />
-                <Route path="/pengaturan/sync-data" element={<SyncData />} />
                 <Route path="/konsul-kehormatan" element={<KonsulKehormatan />} />
                 <Route path="/konsul-kehormatan/:konsulId" element={<DetailKehormatan />} />
             </Route>

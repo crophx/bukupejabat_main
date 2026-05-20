@@ -43,13 +43,7 @@ class PegawaiController extends Controller
     public function getByUnit($unitId)
     {
         $user = auth()->user();
-        
-        // PROTEKSI: Jika bukan Super Admin, dilarang intip Unit lain via URL
-        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
-            if ($user->unit_kerja_id != $unitId) {
-                return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
-            }
-        }
+
 
         $unitKerja = UnitKerja::find($unitId);
         if (!$unitKerja) {
