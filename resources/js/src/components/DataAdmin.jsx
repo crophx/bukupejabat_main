@@ -28,7 +28,7 @@ export default function DataAdmin() {
 
     const fetchUnits = async () => {
         try {
-            const response = await axios.get("http://127.0.0.1:8000/api/unit-kerja");
+            const response = await axios.get("/api/unit-kerja");
             if (response.data.success) {
                 setUnitsData(response.data.data);
             }
@@ -40,7 +40,7 @@ export default function DataAdmin() {
     const fetchAdmins = async () => {
         try {
             // Panggil API yang baru kita buat
-            const response = await axios.get("http://127.0.0.1:8000/api/users");
+            const response = await axios.get("/api/users");
 
             if (response.data.success) {
                 // 3. MAPPING DATA (PENTING!)
@@ -89,7 +89,7 @@ export default function DataAdmin() {
 
     const handleAdd = async (newAdmin) => {
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/users", {
+            const response = await axios.post("/api/users", {
                 username:      newAdmin.username,
                 email:         newAdmin.email,
                 password:      newAdmin.password,
@@ -129,7 +129,7 @@ export default function DataAdmin() {
     const handleSave = async (updated) => {
         try {
             const response = await axios.put(
-                `http://127.0.0.1:8000/api/users/${updated.id}`,
+                `/api/users/${updated.id}`,
                 {
                     username:      updated.username,
                     email:         updated.email,
@@ -163,7 +163,7 @@ export default function DataAdmin() {
     const handleDelete = async () => {
         if (!selected) return;
         try {
-            const response = await axios.delete(`http://127.0.0.1:8000/api/users/${selected.id}`);
+            const response = await axios.delete(`/api/users/${selected.id}`);
             if (response.data.success) {
                 setDeleteOpen(false);
                 fetchAdmins();

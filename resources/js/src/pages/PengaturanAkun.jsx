@@ -34,7 +34,7 @@ export default function AccountSettings() {
                     unit_kerja: userDivisi || "Pusat / Semua Unit",
                 }));
 
-                const response = await axios.get("http://127.0.0.1:8000/api/users", {
+                const response = await axios.get("/api/users", {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
                 });
 
@@ -116,7 +116,7 @@ export default function AccountSettings() {
         }
 
         try {
-            await axios.put(`http://127.0.0.1:8000/api/users/${formData.id}`, payload);
+            await axios.put(`/api/users/${formData.id}`, payload);
 
             localStorage.setItem('user_name', formData.nama);
 

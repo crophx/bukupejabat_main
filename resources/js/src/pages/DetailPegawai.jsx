@@ -42,26 +42,31 @@ export default function DetailPegawai() {
     const getKeywordRank = (jabatan) => {
         const j = (jabatan || "").toLowerCase();
 
-        // 1. Hierarki Luar Negeri
-        if (j.includes("duta besar") || j.includes("kedutaan besar ri")) return 1;
-        if (j.includes("wakepri") || j.includes("wakil kepala perwakilan")) return 2;
-        if (j.includes("konsul") || j.includes("konsul jendral")) return 3;
-        if (j.includes("kepala") || j.includes("kepala")) return 4;
-
-        // 2. Hierarki Dalam Negeri (sebagai pelengkap)
+        // 1. Hierarki Dalam Negeri Berdasarkan Permintaan Spesifik
         if (j.includes("menteri") && !j.includes("wakil menteri")) return 1;
-        if (j.includes("wakil menteri") || (j.includes("direktur jenderal") && !j.includes("sekretaris")) || (j.includes("inspektur jenderal") && !j.includes("sekretaris")) || j.includes("kepala badan") || j.includes("sekretaris badan") || j.includes("sekretaris jenderal")) return 1;
+        if (j.includes("wakil menteri")) return 2;
+        if (j.includes("direktur jenderal") && !j.includes("sekretaris")) return 3;
+        if (j.includes("kepala badan")) return 4;
+        if (j.includes("inspektur jenderal") && !j.includes("sekretaris")) return 5;
+        if (j.includes("sekretaris badan")) return 6;
         
-        if (j.includes("sekretaris direktorat jenderal") || j.includes("sekretaris inspektorat jenderal") || j.includes("kepala pusat") || j.includes("kepala biro") || j.includes("staf ahli")) return 2;
+        if (j.includes("sekretaris direktorat jenderal")) return 7;
+        if (j.includes("sekretaris inspektorat jenderal")) return 8;
+        if (j.includes("kepala pusat")) return 9;
+        if (j.includes("kepala biro")) return 10;
         
-        if (j.includes("kepala bagian") || j.includes("kepala bidang") || j.includes("kepala subdirektorat") || j.includes("kepala subdiktorat")) return 3;
+        if (j.includes("kepala bagian")) return 11;
+        if (j.includes("kepala bidang")) return 12;
+        if (j.includes("kepala subdirektorat") || j.includes("kepala subdiktorat")) return 13;
+        if (j.includes("kepala subbagian") || j.includes("kepala subbag")) return 14;
         
-        if (j.includes("kepala subbag") || j.includes("kepala subbagian")) return 4;
-        
-        // Default untuk direktur/inspektur yang bukan jenderal
-        if (j.includes("direktur") || j.includes("inspektur")) return 2;
+        // 2. Fallback untuk posisi lain yang mungkin ada agar tidak tenggelam di bawah staf
+        if (j.includes("sekretaris jenderal")) return 15;
+        if (j.includes("staf ahli")) return 16;
+        if (j.includes("direktur") && !j.includes("jenderal") && !j.includes("subdirektorat")) return 17;
+        if (j.includes("inspektur") && !j.includes("jenderal")) return 18;
 
-        return 99;
+        return 99; // Staf / posisi lainnya
     };
 
     const filteredUnits = units.filter((unit) => {
@@ -105,6 +110,13 @@ export default function DetailPegawai() {
         if (rankA !== rankB) return rankA - rankB;
 
         if (source === "luar") {
+            // Prioritaskan Duta Besar di urutan paling atas
+            const isDutaBesarA = (a.jabatan || "").toLowerCase().includes("duta besar");
+            const isDutaBesarB = (b.jabatan || "").toLowerCase().includes("duta besar");
+
+            if (isDutaBesarA && !isDutaBesarB) return -1;
+            if (!isDutaBesarA && isDutaBesarB) return 1;
+
             // Luar Negeri: Prioritas Kode Jabatan dari DB
             const kodeA = (a.kode_jabatan && a.kode_jabatan !== '-') ? a.kode_jabatan.toString() : "ZZZZ";
             const kodeB = (b.kode_jabatan && b.kode_jabatan !== '-') ? b.kode_jabatan.toString() : "ZZZZ";
@@ -189,7 +201,7 @@ export default function DetailPegawai() {
         };
 
         try {
-            await axios.put(`http://127.0.0.1:8000/api/pegawai/${selectedUnit.id}`, data);
+            await axios.put(`/api/pegawai/${selectedUnit.id}`, data);
             document.getElementById("modal_edit_pegawai").close();
             fetchPegawai();
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data Pegawai berhasil diperbarui.', confirmButtonColor: '#0ea5e9' });
@@ -502,15 +514,7 @@ export default function DetailPegawai() {
                         </div>
                     </div>
 
-                    {/* BAGIAN KANAN: Button Sync */}
-                    <div className="w-full lg:w-auto flex justify-end">
-                        <button onClick={() => { }} className="btn btn-md w-full md:w-auto bg-sky-500 hover:bg-sky-600 border-none text-white rounded-2xl gap-2 px-8 min-h-[42px] h-[42px] shadow-lg shadow-sky-100 transition-all active:scale-95">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                            </svg>
-                            <span className="text-xs font-bold uppercase">Sync</span>
-                        </button>
-                    </div>
+
                 </div>
             </div>
 

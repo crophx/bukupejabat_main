@@ -41,7 +41,7 @@ export default function TableCard() {
         try {
             // Mengambil data dari API Laravel lokal Anda
             const response = await axios.get(
-                "http://127.0.0.1:8000/api/pegawai",
+                "/api/pegawai",
             );
 
             // Mapping data dari Database ke variabel state yang ada di UI
@@ -102,7 +102,7 @@ export default function TableCard() {
     const fetchUnitKerja = async (q = "") => {
         try {
             const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja",
+                "/api/unit-kerja",
                 { params: { search: q, limit: 100 } },
             );
 

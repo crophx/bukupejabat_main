@@ -79,7 +79,7 @@ export default function UnitKerja() {
         setLoading(true);
         try {
             const response = await axios.get(
-                "http://127.0.0.1:8000/api/unit-kerja",
+                "/api/unit-kerja",
             );
             const result = response.data.data || [];
             setUnits(result);
@@ -123,7 +123,7 @@ export default function UnitKerja() {
         setIsUpdating(true);
         try {
             await axios.put(
-                `http://127.0.0.1:8000/api/unit-kerja/${editData.id}`,
+                `/api/unit-kerja/${editData.id}`,
                 editData,
             );
             setIsEditModalOpen(false);

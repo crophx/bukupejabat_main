@@ -12,13 +12,13 @@ use App\Http\Controllers\Api\PublicActivityController;
 // --- PUBLIC ROUTES ---
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/public-activities/hit', [PublicActivityController::class, 'hit']);
+Route::get('/unit-kerja/dalam-negeri', [UnitKerjaController::class, 'getDalamNegeri']);
+Route::get('/unit-kerja/luar-negeri', [UnitKerjaController::class, 'getLuarNegeri']);
+Route::get('/pegawai', [PegawaiController::class, 'index']);
+Route::get('/pegawai/unit/{unitId}', [PegawaiController::class, 'getByUnit']);
 
 // --- PROTECTED ROUTES ---
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/unit-kerja/dalam-negeri', [UnitKerjaController::class, 'getDalamNegeri']);
-    Route::get('/unit-kerja/luar-negeri', [UnitKerjaController::class, 'getLuarNegeri']);
-    Route::get('/pegawai', [PegawaiController::class, 'index']);
-    Route::get('/pegawai/unit/{unitId}', [PegawaiController::class, 'getByUnit']);
     
     Route::post('/logout', [AuthController::class, 'logout']);
 

@@ -158,25 +158,25 @@ export default function UnitDataPage() {
                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                     Halaman {currentUnitPage} Dari {totalUnitPages}
                 </div>
-                
+
                 <div className="flex items-center gap-1">
-                    <button 
+                    <button
                         className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                         disabled={currentUnitPage === 1}
                         onClick={() => {
                             setCurrentUnitPage(currentUnitPage - 1);
-                            window.scrollTo({top: 0, behavior: 'smooth'});
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                     >
                         Sebelumnya
                     </button>
-                    
-                    <button 
+
+                    <button
                         className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                         disabled={currentUnitPage === totalUnitPages}
                         onClick={() => {
                             setCurrentUnitPage(currentUnitPage + 1);
-                            window.scrollTo({top: 0, behavior: 'smooth'});
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                     >
                         Selanjutnya

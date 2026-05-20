@@ -24,6 +24,7 @@ class PegawaiController extends Controller
                 'email' => $p->email,
                 'no_handphone' => $p->no_handphone,
                 'jabatan' => $p->jabatan ? $p->jabatan->nama_jabatan : '-',
+                'eselon' => $p->jabatan ? $p->jabatan->eselon : null,
                 'unit_kerja_id' => $p->unit_kerja_id,
                 'nama_unit_kerja' => $p->unitKerja ? $p->unitKerja->nama_unit_kerja : '-',
                 'bobot' => $p->bobot,

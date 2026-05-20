@@ -39,7 +39,7 @@ export default function LuarNegeri() {
                 if (element) {
                     element.open = true;
                     element.scrollIntoView({ behavior: "smooth", block: "center" });
-                    
+
                     clearTimer = setTimeout(() => {
                         setHighlightedUnitId(null);
                     }, 3000);
@@ -123,7 +123,7 @@ export default function LuarNegeri() {
         setIsUpdating(true);
         try {
             await axios.put(
-                `http://127.0.0.1:8000/api/unit-kerja/${editData.id}`,
+                `/api/unit-kerja/${editData.id}`,
                 editData,
             );
             setIsEditModalOpen(false);
@@ -164,7 +164,7 @@ export default function LuarNegeri() {
 
         try {
             // Ambil data dari API Pegawai
-            const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const response = await axios.get("/api/pegawai");
             const allPegawai = response.data.data || [];
 
             const doc = new jsPDF();
@@ -224,11 +224,11 @@ export default function LuarNegeri() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -336,7 +336,7 @@ export default function LuarNegeri() {
             }
 
             doc.setProperties({ title: 'Daftar_Pejabat_Luar_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
                 Swal.close();
@@ -534,7 +534,7 @@ export default function LuarNegeri() {
                                         const isSuperAdmin = localStorage.getItem("user_role") === "superadmin";
                                         const userSession = JSON.parse(localStorage.getItem("user") || "{}");
                                         const userUnitId = userSession.unit_kerja_id;
-                                        
+
                                         if (isSuperAdmin || unit.id === userUnitId) {
                                             return (
                                                 <div className="w-full md:w-auto">

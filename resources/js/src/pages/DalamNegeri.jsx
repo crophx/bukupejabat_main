@@ -12,6 +12,13 @@ export default function DalamNegeri() {
     const navigate = useNavigate();
     const [units, setUnits] = useState([]);
     const [loading, setLoading] = useState(false);
+    // Menyimpan pejabat eselon I per unit: { [unitId]: [{nama, jabatan}] }
+    const [eselonIMap, setEselonIMap] = useState({});
+    // State toggle collapse pejabat eselon I per unit
+    const [openEselonI, setOpenEselonI] = useState({});
+    // Semua pejabat eselon I lintas unit (untuk card Pimpinan Kemlu)
+    const [allEselonI, setAllEselonI] = useState([]);
+    const [openPimpinan, setOpenPimpinan] = useState(false);
 
     // State untuk Pencarian dan Pagination
     const [searchTerm, setSearchTerm] = useState("");
@@ -39,7 +46,7 @@ export default function DalamNegeri() {
                 if (element) {
                     element.open = true;
                     element.scrollIntoView({ behavior: "smooth", block: "center" });
-                    
+
                     clearTimer = setTimeout(() => {
                         setHighlightedUnitId(null);
                     }, 3000);
@@ -79,39 +86,67 @@ export default function DalamNegeri() {
         try {
             const token = localStorage.getItem("token");
             const [unitRes, pegRes] = await Promise.all([
-                axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri", {
+                axios.get("/api/unit-kerja/dalam-negeri", {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get("http://127.0.0.1:8000/api/pegawai", {
+                axios.get("/api/pegawai", {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
-            
+
             const allUnits = unitRes.data.data || [];
             const allPegawai = pegRes.data.data || [];
 
             const isPejabatDalam = (jabatan) => {
                 const j = (jabatan || "").toLowerCase();
                 return j.includes("menteri") ||
-                       j.includes("sekretaris jenderal") ||
-                       j.includes("direktur jenderal") ||
-                       j.includes("inspektur jenderal") ||
-                       j.includes("kepala badan") ||
-                       j.includes("sekretaris badan") ||
-                       j.includes("staf ahli") ||
-                       j.includes("kepala biro") ||
-                       j.includes("direktur") ||
-                       j.includes("inspektur") ||
-                       j.includes("sekretaris direktorat jenderal") ||
-                       j.includes("sekretaris inspektorat jenderal") ||
-                       j.includes("kepala pusat") ||
-                       j.includes("kepala bagian") ||
-                       j.includes("kepala bidang") ||
-                       j.includes("kepala subdirektorat") ||
-                       j.includes("kepala subdiktorat") ||
-                       j.includes("kepala subbagian") ||
-                       j.includes("kepala subbag");
+                    j.includes("sekretaris jenderal") ||
+                    j.includes("direktur jenderal") ||
+                    j.includes("inspektur jenderal") ||
+                    j.includes("kepala badan") ||
+                    j.includes("sekretaris badan") ||
+                    j.includes("staf ahli") ||
+                    j.includes("kepala biro") ||
+                    j.includes("direktur") ||
+                    j.includes("inspektur") ||
+                    j.includes("sekretaris direktorat jenderal") ||
+                    j.includes("sekretaris inspektorat jenderal") ||
+                    j.includes("kepala pusat") ||
+                    j.includes("kepala bagian") ||
+                    j.includes("kepala bidang") ||
+                    j.includes("kepala subdirektorat") ||
+                    j.includes("kepala subdiktorat") ||
+                    j.includes("kepala subbagian") ||
+                    j.includes("kepala subbag");
             };
+
+            // Susun pejabat Eselon I per unit
+            const eselonMap = {};
+            const allEselon1 = allPegawai
+                .filter(p => p.eselon === 'I')
+                .sort((a, b) => {
+                    const getPriority = (jabatan) => {
+                        const j = (jabatan || '').toLowerCase();
+                        if (j.includes('menteri') && !j.includes('wakil')) return 0;
+                        if (j.includes('wakil menteri')) return 1;
+                        return 2;
+                    };
+                    const pa = getPriority(a.jabatan);
+                    const pb = getPriority(b.jabatan);
+                    if (pa !== pb) return pa - pb;
+                    return (a.jabatan || '').localeCompare(b.jabatan || '');
+                });
+            setAllEselonI(allEselon1);
+
+            allUnits.forEach(unit => {
+                const eselon1List = allPegawai
+                    .filter(p => p.unit_kerja_id === unit.id && p.eselon === 'I')
+                    .sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
+                if (eselon1List.length > 0) {
+                    eselonMap[unit.id] = eselon1List;
+                }
+            });
+            setEselonIMap(eselonMap);
 
             const unitsWithCount = allUnits.map(unit => {
                 const count = allPegawai.filter(p => p.unit_kerja_id === unit.id && isPejabatDalam(p.jabatan)).length;
@@ -151,7 +186,7 @@ export default function DalamNegeri() {
         setIsUpdating(true);
         try {
             await axios.put(
-                `http://127.0.0.1:8000/api/unit-kerja/${editData.id}`,
+                `/api/unit-kerja/${editData.id}`,
                 editData
             );
             setIsEditModalOpen(false);
@@ -189,13 +224,13 @@ export default function DalamNegeri() {
 
         try {
             // Ambil data dari API Pegawai
-            const response = await axios.get("http://127.0.0.1:8000/api/pegawai");
+            const response = await axios.get("/api/pegawai");
             const allPegawai = response.data.data || [];
 
             // Filter kata kunci jabatan sesuai permintaan
             const allowedKeywords = [
                 "menteri", "wakil menteri", "staf ahli", "direktor jenderal", "inspektur jenderal", "kepala badan", "sekretaris badan", "sekretaris jenderal",
-                "direktur", "inspektur", "sekretaris direktorat jenderal", "sekretaris inspektorat jenderal", 
+                "direktur", "inspektur", "sekretaris direktorat jenderal", "sekretaris inspektorat jenderal",
                 "kepala pusat", "kepala bidang", "kepala subdirektorat", "kepala subdiktorat", "kepala subbagian", "kepala subbag",
                 "kepala biro", "kepala bagian", "kepala subbagian"
             ];
@@ -265,11 +300,11 @@ export default function DalamNegeri() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -302,7 +337,7 @@ export default function DalamNegeri() {
                     pejabatForUnit.forEach((p, i) => {
                         const formatNama = p.nama_pegawai || p.nama || "-";
                         const formatJabatan = p.jabatan || "-";
-                        
+
                         const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
                         const titleCaseJabatan = formatJabatan === "-" ? "-" : formatJabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 
@@ -365,7 +400,7 @@ export default function DalamNegeri() {
             }
 
             doc.setProperties({ title: 'Daftar_Pejabat_Dalam_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
                 Swal.close();
@@ -484,6 +519,69 @@ export default function DalamNegeri() {
                     </div>
                 )}
 
+                {/* ══ CARD PIMPINAN KEMENTERIAN LUAR NEGERI ══════════════════════ */}
+                {!loading && allEselonI.length > 0 && (
+                    <div className="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                        {/* Header / Toggle */}
+                        <button
+                            type="button"
+                            onClick={() => setOpenPimpinan(prev => !prev)}
+                            className="w-full flex items-center justify-between px-5 py-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-200 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4 text-slate-600">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                                    </svg>
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Eselon I</p>
+                                    <h3 className="text-sm font-black uppercase tracking-tight text-slate-800">Pimpinan Kementerian Luar Negeri</h3>
+                                </div>
+                                <span className="ml-1 inline-flex items-center justify-center px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 text-xs font-bold">
+                                    {allEselonI.length} Pejabat
+                                </span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={`size-4 text-slate-400 transition-transform duration-300 ${openPimpinan ? 'rotate-180' : ''}`}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+
+                        {/* Body dengan animasi expand/collapse */}
+                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openPimpinan ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                            <div className="bg-white divide-y divide-slate-100 border-t border-slate-100">
+                                {allEselonI.map((p, idx) => (
+                                    <div key={p.id || idx} className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors">
+                                        {/* Nomor urut */}
+                                        <span className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center">
+                                            {idx + 1}
+                                        </span>
+                                        {/* Info pejabat */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-slate-800 uppercase truncate">
+                                                {p.nama_pegawai || p.nama || '-'}
+                                            </p>
+                                            <p className="text-xs text-sky-600 font-semibold truncate">
+                                                {p.jabatan || '-'}
+                                            </p>
+                                        </div>
+                                        {/* Unit kerja */}
+                                        <span className="hidden md:block text-[11px] text-slate-400 font-medium flex-shrink-0 text-right max-w-[200px] leading-tight">
+                                            {p.nama_unit_kerja || '-'}
+                                        </span>
+                                        {/* Badge NIP */}
+                                        {p.nip && p.nip !== '-' && (
+                                            <span className="hidden lg:block text-[10px] font-mono text-slate-400 flex-shrink-0">
+                                                {p.nip}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="text-center p-10">
                         <span className="loading loading-spinner text-sky-500"></span>
@@ -529,7 +627,7 @@ export default function DalamNegeri() {
                                         const isSuperAdmin = localStorage.getItem("user_role") === "superadmin";
                                         const userSession = JSON.parse(localStorage.getItem("user") || "{}");
                                         const userUnitId = userSession.unit_kerja_id;
-                                        
+
                                         if (isSuperAdmin || unit.id === userUnitId) {
                                             return (
                                                 <div className="w-full md:w-auto">
@@ -549,6 +647,43 @@ export default function DalamNegeri() {
                                         return null;
                                     })()}
                                 </div>
+
+                                {/* ── Collapse Pejabat Eselon I ───────────────────────── */}
+                                {eselonIMap[unit.id] && (
+                                    <div className="border border-indigo-100 rounded-xl overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenEselonI(prev => ({ ...prev, [unit.id]: !prev[unit.id] }))}
+                                            className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-50 to-violet-50 hover:from-indigo-100 hover:to-violet-100 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-500 text-white text-[10px] font-black shadow-sm shadow-indigo-300">I</span>
+                                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Pejabat Eselon I</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-bold">{eselonIMap[unit.id].length}</span>
+                                            </div>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={`size-4 text-indigo-400 transition-transform duration-300 ${openEselonI[unit.id] ? 'rotate-180' : ''}`}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        </button>
+
+                                        <div className={`overflow-hidden transition-all duration-300 ${openEselonI[unit.id] ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                            <div className="divide-y divide-indigo-50">
+                                                {eselonIMap[unit.id].map((p, idx) => (
+                                                    <div key={p.id || idx} className="px-4 py-2.5 flex items-center gap-3 bg-white hover:bg-indigo-50/40 transition-colors">
+                                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-500 text-[10px] font-bold flex items-center justify-center">{idx + 1}</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-bold text-slate-700 uppercase truncate">{p.nama_pegawai || p.nama || '-'}</p>
+                                                            <p className="text-xs text-indigo-500 font-semibold truncate">{p.jabatan || '-'}</p>
+                                                        </div>
+                                                        {p.no_handphone && p.no_handphone !== '-' && (
+                                                            <span className="text-[11px] text-slate-400 flex-shrink-0">{p.no_handphone}</span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div
                                     onClick={() => navigate(`/detail-pegawai/${unit.id}?source=dalam`)}

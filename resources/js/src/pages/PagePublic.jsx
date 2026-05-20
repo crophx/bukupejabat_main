@@ -31,15 +31,15 @@ export default function PublicPage() {
 
         try {
             const [unitsRes, pegawaiRes] = await Promise.all([
-                axios.get("http://127.0.0.1:8000/api/unit-kerja/dalam-negeri"),
-                axios.get("http://127.0.0.1:8000/api/pegawai")
+                axios.get("/api/unit-kerja/dalam-negeri"),
+                axios.get("/api/pegawai")
             ]);
             const filteredUnits = unitsRes.data.data || [];
             const allPegawai = pegawaiRes.data.data || [];
-            
+
             const allowedKeywords = [
-                "menteri", "wakil menteri", "staf ahli",
-                "kepala biro", "kepala bagian", "kepala subbagian"
+                "menteri", "wakil menteri", "staf ahli", "sekretaris jenderal", "inspektur jenderal", "duta besar", "kepala badan", "kepala pusat",
+                "kepala biro", "kepala bagian", "kepala subbagian", "direktur jenderal", "direktur"
             ];
 
             const doc = new jsPDF();
@@ -100,11 +100,11 @@ export default function PublicPage() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -198,7 +198,7 @@ export default function PublicPage() {
             }
 
             doc.setProperties({ title: 'Daftar_Pejabat_Dalam_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Dalam_Negeri.pdf");
                 Swal.close();
@@ -227,10 +227,10 @@ export default function PublicPage() {
 
         try {
             const [unitsRes, pegawaiRes] = await Promise.all([
-                axios.get("http://127.0.0.1:8000/api/unit-kerja/luar-negeri"),
-                axios.get("http://127.0.0.1:8000/api/pegawai")
+                axios.get("/api/unit-kerja/luar-negeri"),
+                axios.get("/api/pegawai")
             ]);
-            
+
             const filteredUnits = unitsRes.data.data || [];
             const allPegawai = pegawaiRes.data.data || [];
 
@@ -289,11 +289,11 @@ export default function PublicPage() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -395,7 +395,7 @@ export default function PublicPage() {
             }
 
             doc.setProperties({ title: 'Daftar_Pejabat_Luar_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Pejabat_Luar_Negeri.pdf");
                 Swal.close();
@@ -423,12 +423,12 @@ export default function PublicPage() {
         });
 
         try {
-            const urlUnits = type === 'dalam' ? "http://127.0.0.1:8000/api/unit-kerja/dalam-negeri" : "http://127.0.0.1:8000/api/unit-kerja/luar-negeri";
+            const urlUnits = type === 'dalam' ? "/api/unit-kerja/dalam-negeri" : "/api/unit-kerja/luar-negeri";
             const [unitsRes, pegawaiRes] = await Promise.all([
                 axios.get(urlUnits),
-                axios.get("http://127.0.0.1:8000/api/pegawai")
+                axios.get("/api/pegawai")
             ]);
-            
+
             const filteredUnits = unitsRes.data.data || [];
             const allPegawai = pegawaiRes.data.data || [];
             const allowedKeywords = [
@@ -451,7 +451,7 @@ export default function PublicPage() {
                 }
 
                 const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
-                
+
                 if (pejabatForUnit.length === 0) {
                     pages.push({
                         unit: unit,
@@ -471,7 +471,7 @@ export default function PublicPage() {
                         const formatNama = p.nama_pegawai || p.nama || "-";
                         const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
                         const titleCaseJabatan = jabatanFormat === "-" ? "-" : jabatanFormat.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-                        
+
                         let contacts = [];
                         const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
                         contacts.push({ lbl: "Kantor", val: kantor });
@@ -570,7 +570,7 @@ export default function PublicPage() {
                             <div className="flex flex-col gap-2 w-full mt-2">
                                 <button onClick={() => prepareFlipbook('dalam')} className="w-full py-3 bg-sky-400 text-white hover:bg-sky-500 rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-lg shadow-sky-200 flex items-center justify-center gap-2 group/btn border border-sky-400 hover:border-sky-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover/btn:rotate-12 transition-transform">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                                     </svg>
                                     Buka Flipbook
                                 </button>
@@ -597,7 +597,7 @@ export default function PublicPage() {
                             <div className="flex flex-col gap-2 w-full mt-2">
                                 <button onClick={() => prepareFlipbook('luar')} className="w-full py-3 bg-sky-400 text-white hover:bg-sky-500 rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-lg shadow-sky-200 flex items-center justify-center gap-2 group/btn border border-sky-400 hover:border-sky-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover/btn:rotate-12 transition-transform">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                                     </svg>
                                     Buka Flipbook
                                 </button>
@@ -621,11 +621,11 @@ export default function PublicPage() {
 
             {/* FLIPBOOK MODAL */}
             {isFlipbookOpen && (
-                <FlipbookViewer 
-                    title={flipbookTitle} 
-                    pages={flipbookData} 
-                    bgImage={kemluBg} 
-                    onClose={() => setIsFlipbookOpen(false)} 
+                <FlipbookViewer
+                    title={flipbookTitle}
+                    pages={flipbookData}
+                    bgImage={kemluBg}
+                    onClose={() => setIsFlipbookOpen(false)}
                 />
             )}
         </div>

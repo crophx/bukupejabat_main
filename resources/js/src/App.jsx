@@ -83,7 +83,8 @@ export default function App() {
 
     return (
         <Routes>
-            <Route path="/public" element={<PagePublic />} />
+            <Route path="/" element={<PagePublic />} />
+            <Route path="/public" element={<Navigate to="/" replace />} />
 
             <Route
                 path="/login"
@@ -97,7 +98,6 @@ export default function App() {
             />
 
             <Route
-                path="/"
                 element={
                     authed ? (
                         <ProtectedLayout onSignOut={handleSignOut} />
@@ -106,21 +106,20 @@ export default function App() {
                     )
                 }
             >
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<DashboardAdmin />} />
-                <Route path="pegawai" element={<DataPegawai />} />
-                <Route path="satkerja" element={<PerSatker />} />
-                <Route path="satkerja/dalam-negeri" element={<DalamNegeri />} />
-                <Route path="satkerja/luar-negeri" element={<LuarNegeri />} />
+                <Route path="/dashboard" element={<DashboardAdmin />} />
+                <Route path="/pegawai" element={<DataPegawai />} />
+                <Route path="/satkerja" element={<PerSatker />} />
+                <Route path="/satkerja/dalam-negeri" element={<DalamNegeri />} />
+                <Route path="/satkerja/luar-negeri" element={<LuarNegeri />} />
                 <Route
-                    path="detail-pegawai/:unitId"
+                    path="/detail-pegawai/:unitId"
                     element={<DetailPegawai />}
                 />
-                <Route path="admin" element={<DataAdmin />} />
+                <Route path="/admin" element={<DataAdmin />} />
                 {localStorage.getItem("user_role") === "superadmin" && (
                     <>
-                        <Route path="unit-kerja" element={<UnitKerja />} />
-                        <Route path="unit-kerja/form" element={<UnitKerja />} />
+                        <Route path="/unit-kerja" element={<UnitKerja />} />
+                        <Route path="/unit-kerja/form" element={<UnitKerja />} />
                         <Route path="/pengaturan/sync-data" element={<SyncData />} />
                     </>
                 )}
@@ -132,7 +131,7 @@ export default function App() {
             <Route
                 path="*"
                 element={
-                    <Navigate to={authed ? "/dashboard" : "/login"} replace />
+                    <Navigate to="/" replace />
                 }
             />
         </Routes>

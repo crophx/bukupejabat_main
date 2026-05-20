@@ -55,7 +55,7 @@ export default function DashboardAdmin() {
             const params = {};
             if (publicStatsStartDate) params.start_date = publicStatsStartDate;
             if (publicStatsEndDate) params.end_date = publicStatsEndDate;
-            
+
             const response = await axios.get("/api/public-activities/stats", {
                 headers: { Authorization: `Bearer ${token}` },
                 params
@@ -63,7 +63,7 @@ export default function DashboardAdmin() {
             if (response.data.success) {
                 const rawData = response.data.data;
                 const dateMap = {};
-                
+
                 // Generate all dates between start and end
                 if (publicStatsStartDate && publicStatsEndDate) {
                     let current = new Date(publicStatsStartDate);
@@ -73,14 +73,14 @@ export default function DashboardAdmin() {
                         current.setDate(current.getDate() + 1);
                     }
                 }
-                
+
                 rawData.forEach(item => {
                     if (!dateMap[item.date]) {
                         dateMap[item.date] = { date: item.date, preview: 0, download: 0 };
                     }
                     dateMap[item.date][item.type] = item.count;
                 });
-                
+
                 // Sort array by date string
                 const formattedData = Object.values(dateMap).sort((a, b) => a.date.localeCompare(b.date));
                 setPublicStats(formattedData);
@@ -166,7 +166,9 @@ export default function DashboardAdmin() {
             }
 
             const allowedKeywords = [
-                "menteri", "wakil menteri", "staf ahli",
+                "menteri", "wakil menteri", "staf ahli", "direktur jenderal", "inspektur jenderal", "kepala badan", "sekretaris badan", "sekretaris jenderal",
+                "direktur", "inspektur", "sekretaris direktorat jenderal", "sekretaris inspektorat jenderal",
+                "kepala pusat", "kepala bidang", "kepala subdirektorat", "kepala subdiktorat", "kepala subbagian", "kepala subbag",
                 "kepala biro", "kepala bagian", "kepala subbagian"
             ];
 
@@ -229,11 +231,11 @@ export default function DashboardAdmin() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -427,11 +429,11 @@ export default function DashboardAdmin() {
                 currentY += 6;
 
                 // ── HELPER: cetak baris label : nilai (format surat resmi) ──
-                const labelX   = 15;   // mulai label
-                const colonX   = 47;   // posisi titik dua
-                const valueX   = 52;   // mulai nilai
+                const labelX = 15;   // mulai label
+                const colonX = 47;   // posisi titik dua
+                const valueX = 52;   // mulai nilai
                 const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
-                const lineH    = 5.5;  // jarak antar baris
+                const lineH = 5.5;  // jarak antar baris
 
                 doc.setFont("times", "normal");
                 doc.setFontSize(10);
@@ -668,15 +670,15 @@ export default function DashboardAdmin() {
                             <p className="text-xs text-slate-500 font-medium">Grafik preview dan unduhan dokumen</p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
                                 value={publicStatsStartDate}
                                 onChange={(e) => setPublicStatsStartDate(e.target.value)}
                             />
                             <span className="text-slate-400">-</span>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
                                 value={publicStatsEndDate}
                                 onChange={(e) => setPublicStatsEndDate(e.target.value)}
@@ -688,14 +690,14 @@ export default function DashboardAdmin() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={publicStats} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="date" tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
-                                    <YAxis tick={{fontSize: 12, fill: '#64748b'}} tickLine={false} axisLine={false} />
-                                    <RechartsTooltip 
+                                    <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} tickLine={false} axisLine={false} />
+                                    <RechartsTooltip
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
                                     <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
-                                    <Line type="monotone" name="Preview" dataKey="preview" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
-                                    <Line type="monotone" name="Download" dataKey="download" stroke="#10b981" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
+                                    <Line type="monotone" name="Preview" dataKey="preview" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                    <Line type="monotone" name="Download" dataKey="download" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
@@ -771,7 +773,7 @@ function Sparkline({ values = [], stroke = "#059669", fill = "#d1fae5" }) {
     const w = 110;
     const h = 64;
     const max = Math.max(...values, 1);
-    
+
     const points = values.map((v, i) => {
         const x = (i / (values.length - 1)) * w;
         const y = h - (v / max) * (h * 0.7) - 4;
@@ -804,7 +806,7 @@ function BarChart({ values = [], stroke = "#a3e635" }) {
     const paddingY = 10;
     const chartW = w - paddingX * 2;
     const chartH = h - paddingY * 2;
-    
+
     const max = Math.max(...values, 1);
     const bw = chartW / values.length;
 
@@ -816,7 +818,7 @@ function BarChart({ values = [], stroke = "#a3e635" }) {
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="none"
         >
-            <g transform={`translate(${paddingX}, -${paddingY/2})`}>
+            <g transform={`translate(${paddingX}, -${paddingY / 2})`}>
                 {values.map((v, i) => {
                     const barH = (v / max) * chartH;
                     return (
