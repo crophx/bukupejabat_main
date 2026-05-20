@@ -6,6 +6,7 @@ import autoTable from "jspdf-autotable"; // TAMBAHAN: Import autoTable
 import Swal from "sweetalert2"; // TAMBAHAN: Import SweetAlert2
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import LogHistory from "./LogHistory";
+import kemluBg from "../assets/images/logo_kemlu_fix.png";
 
 export default function DashboardAdmin() {
     const navigate = useNavigate();
@@ -159,80 +160,175 @@ export default function DashboardAdmin() {
             const pegRes = await axios.get("/api/pegawai", { headers });
             const allPegawai = pegRes.data.data || [];
 
-            // Ambil semua pegawai yang unitnya terdaftar di Dalam Negeri
-            const pegDalamNegeri = allPegawai.filter(p =>
-                unitsDalamNegeri.some(u => u.id === p.unit_kerja_id)
-            );
-
-            if (pegDalamNegeri.length === 0) {
-                Swal.fire('Informasi', 'Tidak ada data pegawai Dalam Negeri.', 'info');
+            if (unitsDalamNegeri.length === 0) {
+                Swal.fire('Informasi', 'Tidak ada data unit kerja Dalam Negeri.', 'info');
                 return;
             }
 
-            // Kelompokkan berdasarkan Satuan Kerja
-            const grouped = pegDalamNegeri.reduce((acc, p) => {
-                const unitName = p.nama_unit_kerja || "Unit Tidak Diketahui";
-                if (!acc[unitName]) acc[unitName] = [];
-                acc[unitName].push(p);
-                return acc;
-            }, {});
+            const allowedKeywords = [
+                "menteri", "wakil menteri", "staf ahli",
+                "kepala biro", "kepala bagian", "kepala subbagian"
+            ];
 
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
 
-            doc.setFont("times", "bold");
-            doc.setFontSize(14);
-            doc.text("DAFTAR SELURUH PEGAWAI DALAM NEGERI", pageWidth / 2, 20, { align: "center" });
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
 
-            doc.setFontSize(10);
-            doc.setFont("times", "normal");
-            doc.text("Kementerian Luar Negeri Republik Indonesia", pageWidth / 2, 26, { align: "center" });
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
 
-            let currentY = 35;
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
 
-            Object.keys(grouped).forEach((unitName) => {
-                if (currentY > 240) {
+            drawWatermark();
+
+            let isFirstPage = true;
+            let hasData = false;
+
+            unitsDalamNegeri.forEach((unit) => {
+                const pejabatForUnit = allPegawai.filter(p => {
+                    const jabatanStr = (p.jabatan || "").toLowerCase();
+                    const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
+                    return isPejabat && p.unit_kerja_id === unit.id;
+                });
+
+                hasData = true;
+
+                if (!isFirstPage) {
                     doc.addPage();
-                    currentY = 20;
                 }
+                isFirstPage = false;
 
-                // HEADER SATKER
-                doc.setFillColor(245, 245, 245);
-                doc.rect(14, currentY - 5, pageWidth - 28, 8, 'F');
+                // --- HEADER HALAMAN ---
                 doc.setFont("times", "bold");
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(unitName.toUpperCase(), 16, currentY);
-                currentY += 5;
+                doc.setFontSize(11);
+                doc.text("DAFTAR PEJABAT DALAM NEGERI", pageWidth / 2, 18, { align: "center" });
 
-                const tableRows = grouped[unitName].map((p, i) => [
-                    `${i + 1}.`,
-                    p.nama_pegawai || p.nama || "-",
-                    p.jabatan || "-",
-                    `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
-                ]);
+                // --- NAMA PANJANG SATKER ---
+                doc.setFontSize(12);
+                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 40);
+                doc.text(splitUnitName, pageWidth / 2, 26, { align: "center" });
+
+                let currentY = 26 + splitUnitName.length * 6 + 4;
+
+                // ── GARIS PEMISAH ────────────────────────────────────────────
+                doc.setLineWidth(0.4);
+                doc.line(15, currentY, pageWidth - 15, currentY);
+                currentY += 6;
+
+                // ── HELPER: cetak baris label : nilai (format surat resmi) ──
+                const labelX   = 15;   // mulai label
+                const colonX   = 47;   // posisi titik dua
+                const valueX   = 52;   // mulai nilai
+                const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
+                const lineH    = 5.5;  // jarak antar baris
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+
+                const drawRow = (label, value) => {
+                    const displayVal = (!value || String(value).trim() === "" || String(value).trim() === "-") ? "-" : value;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(String(displayVal), maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
+
+                drawRow("Alamat", unit.alamat);
+                drawRow("No. Telepon", unit.telepon);
+                drawRow("Fax", unit.fax);
+                drawRow("Email", unit.email);
+                drawRow("Website", unit.website);
+
+                // --- ISI TABEL ---
+                const tableRows = [];
+                if (pejabatForUnit.length === 0) {
+                    tableRows.push([
+                        { content: "1.", styles: { valign: 'top', halign: 'center' } },
+                        { content: "Data Pejabat Belum Tersedia", colSpan: 5, styles: { halign: 'center', fontStyle: 'italic', textColor: [120, 120, 120] } }
+                    ]);
+                } else {
+                    pejabatForUnit.forEach((p, i) => {
+                        const formatNama = p.nama_pegawai || p.nama || "-";
+                        const formatJab = p.jabatan || "-";
+
+                        const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                        const titleCaseJabatan = formatJab === "-" ? "-" : formatJab.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                        let contacts = [];
+                        const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                        contacts.push({ lbl: "Kantor", val: kantor });
+                        if (p.telepon && p.telepon !== "-") contacts.push({ lbl: "Telp.", val: p.telepon });
+                        if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                        if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                        if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                        if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+
+                        if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                        const span = contacts.length;
+                        contacts.forEach((c, cIdx) => {
+                            if (cIdx === 0) {
+                                tableRows.push([
+                                    { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                    { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                                ]);
+                            } else {
+                                tableRows.push([
+                                    { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                                ]);
+                            }
+                        });
+                    });
+                }
 
                 autoTable(doc, {
                     startY: currentY,
-                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    head: [["No.", "Nama Lengkap", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }]],
                     body: tableRows,
                     theme: "plain",
-                    styles: { font: "times", fontSize: 9, cellPadding: 2 },
-                    headStyles: { fontStyle: "bold", lineWidth: { bottom: 0.1 }, lineColor: [0, 0, 0] },
+                    styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                    headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                     columnStyles: {
-                        0: { cellWidth: 10, halign: 'center' },
-                        1: { cellWidth: 45 },
-                        2: { cellWidth: 55 },
-                        3: { cellWidth: 'auto' }
+                        0: { cellWidth: 13, halign: 'center' },
+                        1: { cellWidth: 45, halign: 'left' },
+                        2: { cellWidth: 50, halign: 'left' },
+                        3: { cellWidth: 16 },
+                        4: { cellWidth: 4, halign: 'center' },
+                        5: { cellWidth: 'auto' }
                     },
-                    margin: { left: 14, right: 14 },
+                    margin: { left: 15, right: 15 },
                 });
-
-                currentY = doc.lastAutoTable.finalY + 15;
             });
 
+            if (!hasData) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat untuk diunduh.', 'info');
+                return;
+            }
+
             doc.setProperties({ title: 'Daftar_Semua_Pegawai_Dalam_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Semua_Pegawai_Dalam_Negeri.pdf");
                 Swal.close();
@@ -271,86 +367,174 @@ export default function DashboardAdmin() {
             const pegRes = await axios.get("/api/pegawai", { headers });
             const allPegawai = pegRes.data.data || [];
 
-            // Ambil semua pegawai yang unitnya terdaftar di Luar Negeri
-            const pegLuarNegeri = allPegawai.filter(p =>
-                unitsLuarNegeri.some(u => u.id === p.unit_kerja_id)
-            );
-
-            if (pegLuarNegeri.length === 0) {
-                Swal.fire('Informasi', 'Tidak ada data pegawai Luar Negeri.', 'info');
+            if (unitsLuarNegeri.length === 0) {
+                Swal.fire('Informasi', 'Tidak ada data unit kerja Luar Negeri.', 'info');
                 return;
             }
 
-            // Kelompokkan berdasarkan Satuan Kerja
-            const grouped = pegLuarNegeri.reduce((acc, p) => {
-                const unitName = p.nama_unit_kerja || "Unit Tidak Diketahui";
-                if (!acc[unitName]) acc[unitName] = [];
-                acc[unitName].push(p);
-                return acc;
-            }, {});
-
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
 
-            doc.setFont("times", "bold");
-            doc.setFontSize(14);
-            doc.text("DAFTAR SELURUH PEGAWAI LUAR NEGERI", pageWidth / 2, 20, { align: "center" });
+            const imgWidth = 200;
+            const imgHeight = 140;
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
 
-            doc.setFontSize(10);
-            doc.setFont("times", "normal");
-            doc.text("Kementerian Luar Negeri Republik Indonesia", pageWidth / 2, 26, { align: "center" });
+            const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 1.0 }));
+                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
+            };
 
-            let currentY = 35;
+            const originalAddPage = doc.addPage.bind(doc);
+            doc.addPage = function () {
+                originalAddPage();
+                drawWatermark();
+                return this;
+            };
 
-            Object.keys(grouped).forEach((unitName) => {
-                if (currentY > 240) {
+            drawWatermark();
+
+            let isFirstPage = true;
+            let hasData = false;
+
+            unitsLuarNegeri.forEach((unit) => {
+                const pejabatForUnit = allPegawai.filter(p => p.unit_kerja_id === unit.id);
+
+                hasData = true;
+
+                if (!isFirstPage) {
                     doc.addPage();
-                    currentY = 20;
                 }
+                isFirstPage = false;
 
-                // HEADER SATKER
-                doc.setFillColor(245, 245, 245);
-                doc.rect(14, currentY - 5, pageWidth - 28, 8, 'F');
+                // --- HEADER HALAMAN ---
                 doc.setFont("times", "bold");
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                doc.text(unitName.toUpperCase(), 16, currentY);
-                currentY += 5;
+                doc.setFontSize(11);
+                doc.text("DAFTAR PEJABAT LUAR NEGERI", pageWidth / 2, 18, { align: "center" });
 
-                const tableRows = grouped[unitName].map((p, i) => {
-                    let jabatanFormat = p.jabatan || "-";
-                    if (jabatanFormat.toUpperCase().includes("STAF SK")) {
-                        jabatanFormat = "Administrasi Umum";
-                    }
-                    return [
-                        `${i + 1}.`,
-                        p.nama_pegawai || p.nama || "-",
-                        jabatanFormat,
-                        `Telp: ${p.no_handphone || "-"}\nEmail: ${p.email || "-"}`
-                    ];
-                });
+                // --- NAMA PANJANG SATKER ---
+                doc.setFontSize(12);
+                const unitNameLong = unit.deskripsi ? unit.deskripsi.toUpperCase() : (unit.nama_unit_kerja ? unit.nama_unit_kerja.toUpperCase() : "UNIT TIDAK DIKETAHUI");
+                const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 40);
+                doc.text(splitUnitName, pageWidth / 2, 26, { align: "center" });
+
+                let currentY = 26 + splitUnitName.length * 6 + 4;
+
+                // ── GARIS PEMISAH ────────────────────────────────────────────
+                doc.setLineWidth(0.4);
+                doc.line(15, currentY, pageWidth - 15, currentY);
+                currentY += 6;
+
+                // ── HELPER: cetak baris label : nilai (format surat resmi) ──
+                const labelX   = 15;   // mulai label
+                const colonX   = 47;   // posisi titik dua
+                const valueX   = 52;   // mulai nilai
+                const maxValueW = pageWidth - valueX - 15; // lebar maks nilai
+                const lineH    = 5.5;  // jarak antar baris
+
+                doc.setFont("times", "normal");
+                doc.setFontSize(10);
+
+                const drawRow = (label, value) => {
+                    const displayVal = (!value || String(value).trim() === "" || String(value).trim() === "-") ? "-" : value;
+                    doc.setFont("times", "bold");
+                    doc.text(label, labelX, currentY);
+                    doc.setFont("times", "normal");
+                    doc.text(":", colonX, currentY);
+                    const splitVal = doc.splitTextToSize(String(displayVal), maxValueW);
+                    doc.text(splitVal, valueX, currentY);
+                    currentY += splitVal.length * lineH + 1;
+                };
+
+                drawRow("Alamat", unit.alamat);
+                drawRow("No. Telepon", unit.telepon);
+                drawRow("Fax", unit.fax);
+                drawRow("Email", unit.email);
+                drawRow("Website", unit.website);
+                drawRow("Hari Kerja", unit.hari_kerja);
+                drawRow("Beda Jam", unit.beda_jam);
+                drawRow("Musim Panas", unit.musim_panas);
+                drawRow("Musim Dingin", unit.musim_dingin);
+
+                // --- ISI TABEL ---
+                const tableRows = [];
+                if (pejabatForUnit.length === 0) {
+                    tableRows.push([
+                        { content: "1.", styles: { valign: 'top', halign: 'center' } },
+                        { content: "Data Pejabat Belum Tersedia", colSpan: 5, styles: { halign: 'center', fontStyle: 'italic', textColor: [120, 120, 120] } }
+                    ]);
+                } else {
+                    pejabatForUnit.forEach((p, i) => {
+                        let jabatanFormat = p.jabatan || "-";
+                        if (jabatanFormat.toUpperCase().includes("STAF SK")) {
+                            jabatanFormat = "Administrasi Umum";
+                        }
+
+                        const formatNama = p.nama_pegawai || p.nama || "-";
+
+                        const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                        const titleCaseJabatan = jabatanFormat === "-" ? "-" : jabatanFormat.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                        let contacts = [];
+                        const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                        contacts.push({ lbl: "Kantor", val: kantor });
+                        if (p.telepon && p.telepon !== "-") contacts.push({ lbl: "Telp.", val: p.telepon });
+                        if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                        if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                        if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                        if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+
+                        if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                        const span = contacts.length;
+                        contacts.forEach((c, cIdx) => {
+                            if (cIdx === 0) {
+                                tableRows.push([
+                                    { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                    { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                                ]);
+                            } else {
+                                tableRows.push([
+                                    { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                                ]);
+                            }
+                        });
+                    });
+                }
 
                 autoTable(doc, {
                     startY: currentY,
-                    head: [["No.", "Nama Lengkap", "Jabatan", "Kontak"]],
+                    head: [["No.", "Nama Lengkap", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }]],
                     body: tableRows,
                     theme: "plain",
-                    styles: { font: "times", fontSize: 9, cellPadding: 2 },
-                    headStyles: { fontStyle: "bold", lineWidth: { bottom: 0.1 }, lineColor: [0, 0, 0] },
+                    styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
+                    headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                     columnStyles: {
-                        0: { cellWidth: 10, halign: 'center' },
-                        1: { cellWidth: 45 },
-                        2: { cellWidth: 55 },
-                        3: { cellWidth: 'auto' }
+                        0: { cellWidth: 13, halign: 'center' },
+                        1: { cellWidth: 45, halign: 'left' },
+                        2: { cellWidth: 50, halign: 'left' },
+                        3: { cellWidth: 16 },
+                        4: { cellWidth: 4, halign: 'center' },
+                        5: { cellWidth: 'auto' }
                     },
-                    margin: { left: 14, right: 14 },
+                    margin: { left: 15, right: 15 },
                 });
-
-                currentY = doc.lastAutoTable.finalY + 15;
             });
 
+            if (!hasData) {
+                Swal.fire('Informasi', 'Tidak ditemukan data pejabat untuk diunduh.', 'info');
+                return;
+            }
+
             doc.setProperties({ title: 'Daftar_Semua_Pegawai_Luar_Negeri.pdf' });
-            
+
             if (action === 'download') {
                 doc.save("Daftar_Semua_Pegawai_Luar_Negeri.pdf");
                 Swal.close();

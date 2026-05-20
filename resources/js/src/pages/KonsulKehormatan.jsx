@@ -518,8 +518,6 @@ export default function KonsulKehormatan() {
             filteredKonsuls.forEach((k) => {
                 const pejabatForKonsul = pejabats.filter(p => p.konsul_id === k.id);
 
-                if (pejabatForKonsul.length === 0) return;
-
                 hasData = true;
 
                 if (!isFirstPage) {
@@ -556,12 +554,12 @@ export default function KonsulKehormatan() {
                 doc.setFontSize(10);
 
                 const drawRow = (label, value) => {
-                    if (!value || value === "-") return;
+                    const displayVal = (!value || String(value).trim() === "" || String(value).trim() === "-") ? "-" : value;
                     doc.setFont("times", "bold");
                     doc.text(label, labelX, currentY);
                     doc.setFont("times", "normal");
                     doc.text(":", colonX, currentY);
-                    const splitVal = doc.splitTextToSize(String(value), maxValueW);
+                    const splitVal = doc.splitTextToSize(String(displayVal), maxValueW);
                     doc.text(splitVal, valueX, currentY);
                     currentY += splitVal.length * lineH + 1;
                 };
@@ -575,40 +573,47 @@ export default function KonsulKehormatan() {
 
                 // --- ISI TABEL ---
                 const tableRows = [];
-                pejabatForKonsul.forEach((p, i) => {
-                    const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
-                    
-                    let contacts = [];
-                    const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
-                    contacts.push({ lbl: "Kantor", val: kantor });
-                    if (p.telp || p.no_telp || p.telepon) contacts.push({ lbl: "Telp.", val: (p.telp || p.no_telp || p.telepon) });
-                    if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
-                    if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
-                    if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
-                    if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+                if (pejabatForKonsul.length === 0) {
+                    tableRows.push([
+                        { content: "1.", styles: { valign: 'top', halign: 'center' } },
+                        { content: "Data Pejabat Belum Tersedia", colSpan: 5, styles: { halign: 'center', fontStyle: 'italic', textColor: [120, 120, 120] } }
+                    ]);
+                } else {
+                    pejabatForKonsul.forEach((p, i) => {
+                        const formatNama = p.nama ? p.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
+                        
+                        let contacts = [];
+                        const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                        contacts.push({ lbl: "Kantor", val: kantor });
+                        if (p.telp || p.no_telp || p.telepon) contacts.push({ lbl: "Telp.", val: (p.telp || p.no_telp || p.telepon) });
+                        if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                        if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                        if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                        if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
 
-                    if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+                        if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
 
-                    const span = contacts.length;
-                    contacts.forEach((c, cIdx) => {
-                        if (cIdx === 0) {
-                            tableRows.push([
-                                { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
-                                { content: formatNama, rowSpan: span, styles: { valign: 'top' } },
-                                { content: p.gelar_jabatan || "-", rowSpan: span, styles: { valign: 'top' } },
-                                { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
-                                { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
-                                { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
-                            ]);
-                        } else {
-                            tableRows.push([
-                                { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
-                                { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
-                                { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
-                            ]);
-                        }
+                        const span = contacts.length;
+                        contacts.forEach((c, cIdx) => {
+                            if (cIdx === 0) {
+                                tableRows.push([
+                                    { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                    { content: formatNama, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: p.gelar_jabatan || "-", rowSpan: span, styles: { valign: 'top' } },
+                                    { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                                ]);
+                            } else {
+                                tableRows.push([
+                                    { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                                ]);
+                            }
+                        });
                     });
-                });
+                }
 
                 autoTable(doc, {
                     startY: currentY,
@@ -732,7 +737,7 @@ export default function KonsulKehormatan() {
 
                                     <div className="p-6 bg-white border-t border-slate-200 space-y-6">
                                         {/* Detail Row (Scrollable Horizontal) */}
-                                        <div className="overflow-x-auto pb-4 -mb-4 custom-scrollbar">
+                                        <div className="overflow-x-auto pb-2 custom-scrollbar">
                                             <div className="flex flex-nowrap gap-8 text-[14px] items-stretch min-w-max">
                                             {/* Info Tambahan */}
                                             <div className="flex-1 min-w-[150px]">

@@ -300,29 +300,39 @@ export default function DetailPegawai() {
 
             // 2. Tulis Header setelah watermark agar teks berada di atas logo
             doc.setFont("times", "bold");
-            doc.setFontSize(12);
-            const titleText = unitName ? unitName.toUpperCase() : "DAFTAR PEJABAT";
-            const splitTitle = doc.splitTextToSize(titleText, pageWidth - 40);
-            doc.text(splitTitle, pageWidth / 2, 20, { align: "center" });
+            doc.setFontSize(11);
+            const headerText = source === "luar" ? "DAFTAR PEJABAT LUAR NEGERI" : "DAFTAR PEJABAT DALAM NEGERI";
+            doc.text(headerText, pageWidth / 2, 18, { align: "center" });
 
-            let currentY = 20 + (splitTitle.length * 6) + 4;
+            doc.setFontSize(12);
+            const unitNameLong = unitName ? unitName.toUpperCase() : "UNIT TIDAK DIKETAHUI";
+            const splitUnitName = doc.splitTextToSize(unitNameLong, pageWidth - 40);
+            doc.text(splitUnitName, pageWidth / 2, 26, { align: "center" });
+
+            let currentY = 26 + splitUnitName.length * 6 + 4;
+
+            // ── GARIS PEMISAH ────────────────────────────────────────────
+            doc.setLineWidth(0.4);
+            doc.line(15, currentY, pageWidth - 15, currentY);
+            currentY += 6;
+
             doc.setFont("times", "normal");
             doc.setFontSize(10);
 
             if (unitProfile) {
-                const labelX = 20;
-                const colonX = 50;
+                const labelX = 15;
+                const colonX = 47;
                 const valueX = 52;
-                const lineH = 5;
+                const lineH = 5.5;
                 const maxValueW = pageWidth - valueX - 15;
 
                 const drawRow = (label, value) => {
-                    if (!value || value === "-") return;
+                    const displayVal = (!value || String(value).trim() === "" || String(value).trim() === "-") ? "-" : value;
                     doc.setFont("times", "bold");
                     doc.text(label, labelX, currentY);
                     doc.setFont("times", "normal");
                     doc.text(":", colonX, currentY);
-                    const splitVal = doc.splitTextToSize(value, maxValueW);
+                    const splitVal = doc.splitTextToSize(String(displayVal), maxValueW);
                     doc.text(splitVal, valueX, currentY);
                     currentY += splitVal.length * lineH + 1;
                 };
@@ -339,7 +349,6 @@ export default function DetailPegawai() {
                     drawRow("Musim Panas", unitProfile.musim_panas);
                     drawRow("Musim Dingin", unitProfile.musim_dingin);
                 }
-                currentY += 5;
             } else {
                 currentY += 5;
             }
@@ -352,41 +361,54 @@ export default function DetailPegawai() {
                 return this;
             };
 
-            const tableColumn = ["No.", "Nama", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }];
+            const tableColumn = ["No.", "Nama Lengkap", "Jabatan", { content: "Alamat & Telepon", colSpan: 3, styles: { halign: 'center' } }];
             const tableRows = [];
 
-            sortedUnits.forEach((unit, index) => {
-                let contacts = [];
-                const kantor = unit.alamat && unit.alamat !== "-" ? unit.alamat : "s.d.a.";
-                contacts.push({ lbl: "Kantor", val: kantor });
-                if (unit.telepon && unit.telepon !== "-") contacts.push({ lbl: "Telp.", val: unit.telepon });
-                if (unit.fax && unit.fax !== "-") contacts.push({ lbl: "Fax", val: unit.fax });
-                if (unit.no_handphone && unit.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: unit.no_handphone });
-                if (unit.email && unit.email !== "-") contacts.push({ lbl: "Email", val: unit.email });
-                else contacts.push({ lbl: "Email", val: "-" });
-                if (unit.wisma && unit.wisma !== "-") contacts.push({ lbl: "Wisma", val: unit.wisma });
-                else contacts.push({ lbl: "Wisma", val: "-" });
+            if (sortedUnits.length === 0) {
+                tableRows.push([
+                    { content: "1.", styles: { valign: 'top', halign: 'center' } },
+                    { content: "Data Pejabat Belum Tersedia", colSpan: 5, styles: { halign: 'center', fontStyle: 'italic', textColor: [120, 120, 120] } }
+                ]);
+            } else {
+                sortedUnits.forEach((unit, index) => {
+                    let contacts = [];
+                    const kantor = unit.alamat && unit.alamat !== "-" ? unit.alamat : "s.d.a.";
+                    contacts.push({ lbl: "Kantor", val: kantor });
+                    if (unit.telepon && unit.telepon !== "-") contacts.push({ lbl: "Telp.", val: unit.telepon });
+                    if (unit.fax && unit.fax !== "-") contacts.push({ lbl: "Fax", val: unit.fax });
+                    if (unit.no_handphone && unit.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: unit.no_handphone });
+                    if (unit.email && unit.email !== "-") contacts.push({ lbl: "Email", val: unit.email });
+                    if (unit.wisma && unit.wisma !== "-") contacts.push({ lbl: "Wisma", val: unit.wisma });
 
-                const span = contacts.length;
-                contacts.forEach((c, cIdx) => {
-                    if (cIdx === 0) {
-                        tableRows.push([
-                            { content: `${index + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
-                            { content: unit.nama_pegawai || "-", rowSpan: span, styles: { valign: 'top' } },
-                            { content: formatJabatan(unit.jabatan), rowSpan: span, styles: { valign: 'top' } },
-                            { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
-                            { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
-                            { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
-                        ]);
-                    } else {
-                        tableRows.push([
-                            { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
-                            { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
-                            { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
-                        ]);
-                    }
+                    if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+
+                    const formatNama = unit.nama_pegawai || unit.nama || "-";
+                    const formatJab = unit.jabatan || "-";
+
+                    const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                    const titleCaseJabatan = formatJab === "-" ? "-" : formatJab.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+
+                    const span = contacts.length;
+                    contacts.forEach((c, cIdx) => {
+                        if (cIdx === 0) {
+                            tableRows.push([
+                                { content: `${index + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
+                                { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
+                                { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                            ]);
+                        } else {
+                            tableRows.push([
+                                { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                            ]);
+                        }
+                    });
                 });
-            });
+            }
 
             // 4. Generate tabel tanpa didDrawPage (karena sudah di-handle di atas)
             autoTable(doc, {
@@ -397,13 +419,14 @@ export default function DetailPegawai() {
                 styles: { font: "times", fontSize: 10, cellPadding: 4, textColor: [0, 0, 0] },
                 headStyles: { fontStyle: "bold", lineWidth: { top: 0.5, bottom: 0.5 }, lineColor: [0, 0, 0], halign: 'center' },
                 columnStyles: {
-                    0: { cellWidth: 15 },
-                    1: { cellWidth: 45 },
-                    2: { cellWidth: 50 },
-                    3: { cellWidth: 15 },
+                    0: { cellWidth: 13, halign: 'center' },
+                    1: { cellWidth: 45, halign: 'left' },
+                    2: { cellWidth: 50, halign: 'left' },
+                    3: { cellWidth: 16 },
                     4: { cellWidth: 4, halign: 'center' },
                     5: { cellWidth: 'auto' }
-                }
+                },
+                margin: { left: 15, right: 15 }
             });
 
             const fileName = unitName ? unitName.replace(/\s+/g, "_") : "Semua_Unit";

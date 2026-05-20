@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import Swal from "sweetalert2";
 
 export default function LogHistory() {
     const [logs, setLogs] = useState([]);
@@ -36,27 +39,85 @@ export default function LogHistory() {
         fetchLogs();
     }, [startDate, endDate]);
 
-    const handleExport = () => {
-        const token = localStorage.getItem("token");
-        let url = `/api/activity-logs/export?token=${token}`;
-        if (startDate) url += `&start_date=${startDate}`;
-        if (endDate) url += `&end_date=${endDate}`;
-        
-        axios.get(url, {
-            headers: { Authorization: `Bearer ${token}` },
-            responseType: 'blob'
-        }).then((response) => {
-            const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = urlBlob;
-            link.setAttribute('download', `log_aktivitas_${new Date().getTime()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }).catch(err => {
-            console.error("Gagal export:", err);
-            alert("Gagal mengunduh CSV");
+    const handleExportPDF = (action = 'preview') => {
+        if (filteredLogs.length === 0) {
+            Swal.fire('Informasi', 'Tidak ada data log aktivitas untuk diekspor.', 'info');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Memproses PDF...',
+            text: 'Sedang menyusun dokumen log aktivitas...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
         });
+
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+
+            doc.setFont("times", "bold");
+            doc.setFontSize(14);
+            doc.text("LOG AKTIVITAS SISTEM", pageWidth / 2, 20, { align: "center" });
+
+            doc.setFontSize(10);
+            doc.setFont("times", "normal");
+            doc.text("Kementerian Luar Negeri Republik Indonesia", pageWidth / 2, 26, { align: "center" });
+
+            let subtitle = "Seluruh Data";
+            if (startDate && endDate) subtitle = `Periode: ${startDate} s.d ${endDate}`;
+            else if (startDate) subtitle = `Mulai: ${startDate}`;
+            else if (endDate) subtitle = `Hingga: ${endDate}`;
+
+            doc.setFont("times", "italic");
+            doc.text(subtitle, pageWidth / 2, 32, { align: "center" });
+
+            const tableRows = filteredLogs.map((log, i) => {
+                const dateObj = new Date(log.created_at);
+                const dateStr = dateObj.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+                const timeStr = dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+                return [
+                    `${i + 1}.`,
+                    `${dateStr}\n${timeStr}`,
+                    `${log.user?.username || "User Terhapus"}\n(${log.user?.role || "Unknown"})`,
+                    log.action,
+                    log.description
+                ];
+            });
+
+            autoTable(doc, {
+                startY: 40,
+                head: [["No.", "Waktu", "Pengguna", "Aksi", "Detail"]],
+                body: tableRows,
+                theme: "plain",
+                styles: { font: "times", fontSize: 9, cellPadding: 2 },
+                headStyles: { fontStyle: "bold", lineWidth: { bottom: 0.1 }, lineColor: [0, 0, 0] },
+                columnStyles: {
+                    0: { cellWidth: 10, halign: 'center' },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 35 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 'auto' }
+                },
+                margin: { left: 14, right: 14 },
+            });
+
+            doc.setProperties({ title: 'Log_Aktivitas.pdf' });
+            
+            if (action === 'download') {
+                doc.save(`Log_Aktivitas_${new Date().getTime()}.pdf`);
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'PDF berhasil diunduh.', timer: 2000, showConfirmButton: false });
+            } else {
+                const pdfBlob = doc.output('bloburl');
+                window.open(pdfBlob, '_blank');
+                Swal.close();
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Preview PDF berhasil dibuka di tab baru.', timer: 2000, showConfirmButton: false });
+            }
+        } catch (error) {
+            console.error("Gagal Download PDF:", error);
+            Swal.fire('Error', 'Terjadi kesalahan teknis saat menyusun data PDF.', 'error');
+        }
     };
 
     const filteredLogs = logs.filter(
@@ -120,12 +181,23 @@ export default function LogHistory() {
                         />
                     </div>
                     
-                    <button onClick={handleExport} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                        Export CSV
-                    </button>
+                    <div className="inline-flex shadow-sm rounded-xl overflow-hidden border border-rose-200 shrink-0">
+                        <button 
+                            onClick={() => handleExportPDF('preview')} 
+                            className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-bold transition-colors flex items-center gap-2 uppercase tracking-wide whitespace-nowrap shrink-0"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            PREVIEW
+                        </button>
+                        <button 
+                            onClick={() => handleExportPDF('download')} 
+                            className="px-3 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold transition-colors flex items-center gap-2 uppercase tracking-wide whitespace-nowrap shrink-0"
+                        >
+                            UNDUH PDF
+                        </button>
+                    </div>
 
                     <div className="relative w-full md:w-64">
                         <svg

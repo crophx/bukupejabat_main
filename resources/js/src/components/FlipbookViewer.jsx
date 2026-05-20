@@ -62,13 +62,13 @@ export default function FlipbookViewer({ title, pages, onClose, bgImage }) {
 
                 <div className="shadow-2xl">
                     <HTMLFlipBook 
-                        width={450} 
-                        height={650} 
+                        width={550} 
+                        height={750} 
                         size="stretch"
-                        minWidth={315}
-                        maxWidth={550}
-                        minHeight={420}
-                        maxHeight={750}
+                        minWidth={400}
+                        maxWidth={750}
+                        minHeight={550}
+                        maxHeight={950}
                         maxShadowOpacity={0.6}
                         showCover={true}
                         mobileScrollSupport={true}
@@ -91,27 +91,114 @@ export default function FlipbookViewer({ title, pages, onClose, bgImage }) {
                         {/* DATA PAGES */}
                         {pages.map((pageData, index) => (
                             <Page key={index} number={index + 2} bgImage={bgImage} isLeft={(index + 2) % 2 === 0}>
-                                <div className="flex-1 flex flex-col">
-                                    <h3 className="text-center font-bold text-slate-800 text-lg uppercase mb-1 border-b-2 border-slate-100 pb-2">{pageData.unitName}</h3>
-                                    {pageData.kontak && <p className="text-center text-[10px] text-slate-500 mb-4 bg-slate-50 py-1 rounded-lg leading-relaxed">{pageData.kontak}</p>}
+                                <div className="flex-grow flex flex-col font-serif select-none h-full">
+                                    {/* 1. Header Halaman */}
+                                    <h4 className="text-center font-bold text-slate-500 text-[10px] tracking-wider uppercase mb-1">
+                                        {pageData.type === 'dalam' ? 'DAFTAR PEJABAT DALAM NEGERI' : 'DAFTAR PEJABAT LUAR NEGERI'}
+                                    </h4>
                                     
-                                    <div className="flex-1 overflow-hidden mt-2">
-                                        <table className="w-full text-left text-xs">
+                                    {/* 2. Nama Satuan Kerja */}
+                                    <h3 className="text-center font-bold text-slate-900 text-xs uppercase mb-2 max-w-[90%] mx-auto leading-tight">
+                                        {pageData.unitName}
+                                    </h3>
+                                    
+                                    {/* 3. Double Border Divider */}
+                                    <div className="border-b-[3px] border-double border-slate-400 mb-3 pb-0.5"></div>
+                                    
+                                    {/* 4. Profile block (only on first page of unit) */}
+                                    {!pageData.isLanjutan && (
+                                        <div className="grid grid-cols-[100px_10px_1fr] text-[10px] gap-y-0.5 text-slate-800 leading-normal mb-4 px-1">
+                                            <span className="font-bold">Alamat</span>
+                                            <span>:</span>
+                                            <span>{pageData.unit.alamat || "-"}</span>
+
+                                            <span className="font-bold">No. Telepon</span>
+                                            <span>:</span>
+                                            <span>{pageData.unit.telepon || "-"}</span>
+
+                                            <span className="font-bold">Fax</span>
+                                            <span>:</span>
+                                            <span>{pageData.unit.fax || "-"}</span>
+
+                                            <span className="font-bold">Email</span>
+                                            <span>:</span>
+                                            <span>{pageData.unit.email || "-"}</span>
+
+                                            <span className="font-bold">Website</span>
+                                            <span>:</span>
+                                            <span>{pageData.unit.website || "-"}</span>
+
+                                            {pageData.type === 'luar' && (
+                                                <>
+                                                    <span className="font-bold">Hari Kerja</span>
+                                                    <span>:</span>
+                                                    <span>{pageData.unit.hari_kerja || "-"}</span>
+
+                                                    <span className="font-bold">Beda Jam</span>
+                                                    <span>:</span>
+                                                    <span>{pageData.unit.beda_jam || "-"}</span>
+
+                                                    <span className="font-bold">Musim Panas</span>
+                                                    <span>:</span>
+                                                    <span>{pageData.unit.musim_panas || "-"}</span>
+
+                                                    <span className="font-bold">Musim Dingin</span>
+                                                    <span>:</span>
+                                                    <span>{pageData.unit.musim_dingin || "-"}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    {/* 5. Pejabat Table */}
+                                    <div className="flex-grow min-h-0 overflow-hidden">
+                                        <table className="w-full text-left text-[9px] border-collapse">
                                             <thead>
-                                                <tr className="border-b border-slate-200 text-slate-600">
-                                                    <th className="py-2 font-bold w-8">No.</th>
-                                                    <th className="py-2 font-bold w-1/2">Nama Lengkap</th>
-                                                    <th className="py-2 font-bold">Jabatan</th>
+                                                <tr className="border-t border-b border-black text-slate-800 font-bold bg-slate-50/50">
+                                                    <th className="py-1.5 text-center w-8">No.</th>
+                                                    <th className="py-1.5 text-left w-[110px]">Nama Lengkap</th>
+                                                    <th className="py-1.5 text-left w-[110px]">Jabatan</th>
+                                                    <th colSpan="3" className="py-1.5 text-center">Alamat & Telepon</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {pageData.pejabat.map((p, i) => (
-                                                    <tr key={i} className="text-slate-700 hover:bg-slate-50 transition-colors">
-                                                        <td className="py-2.5 align-top">{pageData.startIndex + i + 1}.</td>
-                                                        <td className="py-2.5 align-top font-medium pr-2 leading-relaxed">{p.nama}</td>
-                                                        <td className="py-2.5 align-top italic text-slate-500 leading-relaxed">{p.jabatan}</td>
+                                            <tbody className="divide-y divide-slate-100 text-slate-700">
+                                                {pageData.pejabat.length === 0 ? (
+                                                    <tr>
+                                                        <td className="py-2 text-center align-top border-b border-black">1.</td>
+                                                        <td colSpan="5" className="py-8 text-center italic text-slate-400 font-medium align-middle border-b border-black">
+                                                            Data Pejabat Belum Tersedia
+                                                        </td>
                                                     </tr>
-                                                ))}
+                                                ) : (
+                                                    pageData.pejabat.map((p, pIdx) => {
+                                                        const span = p.contacts.length;
+                                                        return p.contacts.map((c, cIdx) => {
+                                                            const isLastRowOfUnit = pIdx === pageData.pejabat.length - 1 && cIdx === span - 1;
+                                                            const borderClass = isLastRowOfUnit ? "border-b border-black" : "";
+                                                            
+                                                            if (cIdx === 0) {
+                                                                return (
+                                                                    <tr key={`${pIdx}-${cIdx}`} className={`hover:bg-slate-50/30 transition-colors ${borderClass}`}>
+                                                                        <td rowSpan={span} className="py-1.5 text-center align-top border-r border-slate-100">{pageData.startIndex + pIdx + 1}.</td>
+                                                                        <td rowSpan={span} className="py-1.5 align-top font-bold pr-2 leading-tight border-r border-slate-100">{p.nama}</td>
+                                                                        <td rowSpan={span} className="py-1.5 align-top leading-tight pr-2 border-r border-slate-100">{p.jabatan}</td>
+                                                                        <td className="py-1.5 align-top pl-2 font-semibold w-12 text-slate-600">{c.lbl}</td>
+                                                                        <td className="py-1.5 align-top text-center w-3 text-slate-400">:</td>
+                                                                        <td className="py-1.5 align-top leading-tight text-slate-700 pl-1">{c.val}</td>
+                                                                    </tr>
+                                                                );
+                                                            } else {
+                                                                return (
+                                                                    <tr key={`${pIdx}-${cIdx}`} className={`hover:bg-slate-50/30 transition-colors ${borderClass}`}>
+                                                                        <td className="py-1 align-top pl-2 font-semibold text-slate-600 border-l border-slate-100">{c.lbl}</td>
+                                                                        <td className="py-1 align-top text-center text-slate-400">:</td>
+                                                                        <td className="py-1 align-top leading-tight text-slate-700 pl-1">{c.val}</td>
+                                                                    </tr>
+                                                                );
+                                                            }
+                                                        });
+                                                    })
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>

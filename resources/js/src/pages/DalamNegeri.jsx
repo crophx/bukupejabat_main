@@ -18,6 +18,40 @@ export default function DalamNegeri() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // State & Efek untuk Shortcut Direct Satker
+    const [highlightedUnitId, setHighlightedUnitId] = useState(null);
+
+    const handleGoToMyUnit = (myUnitId) => {
+        setSearchTerm("");
+        const index = units.findIndex(u => u.id === myUnitId);
+        if (index !== -1) {
+            const targetPage = Math.floor(index / itemsPerPage) + 1;
+            setCurrentPage(targetPage);
+            setHighlightedUnitId(myUnitId);
+        }
+    };
+
+    useEffect(() => {
+        if (highlightedUnitId && !loading) {
+            let clearTimer;
+            const timer = setTimeout(() => {
+                const element = document.getElementById(`unit-card-${highlightedUnitId}`);
+                if (element) {
+                    element.open = true;
+                    element.scrollIntoView({ behavior: "smooth", block: "center" });
+                    
+                    clearTimer = setTimeout(() => {
+                        setHighlightedUnitId(null);
+                    }, 3000);
+                }
+            }, 150);
+            return () => {
+                clearTimeout(timer);
+                if (clearTimer) clearTimeout(clearTimer);
+            };
+        }
+    }, [highlightedUnitId, loading]);
+
     // ==========================================
     // STATE UNTUK MODAL EDIT
     // ==========================================
@@ -160,7 +194,9 @@ export default function DalamNegeri() {
 
             // Filter kata kunci jabatan sesuai permintaan
             const allowedKeywords = [
-                "menteri", "wakil menteri", "staf ahli",
+                "menteri", "wakil menteri", "staf ahli", "direktor jenderal", "inspektur jenderal", "kepala badan", "sekretaris badan", "sekretaris jenderal",
+                "direktur", "inspektur", "sekretaris direktorat jenderal", "sekretaris inspektorat jenderal", 
+                "kepala pusat", "kepala bidang", "kepala subdirektorat", "kepala subdiktorat", "kepala subbagian", "kepala subbag",
                 "kepala biro", "kepala bagian", "kepala subbagian"
             ];
 
@@ -198,9 +234,6 @@ export default function DalamNegeri() {
                     const isPejabat = allowedKeywords.some(key => jabatanStr.includes(key));
                     return isPejabat && p.unit_kerja_id === unit.id;
                 });
-
-                // Jika tidak ada pejabat yang memenuhi syarat di unit ini, lewati (jangan buat halamannya)
-                if (pejabatForUnit.length === 0) return;
 
                 hasData = true;
 
@@ -242,12 +275,12 @@ export default function DalamNegeri() {
                 doc.setFontSize(10);
 
                 const drawRow = (label, value) => {
-                    if (!value || value === "-") return;
+                    const displayVal = (!value || String(value).trim() === "" || String(value).trim() === "-") ? "-" : value;
                     doc.setFont("times", "bold");
                     doc.text(label, labelX, currentY);
                     doc.setFont("times", "normal");
                     doc.text(":", colonX, currentY);
-                    const splitVal = doc.splitTextToSize(String(value), maxValueW);
+                    const splitVal = doc.splitTextToSize(String(displayVal), maxValueW);
                     doc.text(splitVal, valueX, currentY);
                     currentY += splitVal.length * lineH + 1;
                 };
@@ -260,44 +293,51 @@ export default function DalamNegeri() {
 
                 // --- ISI TABEL ---
                 const tableRows = [];
-                pejabatForUnit.forEach((p, i) => {
-                    const formatNama = p.nama_pegawai || p.nama || "-";
-                    const formatJabatan = p.jabatan || "-";
-                    
-                    const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-                    const titleCaseJabatan = formatJabatan === "-" ? "-" : formatJabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                if (pejabatForUnit.length === 0) {
+                    tableRows.push([
+                        { content: "1.", styles: { valign: 'top', halign: 'center' } },
+                        { content: "Data Pejabat Belum Tersedia", colSpan: 5, styles: { halign: 'center', fontStyle: 'italic', textColor: [120, 120, 120] } }
+                    ]);
+                } else {
+                    pejabatForUnit.forEach((p, i) => {
+                        const formatNama = p.nama_pegawai || p.nama || "-";
+                        const formatJabatan = p.jabatan || "-";
+                        
+                        const titleCaseNama = formatNama === "-" ? "-" : formatNama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                        const titleCaseJabatan = formatJabatan === "-" ? "-" : formatJabatan.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
 
-                    let contacts = [];
-                    const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
-                    contacts.push({ lbl: "Kantor", val: kantor });
-                    if (p.telepon && p.telepon !== "-") contacts.push({ lbl: "Telp.", val: p.telepon });
-                    if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
-                    if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
-                    if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
-                    if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
+                        let contacts = [];
+                        const kantor = p.alamat && p.alamat !== "-" ? p.alamat : "s.d.a.";
+                        contacts.push({ lbl: "Kantor", val: kantor });
+                        if (p.telepon && p.telepon !== "-") contacts.push({ lbl: "Telp.", val: p.telepon });
+                        if (p.fax && p.fax !== "-") contacts.push({ lbl: "Fax", val: p.fax });
+                        if (p.no_handphone && p.no_handphone !== "-") contacts.push({ lbl: "Hp.", val: p.no_handphone });
+                        if (p.email && p.email !== "-") contacts.push({ lbl: "Email", val: p.email });
+                        if (p.wisma && p.wisma !== "-") contacts.push({ lbl: "Wisma", val: p.wisma });
 
-                    if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
+                        if (contacts.length === 0) contacts.push({ lbl: "-", val: "-" });
 
-                    const span = contacts.length;
-                    contacts.forEach((c, cIdx) => {
-                        if (cIdx === 0) {
-                            tableRows.push([
-                                { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
-                                { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
-                                { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
-                                { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
-                                { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
-                                { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
-                            ]);
-                        } else {
-                            tableRows.push([
-                                { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
-                                { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
-                                { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
-                            ]);
-                        }
+                        const span = contacts.length;
+                        contacts.forEach((c, cIdx) => {
+                            if (cIdx === 0) {
+                                tableRows.push([
+                                    { content: `${i + 1}.`, rowSpan: span, styles: { valign: 'top', halign: 'center' } },
+                                    { content: titleCaseNama, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: titleCaseJabatan, rowSpan: span, styles: { valign: 'top' } },
+                                    { content: c.lbl, styles: { cellPadding: { top: 4, bottom: 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 4, bottom: 1, left: 1, right: 4 } } }
+                                ]);
+                            } else {
+                                tableRows.push([
+                                    { content: c.lbl, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 4, right: 1 } } },
+                                    { content: ":", styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 1 } } },
+                                    { content: c.val, styles: { cellPadding: { top: 1, bottom: cIdx === span - 1 ? 4 : 1, left: 1, right: 4 } } }
+                                ]);
+                            }
+                        });
                     });
-                });
+                }
 
                 autoTable(doc, {
                     startY: currentY,
@@ -366,6 +406,11 @@ export default function DalamNegeri() {
         setCurrentPage(page);
     };
 
+    const isSuperAdmin = localStorage.getItem("user_role") === "superadmin";
+    const userSession = JSON.parse(localStorage.getItem("user") || "{}");
+    const userUnitId = userSession.unit_kerja_id;
+    const myUnit = units.find(u => u.id === userUnitId);
+
     return (
         <div className="space-y-6 min-h-screen">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 w-full text-slate-700 p-6 animate-in fade-in duration-500">
@@ -410,6 +455,35 @@ export default function DalamNegeri() {
                     </div>
                 </div>
 
+                {/* Banner Shortcut Direct Satker */}
+                {!isSuperAdmin && myUnit && (
+                    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100/80 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 hover:shadow-md">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-sky-500 text-white rounded-xl shadow-md shadow-sky-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="size-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold text-sky-600 uppercase tracking-wider">Akses Cepat Unit Kerja Anda</p>
+                                <h4 className="text-sm font-bold text-slate-800 uppercase mt-0.5 leading-snug">
+                                    {myUnit.deskripsi || myUnit.nama_unit_kerja}
+                                </h4>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleGoToMyUnit(myUnit.id)}
+                            className="btn btn-sm bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white border-none shadow-md hover:shadow-lg transition-all rounded-xl gap-2 font-bold text-xs uppercase group"
+                        >
+                            <span>Buka Unit Kerja</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="size-3.5 transition-transform group-hover:translate-x-1">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="text-center p-10">
                         <span className="loading loading-spinner text-sky-500"></span>
@@ -419,7 +493,8 @@ export default function DalamNegeri() {
                     currentUnits.map((unit) => (
                         <details
                             key={unit.id}
-                            className="group mb-4 bg-slate-50 border-slate-200 border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+                            id={`unit-card-${unit.id}`}
+                            className={`group mb-4 bg-slate-50 border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-500 ${highlightedUnitId === unit.id ? 'ring-4 ring-sky-400 ring-offset-2 border-sky-400 shadow-xl scale-[1.01] bg-sky-50/30' : 'border-slate-200'}`}
                         >
                             <summary className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-100 transition-colors list-none">
                                 <div className="flex items-center gap-4">
