@@ -18,11 +18,22 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // 2. Cek Akun
+        // 2. Cek apakah email terdaftar
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'success'    => false,
+                'error_type' => 'email',
+                'message'    => 'Email tidak ditemukan. Pastikan email yang Anda masukkan benar.'
+            ], 401);
+        }
+
+        // 3. Cek password
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
-                'success' => false,
-                'message' => 'Email atau Password salah!'
+                'success'    => false,
+                'error_type' => 'password',
+                'message'    => 'Password yang Anda masukkan salah.'
             ], 401);
         }
 

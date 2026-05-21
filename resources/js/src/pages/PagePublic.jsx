@@ -1,16 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
 import kemluBg from "../assets/images/logo-kemlu-flipbook.png";
-import Logo from "../assets/images/logo-kemlu.png";
 import FlipbookViewer from "../components/FlipbookViewer";
 
 export default function PublicPage() {
     const [isFlipbookOpen, setIsFlipbookOpen] = useState(false);
     const [flipbookTitle, setFlipbookTitle] = useState("");
     const [flipbookData, setFlipbookData] = useState([]);
+
+    // Cache watermark yang sudah dikompres agar tidak diproses ulang setiap kali
+    const compressedWatermarkRef = useRef(null);
+
+    /**
+     * Kompres gambar watermark: resize ke 200x200 dan convert ke JPEG 60%
+     * Hasilnya ~10-20KB vs PNG asli yang bisa 1MB+, sangat mengurangi ukuran PDF
+     */
+    const compressWatermark = useCallback(() => {
+        return new Promise((resolve) => {
+            // Gunakan cache jika sudah pernah dikompres
+            if (compressedWatermarkRef.current) {
+                resolve(compressedWatermarkRef.current);
+                return;
+            }
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 200; // cukup untuk watermark 100mm di PDF
+                canvas.height = 200;
+                const ctx = canvas.getContext('2d');
+                // Konversi ke hitam putih (grayscale) sebelum embed ke PDF
+                ctx.filter = 'grayscale(100%)';
+                ctx.drawImage(img, 0, 0, 200, 200);
+                ctx.filter = 'none';
+                // JPEG quality 0.6 → ukuran ~10-15KB vs PNG asli
+                const compressed = canvas.toDataURL('image/jpeg', 0.6);
+                compressedWatermarkRef.current = compressed;
+                resolve(compressed);
+            };
+            img.src = kemluBg;
+        });
+    }, []);
 
     const trackHit = async (type) => {
         try {
@@ -30,6 +62,9 @@ export default function PublicPage() {
         });
 
         try {
+            // Kompres watermark sekali di awal
+            const watermarkData = await compressWatermark();
+
             const [unitsRes, pegawaiRes] = await Promise.all([
                 axios.get("/api/unit-kerja/dalam-negeri"),
                 axios.get("/api/pegawai")
@@ -45,14 +80,14 @@ export default function PublicPage() {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
-            const imgWidth = 200;
-            const imgHeight = 140;
-            const x = (pageWidth - imgWidth) / 2;
-            const y = (pageHeight - imgHeight) / 2;
+            const imgSize = 100; // 1:1 sesuai dimensi asli logo (square)
+            const x = (pageWidth - imgSize) / 2;
+            const y = (pageHeight - imgSize) / 2;
 
             const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 0.12 }));
+                doc.addImage(watermarkData, 'JPEG', x, y, imgSize, imgSize);
                 doc.setGState(new doc.GState({ opacity: 1.0 }));
-                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
             };
 
             const originalAddPage = doc.addPage.bind(doc);
@@ -226,6 +261,9 @@ export default function PublicPage() {
         });
 
         try {
+            // Kompres watermark sekali di awal (gunakan cache jika sudah ada)
+            const watermarkData = await compressWatermark();
+
             const [unitsRes, pegawaiRes] = await Promise.all([
                 axios.get("/api/unit-kerja/luar-negeri"),
                 axios.get("/api/pegawai")
@@ -237,14 +275,14 @@ export default function PublicPage() {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
-            const imgWidth = 200;
-            const imgHeight = 140;
-            const x = (pageWidth - imgWidth) / 2;
-            const y = (pageHeight - imgHeight) / 2;
+            const imgSize = 100; // 1:1 sesuai dimensi asli logo (square)
+            const x = (pageWidth - imgSize) / 2;
+            const y = (pageHeight - imgSize) / 2;
 
             const drawWatermark = () => {
+                doc.setGState(new doc.GState({ opacity: 0.12 }));
+                doc.addImage(watermarkData, 'JPEG', x, y, imgSize, imgSize);
                 doc.setGState(new doc.GState({ opacity: 1.0 }));
-                doc.addImage(kemluBg, 'PNG', x, y, imgWidth, imgHeight);
             };
 
             const originalAddPage = doc.addPage.bind(doc);
@@ -532,27 +570,11 @@ export default function PublicPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
-            <header className="w-full pt-6 px-6">
-                <div className="max-w-7xl mx-auto">
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 h-20 flex items-center justify-center px-6">
-                        <div className="flex items-center gap-4">
-                            <img src={Logo} alt="logo" className="max-h-12 object-contain" />
-                            <div className="hidden sm:block border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Republik Indonesia</p>
-                                <p className="text-sm font-bold text-slate-800 leading-none">Kementerian Luar Negeri</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
             <main className="flex-grow flex items-center justify-center p-6">
                 <div className="max-w-4xl w-full bg-white rounded-[32px] shadow-2xl shadow-slate-200/60 p-10 border border-slate-100 text-center transition-all">
                     <div className="mb-12">
-                        <div className="inline-block p-4 bg-sky-50 rounded-3xl mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-10 text-sky-600">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
-                            </svg>
+                        <div className="inline-block mb-6">
+                            <img src={kemluBg} alt="Logo Kemlu" className="h-24 object-contain" />
                         </div>
                         <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase mb-2">Portal Unduhan Dokumen Pejabat</h1>
                         <p className="text-xs text-slate-400 font-semibold tracking-widest uppercase mt-1">

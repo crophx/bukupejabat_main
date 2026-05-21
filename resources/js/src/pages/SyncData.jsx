@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default function SyncData() {
     const [isSyncing, setIsSyncing] = useState(false);
-    
+
     // State untuk Auto Sync
     const [autoSyncType, setAutoSyncType] = useState('weekly'); // 'weekly' atau 'monthly'
     const [syncDay, setSyncDay] = useState('Senin');
@@ -26,7 +26,7 @@ export default function SyncData() {
             const params = {};
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
-            
+
             const response = await axios.get("/api/sync-logs", {
                 headers: { Authorization: `Bearer ${token}` },
                 params
@@ -48,7 +48,7 @@ export default function SyncData() {
         let url = `/api/sync-logs/export?token=${token}`;
         if (startDate) url += `&start_date=${startDate}`;
         if (endDate) url += `&end_date=${endDate}`;
-        
+
         axios.get(url, {
             headers: { Authorization: `Bearer ${token}` },
             responseType: 'blob'
@@ -89,13 +89,13 @@ export default function SyncData() {
         }
 
         setIsSyncing(true);
-        
+
         // Simulasi proses sinkronisasi ke backend
         setTimeout(() => {
             setIsSyncing(false);
-            
+
             // SIMULASI: Ubah nilai ini menjadi `false` jika ingin menguji skenario gagal
-            const isSuccess = true; 
+            const isSuccess = true;
 
             const currentTime = new Date().toLocaleString('id-ID').replace(/\./g, ':');
 
@@ -109,7 +109,7 @@ export default function SyncData() {
                     detail: `Berhasil mensinkronkan data secara ${method.toLowerCase()}.`
                 };
                 setLogs(prev => [newLog, ...prev]);
-                
+
                 if (method === 'Manual') {
                     Swal.fire({
                         icon: 'success',
@@ -121,7 +121,7 @@ export default function SyncData() {
             } else {
                 const currentFail = failCount + 1;
                 setFailCount(currentFail);
-                
+
                 const newLog = {
                     id: Date.now(),
                     date: currentTime,
@@ -187,6 +187,121 @@ export default function SyncData() {
                 <p className="text-slate-500 text-sm mt-1">Kelola pembaruan data dari API Utama secara manual maupun otomatis.</p>
             </div>
 
+            {/* --- KONFIGURASI ENDPOINT API --- */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8">
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                    <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold text-slate-800">Konfigurasi Endpoint API</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Atur koneksi ke database master KEMLU untuk sinkronisasi data pegawai.</p>
+                    </div>
+                    {/* Badge status koneksi */}
+                    <div className="ml-auto flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full">
+                        <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span className="text-xs font-semibold text-slate-500">Belum Dikonfigurasi</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* URL Endpoint */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                            URL Endpoint <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="flex items-center gap-2 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all overflow-hidden">
+                            <span className="pl-4 text-slate-400 text-sm font-mono select-none shrink-0">https://</span>
+                            <input
+                                type="text"
+                                placeholder="api.kemlu.go.id/v1/pegawai"
+                                className="flex-1 py-2.5 pr-4 bg-transparent text-sm text-slate-700 focus:outline-none font-mono"
+                            />
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">Contoh: api.kemlu.go.id/v1/pegawai atau api.kemlu.go.id/employees</p>
+                    </div>
+
+                    {/* API Key */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                            API Key / Token <span className="text-rose-400">*</span>
+                        </label>
+                        <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all overflow-hidden">
+                            <input
+                                type="password"
+                                placeholder="Masukkan API Key atau Bearer Token..."
+                                className="flex-1 py-2.5 pl-4 bg-transparent text-sm text-slate-700 focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                className="px-3 py-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                                title="Tampilkan / Sembunyikan"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">Akan dikirim sebagai header <span className="font-mono bg-slate-100 px-1 rounded">Authorization: Bearer ...</span></p>
+                    </div>
+
+                    {/* HTTP Method */}
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">HTTP Method</label>
+                        <div className="flex gap-3">
+                            {['GET', 'POST'].map((method) => (
+                                <label key={method} className="flex-1 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 rounded-xl py-2.5 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 transition-all has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-400">
+                                    <input type="radio" name="httpMethod" value={method} defaultChecked={method === 'GET'} className="w-4 h-4 text-indigo-500 focus:ring-indigo-400" />
+                                    <span className={`text-sm font-bold font-mono ${method === 'GET' ? 'text-emerald-600' : 'text-amber-600'}`}>{method}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">Sesuaikan dengan dokumentasi API KEMLU.</p>
+                    </div>
+
+                    {/* Field Mapping Info */}
+                    <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-amber-500 shrink-0 mt-0.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <div className="text-xs text-amber-700">
+                            <p className="font-bold mb-1">Field yang akan disinkronisasi dari API:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {['nip', 'nama', 'email', 'alamat', 'no_handphone', 'jabatan', 'unit_kerja'].map(field => (
+                                    <span key={field} className="font-mono bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md text-amber-800">{field}</span>
+                                ))}
+                            </div>
+                            <p className="mt-1.5 text-amber-600">Jika jabatan atau unit kerja belum ada di database, akan dibuat otomatis.</p>
+                        </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="md:col-span-2 flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                        <button
+                            type="button"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 border border-indigo-300 text-indigo-600 hover:bg-indigo-50 font-semibold text-sm rounded-xl transition-all"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.348 14.651a3.75 3.75 0 0 1 0-5.303m5.304 0a3.75 3.75 0 0 1 0 5.303m-7.425 2.122a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.789M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                            Test Koneksi
+                        </button>
+                        <button
+                            type="button"
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-200 transition-all active:scale-95"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" />
+                            </svg>
+                            Simpan Konfigurasi API
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             {/* Banner Peringatan Jika Diblokir */}
             {isBlocked && (
                 <div className="mb-8 bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 animate-in fade-in">
@@ -210,7 +325,7 @@ export default function SyncData() {
                 <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group">
                     <div className="absolute -right-10 -top-10 w-40 h-40 bg-sky-200/50 rounded-full blur-3xl"></div>
                     <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-sky-300/30 rounded-full blur-3xl"></div>
-                    
+
                     <div className="bg-white p-4 rounded-full shadow-sm text-sky-500 mb-4 z-10">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-8 h-8 ${isSyncing ? 'animate-spin' : ''}`}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -218,8 +333,8 @@ export default function SyncData() {
                     </div>
                     <h3 className="text-lg font-bold text-slate-800 z-10 mb-2">Sinkronisasi Manual</h3>
                     <p className="text-sm text-slate-600 z-10 mb-6">Tarik data terbaru dari API Utama sekarang juga. Gunakan opsi ini jika Anda butuh update data instan.</p>
-                    
-                    <button 
+
+                    <button
                         onClick={handleManualSync}
                         disabled={isSyncing || isBlocked}
                         className="z-10 w-full max-w-xs py-3 px-6 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-lg shadow-sky-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -239,7 +354,7 @@ export default function SyncData() {
                         <div className="flex items-center gap-3">
                             <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                             </div>
                             <h3 className="text-base font-bold text-slate-800">Pengaturan Auto Sync</h3>
@@ -302,15 +417,15 @@ export default function SyncData() {
                     <h3 className="text-lg font-bold text-slate-800">Riwayat Sinkronisasi (Log)</h3>
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
                             <span className="text-slate-400">-</span>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 bg-slate-50 text-slate-700"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
@@ -318,7 +433,7 @@ export default function SyncData() {
                         </div>
                         <button onClick={handleExport} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2 w-full sm:w-auto justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                             </svg>
                             Export CSV
                         </button>
