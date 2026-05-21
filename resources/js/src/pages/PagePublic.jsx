@@ -555,6 +555,11 @@ export default function PublicPage() {
                             </svg>
                         </div>
                         <h1 className="text-3xl font-black text-slate-800 tracking-tight uppercase mb-2">Portal Unduhan Dokumen Pejabat</h1>
+                        <p className="text-xs text-slate-400 font-semibold tracking-widest uppercase mt-1">
+                            Data Update{" "}
+                            {new Intl.DateTimeFormat("id-ID", { month: "long" }).format(new Date())}{" "}
+                            {new Date().getFullYear()}
+                        </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-6 w-full px-4 sm:px-0">
