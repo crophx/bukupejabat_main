@@ -3,7 +3,7 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
-import kemluBg from "../assets/images/logo_kemlu_fix.png";
+import kemluBg from "../assets/images/logo-kemlu-flipbook.png";
 import Logo from "../assets/images/logo-kemlu.png";
 import FlipbookViewer from "../components/FlipbookViewer";
 

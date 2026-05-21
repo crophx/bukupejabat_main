@@ -5,7 +5,7 @@ const Page = React.forwardRef((props, ref) => {
     return (
         <div className="demoPage bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] overflow-hidden relative border border-slate-200 flex flex-col" ref={ref} style={{ padding: '0', backgroundColor: '#fff' }}>
             {/* Watermark / Background */}
-            <div className="absolute inset-0 z-0 opacity-[0.03] flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 z-0 opacity-[0.08] flex items-center justify-center pointer-events-none">
                  {props.bgImage && <img src={props.bgImage} alt="watermark" className="w-[80%] h-auto object-contain" />}
             </div>
             
@@ -80,7 +80,6 @@ export default function FlipbookViewer({ title, pages, onClose, bgImage }) {
                         {/* COVER PAGE */}
                         <Page number={1} bgImage={bgImage} isLeft={false}>
                             <div className="flex-1 flex flex-col items-center justify-center text-center h-full">
-                               <img src={bgImage} alt="logo" className="w-32 h-32 object-contain mb-8 drop-shadow-xl" />
                                <h1 className="text-4xl font-black text-slate-800 uppercase leading-tight mb-6 px-4">{title}</h1>
                                <div className="w-20 h-1.5 bg-sky-500 mx-auto mb-8 rounded-full"></div>
                                <p className="text-slate-600 font-bold tracking-widest uppercase text-sm">Kementerian Luar Negeri</p>
@@ -209,7 +208,6 @@ export default function FlipbookViewer({ title, pages, onClose, bgImage }) {
                         {/* BACK COVER */}
                         <Page number={pages.length + 2} bgImage={bgImage} isLeft={(pages.length + 2) % 2 === 0}>
                             <div className="flex-1 flex flex-col items-center justify-center text-center h-full">
-                               <img src={bgImage} alt="logo" className="w-16 h-16 object-contain mb-6 opacity-30" />
                                <h1 className="text-xl font-bold text-slate-400 uppercase leading-tight mb-4 tracking-widest">Akhir Dokumen</h1>
                                <div className="w-12 h-1 bg-slate-200 mx-auto mb-6 rounded-full"></div>
                                <p className="text-slate-400 font-medium text-[10px] uppercase tracking-widest">Buku Pejabat Kemenlu RI</p>
