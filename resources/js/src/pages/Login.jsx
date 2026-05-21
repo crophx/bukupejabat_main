@@ -13,10 +13,95 @@ export default function Login({ onLogin }) {
     // State loading agar user tahu sedang memproses (Opsional, tidak merubah tampilan dasar)
     const [isLoading, setIsLoading] = useState(false);
 
+    // --- CAPTCHA STATE ---
+    const [captchaInput, setCaptchaInput] = useState("");
+    const [captchaAnswer, setCaptchaAnswer] = useState(null);
+    const [captchaError, setCaptchaError] = useState("");
+    const canvasRef = React.useRef(null);
+
+    // Generate CAPTCHA soal matematika dan gambar di canvas
+    const generateCaptcha = React.useCallback(() => {
+        const ops = ['+', '-'];
+        const op = ops[Math.floor(Math.random() * ops.length)];
+        let a = Math.floor(Math.random() * 9) + 1;
+        let b = Math.floor(Math.random() * 9) + 1;
+        if (op === '-' && b > a) [a, b] = [b, a]; // pastikan hasil positif
+        const answer = op === '+' ? a + b : a - b;
+        const text = `${a}  ${op}  ${b}  =  ?`;
+        setCaptchaAnswer(answer);
+        setCaptchaInput("");
+        setCaptchaError("");
+
+        // Gambar di canvas
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // Background
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, W, H);
+
+        // Noise dots
+        for (let i = 0; i < 40; i++) {
+            ctx.beginPath();
+            ctx.arc(
+                Math.random() * W,
+                Math.random() * H,
+                Math.random() * 1.5,
+                0, Math.PI * 2
+            );
+            ctx.fillStyle = `hsl(${Math.random() * 360}, 50%, 75%)`;
+            ctx.fill();
+        }
+
+        // Noise lines
+        for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * W, Math.random() * H);
+            ctx.lineTo(Math.random() * W, Math.random() * H);
+            ctx.strokeStyle = `hsl(${Math.random() * 360}, 40%, 80%)`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+        }
+
+        // Teks soal
+        ctx.font = 'bold 22px monospace';
+        ctx.textBaseline = 'middle';
+        // Gambar huruf satu per satu dengan rotasi sedikit berbeda agar lebih sulit dibaca bot
+        const chars = text.split('');
+        let x = 12;
+        chars.forEach((ch) => {
+            const rotation = (Math.random() - 0.5) * 0.25;
+            ctx.save();
+            ctx.translate(x, H / 2 + (Math.random() - 0.5) * 4);
+            ctx.rotate(rotation);
+            ctx.fillStyle = `hsl(${200 + Math.random() * 40}, 60%, 30%)`;
+            ctx.fillText(ch, 0, 0);
+            ctx.restore();
+            x += ch === ' ' ? 6 : 18;
+        });
+    }, []);
+
+    // Generate saat komponen pertama kali muncul
+    React.useEffect(() => {
+        generateCaptcha();
+    }, [generateCaptcha]);
+
     // --- LOGIC BARU (TERHUBUNG DATABASE) ---
     const handleLogin = async (e) => {
         e.preventDefault();
         setError(""); // Reset error lama
+        setCaptchaError("");
+
+        // Validasi CAPTCHA sebelum kirim ke server
+        if (parseInt(captchaInput, 10) !== captchaAnswer) {
+            setCaptchaError("Jawaban CAPTCHA salah. Silakan coba lagi.");
+            generateCaptcha();
+            return;
+        }
+
         setIsLoading(true); // Mulai proses
 
         try {
@@ -58,6 +143,8 @@ export default function Login({ onLogin }) {
                 err.response?.data?.message ||
                     "Login Gagal. Periksa Email/Password atau Server.",
             );
+            // Refresh captcha setiap kali login gagal
+            generateCaptcha();
         } finally {
             setIsLoading(false); // Selesai proses
         }
@@ -136,6 +223,51 @@ export default function Login({ onLogin }) {
                                     />
                                 </div>
                             </div>
+
+                            {/* ── CAPTCHA ─────────────────────────────────── */}
+                            <div>
+                                <label className="block text-xs font-medium text-slate-600 mb-2">
+                                    Verifikasi — Selesaikan soal berikut
+                                </label>
+
+                                {/* Baris 1: Canvas soal + tombol refresh */}
+                                <div className="flex items-stretch gap-2 mb-2">
+                                    <canvas
+                                        ref={canvasRef}
+                                        width={220}
+                                        height={46}
+                                        className="flex-1 rounded-xl border border-slate-200 bg-slate-50 select-none"
+                                        style={{ userSelect: 'none', display: 'block' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={generateCaptcha}
+                                        title="Ganti soal"
+                                        className="flex-shrink-0 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Baris 2: Input jawaban (full width) */}
+                                <input
+                                    type="number"
+                                    value={captchaInput}
+                                    onChange={(e) => setCaptchaInput(e.target.value)}
+                                    placeholder="Ketik jawaban di sini..."
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-sky-300"
+                                    required
+                                    disabled={isLoading}
+                                />
+
+                                {captchaError && (
+                                    <p className="text-xs text-red-500 mt-1.5 font-medium">{captchaError}</p>
+                                )}
+                            </div>
+                            {/* ─────────────────────────────────────────────── */}
+
 
                             <div>
                                 <button
