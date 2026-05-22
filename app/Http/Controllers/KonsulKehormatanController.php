@@ -9,12 +9,9 @@ class KonsulKehormatanController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        // Tampilkan semua data konsul kehormatan dari semua satker.
+        // Kontrol aksi edit/hapus dilakukan di sisi frontend berdasarkan unit_kerja_id.
         $query = KonsulKehormatan::orderBy('id', 'desc');
-
-        if ($user && $user->role !== 'superadmin' && $user->unit_kerja_id) {
-            $query->where('unit_kerja_id', $user->unit_kerja_id);
-        }
 
         return response()->json([
             'success' => true,

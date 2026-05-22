@@ -30,11 +30,23 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         fetchPejabats();
         fetchKonsulDetail();
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
     }, [konsulId]);
+
+    // Cek apakah user boleh edit/hapus data pada konsul ini
+    const canEdit = () => {
+        if (!user || !konsulDetail) return false;
+        if (user.role === 'superadmin') return true;
+        // gunakan == agar integer vs string tidak masalah
+        return konsulDetail.unit_kerja_id != null && user.unit_kerja_id != null &&
+            konsulDetail.unit_kerja_id == user.unit_kerja_id;
+    };
 
     const fetchKonsulDetail = async () => {
         try {
@@ -398,6 +410,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                                 <span className="text-xs font-bold uppercase">Unduh PDF</span>
                             </button>
                         </div>
+                        {canEdit() && (
                         <button
                             type="button"
                             onClick={openAddModal}
@@ -415,6 +428,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                             </svg>
                             <span className="text-xs font-bold uppercase">Tambah</span>
                         </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -428,13 +442,13 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                             <th className="px-4 py-4">Gelar/Jabatan</th>
                             <th className="px-4 py-4">Alamat</th>
                             <th className="px-4 py-4">No. Telp</th>
-                            <th className="px-4 py-4 w-24 text-center sticky right-0 bg-slate-50">Aksi</th>
+                            {canEdit() && <th className="px-4 py-4 w-24 text-center sticky right-0 bg-slate-50">Aksi</th>}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="p-10 text-center">
+                                <td colSpan={canEdit() ? "6" : "5"} className="p-10 text-center">
                                     <span className="loading loading-spinner text-sky-500"></span>
                                 </td>
                             </tr>
@@ -456,6 +470,7 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                                     <td className="px-4 py-3 text-sm font-medium text-slate-600">
                                         {p.telp || "-"}
                                     </td>
+                                    {canEdit() && (
                                     <td className="px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-[#f6fbff] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
                                         <div className="flex justify-center gap-1">
                                             <button
@@ -480,11 +495,12 @@ export default function DetailKonhor({ konsulId: konsulIdProp, konsulNama }) {
                                             </button>
                                         </div>
                                     </td>
+                                    )}
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="p-10 text-center text-slate-400 italic">
+                                <td colSpan={canEdit() ? "6" : "5"} className="p-10 text-center text-slate-400 italic">
                                     Data tidak ditemukan.
                                 </td>
                             </tr>
