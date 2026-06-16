@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\UnitKerjaController;
 use App\Http\Controllers\Api\SyncLogController;
+use App\Http\Controllers\Api\SyncDataController;
 use App\Http\Controllers\Api\PublicActivityController;
 
 // --- PUBLIC ROUTES ---
@@ -38,6 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sync-logs/export', [SyncLogController::class, 'export']);
     Route::get('/sync-logs', [SyncLogController::class, 'index']);
     Route::post('/sync-logs', [SyncLogController::class, 'store']);
+
+    // Sync Data
+    Route::get('/sync-config', [SyncDataController::class, 'getConfig']);
+    Route::post('/sync-config', [SyncDataController::class, 'saveConfig']);
+    Route::post('/sync-data/test-connection', [SyncDataController::class, 'testConnection']);
+    Route::post('/sync-data/trigger', [SyncDataController::class, 'triggerSync']);
 
     // Pegawai Management
     Route::post('/pegawai', [PegawaiController::class, 'store']);

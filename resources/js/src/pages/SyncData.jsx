@@ -5,8 +5,14 @@ import axios from 'axios';
 export default function SyncData() {
     const [isSyncing, setIsSyncing] = useState(false);
 
+    // State untuk Konfigurasi API
+    const [apiUrl, setApiUrl] = useState('');
+    const [apiKey, setApiKey] = useState('');
+    const [httpMethod, setHttpMethod] = useState('GET');
+    const [showApiKey, setShowApiKey] = useState(false);
+
     // State untuk Auto Sync
-    const [autoSyncType, setAutoSyncType] = useState('weekly'); // 'weekly' atau 'monthly'
+    const [autoSyncType, setAutoSyncType] = useState('weekly');
     const [syncDay, setSyncDay] = useState('Senin');
     const [syncDate, setSyncDate] = useState('1');
     const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(false);
@@ -20,15 +26,39 @@ export default function SyncData() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem("token");
+        return { Authorization: `Bearer ${token}` };
+    };
+
+    const fetchConfig = async () => {
+        try {
+            const response = await axios.get("/api/sync-config", {
+                headers: getAuthHeaders()
+            });
+            if (response.data.success) {
+                const cfg = response.data.data;
+                setApiUrl(cfg.api_url || '');
+                setApiKey(cfg.api_key || '');
+                setHttpMethod(cfg.http_method || 'GET');
+                setIsAutoSyncEnabled(cfg.auto_sync_enabled || false);
+                setAutoSyncType(cfg.auto_sync_type || 'weekly');
+                setSyncDay(cfg.auto_sync_day || 'Senin');
+                setSyncDate(cfg.auto_sync_date?.toString() || '1');
+            }
+        } catch (error) {
+            console.error("Gagal mengambil konfigurasi sync:", error);
+        }
+    };
+
     const fetchSyncLogs = async () => {
         try {
-            const token = localStorage.getItem("token");
             const params = {};
             if (startDate) params.start_date = startDate;
             if (endDate) params.end_date = endDate;
 
             const response = await axios.get("/api/sync-logs", {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: getAuthHeaders(),
                 params
             });
             if (response.data.success) {
@@ -38,6 +68,11 @@ export default function SyncData() {
             console.error("Gagal mengambil log sinkronisasi:", error);
         }
     };
+
+    useEffect(() => {
+        fetchConfig();
+        fetchSyncLogs();
+    }, []);
 
     useEffect(() => {
         fetchSyncLogs();
@@ -50,7 +85,7 @@ export default function SyncData() {
         if (endDate) url += `&end_date=${endDate}`;
 
         axios.get(url, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: getAuthHeaders(),
             responseType: 'blob'
         }).then((response) => {
             const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
@@ -66,23 +101,23 @@ export default function SyncData() {
         });
     };
 
-    // Efek Retry: Jika gagal 1 atau 2 kali, jadwalkan ulang dalam 10 menit (600000 ms)
+    // Efek Retry
     useEffect(() => {
         let retryTimer;
         if (failCount > 0 && failCount < 3 && !isBlocked && isAutoSyncEnabled) {
             retryTimer = setTimeout(() => {
                 triggerSync('Auto (Retry)');
-            }, 600000); // 10 Menit
+            }, 600000);
         }
         return () => clearTimeout(retryTimer);
     }, [failCount, isBlocked, isAutoSyncEnabled]);
 
-    const triggerSync = (method = 'Manual') => {
+    const triggerSync = async (method = 'Manual') => {
         if (isBlocked) {
             Swal.fire({
                 icon: 'error',
                 title: 'Akses Diblokir',
-                text: 'Sinkronisasi telah dihentikan otomatis karena gagal 3 kali berturut-turut. Harap periksa koneksi API Anda sebelum mencoba kembali.',
+                text: 'Sinkronisasi telah dihentikan otomatis karena gagal 3 kali berturut-turut.',
                 confirmButtonColor: '#e11d48'
             });
             return;
@@ -90,82 +125,134 @@ export default function SyncData() {
 
         setIsSyncing(true);
 
-        // Simulasi proses sinkronisasi ke backend
-        setTimeout(() => {
+        try {
+            const response = await axios.post("/api/sync-data/trigger", { method }, {
+                headers: getAuthHeaders()
+            });
+
             setIsSyncing(false);
 
-            // SIMULASI: Ubah nilai ini menjadi `false` jika ingin menguji skenario gagal
-            const isSuccess = true;
-
-            const currentTime = new Date().toLocaleString('id-ID').replace(/\./g, ':');
-
-            if (isSuccess) {
-                setFailCount(0); // Reset hitungan gagal jika sukses
-                const newLog = {
-                    id: Date.now(),
-                    date: currentTime,
-                    method: method,
-                    status: 'Success',
-                    detail: `Berhasil mensinkronkan data secara ${method.toLowerCase()}.`
-                };
-                setLogs(prev => [newLog, ...prev]);
+            if (response.data.success) {
+                setFailCount(0);
+                fetchSyncLogs();
 
                 if (method === 'Manual') {
                     Swal.fire({
                         icon: 'success',
                         title: 'Sinkronisasi Selesai',
-                        text: 'Data berhasil ditarik dari API Utama!',
+                        text: response.data.message || 'Data berhasil ditarik dari API Utama!',
                         confirmButtonColor: '#0ea5e9'
                     });
                 }
             } else {
-                const currentFail = failCount + 1;
-                setFailCount(currentFail);
-
-                const newLog = {
-                    id: Date.now(),
-                    date: currentTime,
-                    method: method,
-                    status: 'Failed',
-                    detail: `Gagal menarik data (Percobaan ${currentFail}/3).`
-                };
-                setLogs(prev => [newLog, ...prev]);
-
-                if (currentFail >= 3) {
-                    setIsBlocked(true);
-                    setIsAutoSyncEnabled(false); // Matikan auto sync
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Sinkronisasi Dihentikan',
-                        text: 'Sinkronisasi gagal 3 kali berturut-turut. Sistem menghentikan proses ini otomatis untuk mencegah pemblokiran/beban server API.',
-                        confirmButtonColor: '#e11d48'
-                    });
-                } else {
-                    if (method === 'Manual') {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Sinkronisasi Gagal',
-                            text: `Gagal menarik data (Percobaan ${currentFail}/3). Sistem akan mencoba otomatis dalam 10 menit.`,
-                            confirmButtonColor: '#f59e0b'
-                        });
-                    }
-                }
+                handleSyncFailure(method, response.data.message);
             }
-        }, 2000);
+        } catch (error) {
+            setIsSyncing(false);
+            const msg = error.response?.data?.message || 'Gagal terhubung ke server.';
+            handleSyncFailure(method, msg);
+        }
+    };
+
+    const handleSyncFailure = (method, errorMsg) => {
+        const currentFail = failCount + 1;
+        setFailCount(currentFail);
+        fetchSyncLogs();
+
+        if (currentFail >= 3) {
+            setIsBlocked(true);
+            setIsAutoSyncEnabled(false);
+            Swal.fire({
+                icon: 'error',
+                title: 'Sinkronisasi Dihentikan',
+                text: 'Sinkronisasi gagal 3 kali berturut-turut. Sistem menghentikan proses ini otomatis.',
+                confirmButtonColor: '#e11d48'
+            });
+        } else {
+            if (method === 'Manual') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sinkronisasi Gagal',
+                    text: `Gagal menarik data (Percobaan ${currentFail}/3). ${errorMsg}`,
+                    confirmButtonColor: '#f59e0b'
+                });
+            }
+        }
     };
 
     const handleManualSync = () => {
         triggerSync('Manual');
     };
 
-    const handleSaveConfig = () => {
+    const handleTestConnection = async () => {
         Swal.fire({
-            icon: 'success',
-            title: 'Konfigurasi Tersimpan',
-            text: 'Pengaturan Auto Sync berhasil diperbarui.',
-            showConfirmButton: false,
-            timer: 1500
+            title: 'Menguji Koneksi...',
+            text: 'Sedang menghubungi endpoint API',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
+
+        try {
+            const response = await axios.post("/api/sync-data/test-connection", {}, {
+                headers: getAuthHeaders()
+            });
+
+            if (response.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Koneksi Berhasil',
+                    text: response.data.message,
+                    confirmButtonColor: '#0ea5e9'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Koneksi Gagal',
+                    text: response.data.message,
+                    confirmButtonColor: '#e11d48'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Koneksi Gagal',
+                text: error.response?.data?.message || 'Tidak dapat terhubung ke server.',
+                confirmButtonColor: '#e11d48'
+            });
+        }
+    };
+
+    const handleSaveConfig = async () => {
+        try {
+            const response = await axios.post("/api/sync-config", {
+                api_url: apiUrl,
+                api_key: apiKey,
+                http_method: httpMethod,
+                auto_sync_enabled: isAutoSyncEnabled,
+                auto_sync_type: autoSyncType,
+                auto_sync_day: syncDay,
+                auto_sync_date: parseInt(syncDate),
+            }, {
+                headers: getAuthHeaders()
+            });
+
+            if (response.data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Konfigurasi Tersimpan',
+                    text: 'Pengaturan berhasil diperbarui.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyimpan',
+                text: error.response?.data?.message || 'Terjadi kesalahan.',
+                confirmButtonColor: '#e11d48'
+            });
+        }
     };
 
     const handleResetBlock = () => {
@@ -199,10 +286,9 @@ export default function SyncData() {
                         <h3 className="text-base font-bold text-slate-800">Konfigurasi Endpoint API</h3>
                         <p className="text-xs text-slate-500 mt-0.5">Atur koneksi ke database master KEMLU untuk sinkronisasi data pegawai.</p>
                     </div>
-                    {/* Badge status koneksi */}
                     <div className="ml-auto flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full">
-                        <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                        <span className="text-xs font-semibold text-slate-500">Belum Dikonfigurasi</span>
+                        <span className={`w-2 h-2 rounded-full ${apiUrl ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                        <span className="text-xs font-semibold text-slate-500">{apiUrl ? 'Terkonfigurasi' : 'Belum Dikonfigurasi'}</span>
                     </div>
                 </div>
 
@@ -217,6 +303,8 @@ export default function SyncData() {
                             <input
                                 type="text"
                                 placeholder="api.kemlu.go.id/v1/pegawai"
+                                value={apiUrl}
+                                onChange={(e) => setApiUrl(e.target.value)}
                                 className="flex-1 py-2.5 pr-4 bg-transparent text-sm text-slate-700 focus:outline-none font-mono"
                             />
                         </div>
@@ -230,12 +318,15 @@ export default function SyncData() {
                         </label>
                         <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all overflow-hidden">
                             <input
-                                type="password"
+                                type={showApiKey ? 'text' : 'password'}
                                 placeholder="Masukkan API Key atau Bearer Token..."
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
                                 className="flex-1 py-2.5 pl-4 bg-transparent text-sm text-slate-700 focus:outline-none"
                             />
                             <button
                                 type="button"
+                                onClick={() => setShowApiKey(!showApiKey)}
                                 className="px-3 py-2.5 text-slate-400 hover:text-slate-600 transition-colors"
                                 title="Tampilkan / Sembunyikan"
                             >
@@ -254,7 +345,7 @@ export default function SyncData() {
                         <div className="flex gap-3">
                             {['GET', 'POST'].map((method) => (
                                 <label key={method} className="flex-1 flex items-center justify-center gap-2 cursor-pointer border border-slate-200 rounded-xl py-2.5 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 transition-all has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-400">
-                                    <input type="radio" name="httpMethod" value={method} defaultChecked={method === 'GET'} className="w-4 h-4 text-indigo-500 focus:ring-indigo-400" />
+                                    <input type="radio" name="httpMethod" value={method} checked={httpMethod === method} onChange={(e) => setHttpMethod(e.target.value)} className="w-4 h-4 text-indigo-500 focus:ring-indigo-400" />
                                     <span className={`text-sm font-bold font-mono ${method === 'GET' ? 'text-emerald-600' : 'text-amber-600'}`}>{method}</span>
                                 </label>
                             ))}
@@ -270,7 +361,7 @@ export default function SyncData() {
                         <div className="text-xs text-amber-700">
                             <p className="font-bold mb-1">Field yang akan disinkronisasi dari API:</p>
                             <div className="flex flex-wrap gap-2">
-                                {['nip', 'nama', 'email', 'alamat', 'no_handphone', 'jabatan', 'unit_kerja'].map(field => (
+                                {['nip', 'nama', 'alamat', 'no_handphone', 'Jabatan', 'kd_unker', 'LokasiKerjaName'].map(field => (
                                     <span key={field} className="font-mono bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md text-amber-800">{field}</span>
                                 ))}
                             </div>
@@ -282,6 +373,7 @@ export default function SyncData() {
                     <div className="md:col-span-2 flex flex-col sm:flex-row items-center justify-end gap-3 pt-2 border-t border-slate-100">
                         <button
                             type="button"
+                            onClick={handleTestConnection}
                             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 border border-indigo-300 text-indigo-600 hover:bg-indigo-50 font-semibold text-sm rounded-xl transition-all"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -291,6 +383,7 @@ export default function SyncData() {
                         </button>
                         <button
                             type="button"
+                            onClick={handleSaveConfig}
                             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-indigo-200 transition-all active:scale-95"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -454,7 +547,9 @@ export default function SyncData() {
                             {logs.map((log, index) => (
                                 <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-4 py-4 text-center text-slate-400 font-medium">{index + 1}</td>
-                                    <td className="px-4 py-4 text-slate-700 font-medium">{log.date}</td>
+                                    <td className="px-4 py-4 text-slate-700 font-medium">
+                                        {new Date(log.date).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                    </td>
                                     <td className="px-4 py-4">
                                         <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md ${log.method === 'Manual' ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'}`}>
                                             {log.method}
